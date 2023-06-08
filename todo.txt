@@ -1,0 +1,6 @@
+- aya inke file ha tooye client getLawbyid dide mishan okeye ya na?
+- route laws/:id/files/:id2, aya bayad id1 bashe?
+- encryptCookie tooye bakhshe guest messaging bayad function haye encrypt va decrypt esh ro taghir bedim
+-- ke amniatesh bere bala
+-- U.ParsedPagination bayad error bargardoone va tooye controller ham bayad age error bood 
+--- return U.ResError bashe

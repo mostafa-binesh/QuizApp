@@ -1,0 +1,50 @@
+// ? gorm unique
+
+	// Register the custom validator
+	// if err := validate.RegisterValidation("unique", uniqueValidator); err != nil {
+	// 	panic(err)
+	// }
+
+    func uniqueValidator(fl validator.FieldLevel) bool {
+	// db := fl.Parent().Addr().Interface().(*gorm.DB)
+	// db := D.DB()
+	db := dbEnv.GetDatabaseUrl()
+	field := fl.FieldName()
+
+	// Get the struct's value and use reflection to extract the field's value
+	var s reflect.Value = fl.Parent()
+	val := reflect.Indirect(s).FieldByName(field).String()
+
+	var count int64
+	db.Model(fl.Parent()).Where(fmt.Sprintf("%s = ?", field), val).Count(&count)
+
+	return count == 0
+}
+// dev.go 
+func GormG(c *fiber.Ctx) error {
+	type pashm struct {
+		Name string `json:"name" validate:"unique"`
+	}
+	payload := new(pashm)
+	// parse payload
+	if err := c.BodyParser(payload); err != nil {
+		U.ResErr(c, err.Error())
+	}
+	if errs := U.Validate(payload); errs != nil {
+		return c.Status(400).JSON(fiber.Map{"errors": errs})
+	}
+	return c.SendString("no error")
+}
+// db.go
+// type DBConfig struct {
+	// 	Host     string
+	// 	Port     string
+	// 	Username string
+	// 	Password string
+	// 	Server   string
+	// 	Name     string
+	// }
+	// dbConfig := config.GetDBConfig()
+	// dbConfig := DBConfig{}
+	// dsn := fmt.Sprintf("postgres://%s:%s@%s:%s/%s", dbConfig.Username, dbConfig.Password, dbConfig.Server, dbConfig.Port, dbConfig.Name)
+	

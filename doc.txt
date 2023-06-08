@@ -1,0 +1,15 @@
+CHANGE APPLICATION PORT:
+- if you want to change the port application, you need to change 
+-- APP_PORT in .env file and EXPOSE port in dockerfile 
+CHANGE UPLOAD DIRECTORY:
+- to change upload dir., you need to change UploadLocation in utitile and also change "mountTo" in liara.json 
+-- liara supports 100MB free disk in tmp folder. so i'm gonna change the upload folder to tmp for now 
+--- but for final deployment, we need to change it to the public folder and buy disk in liara 
+(THIS U.UploadLocation has not been implemented yet)
+WHY WE DIDN'T USE S3 BUCKET:
+- this decision is made by me (@mostafa_bnesh). i thought for future code migration from liara to X, 
+-- it would be easier. But if they don't wanna migrate, we may use S3 disk 
+FIBER CONTEXT VARIABLE IS THE SAME THROUGHOUT OF THE REQUEST 
+- FOR EXAMPLE, IF YOU HAVE 3 MIDDLEWARES AND THEN PASS THE CONTEXT TO THE MAIN HANDLER FUNCTION 
+-- ALL OF THEM WILL USE THE SAME FIBER.CTX VARIABLE, SO YOU CAN CREATE A GLOBAL POINTER AND POINT IT TO THE CONTEXT 
+--- AND NO NEED TO PASS IT TO EVERY FUNCTION WHICH USES FIBER CONTEXT ANYMORE

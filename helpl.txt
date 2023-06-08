@@ -1,0 +1,37 @@
+Sure, I can explain this Dockerfile line-by-line:
+
+FROM golang:latest
+This sets the base image for our Docker image as the latest version of the official Golang image.
+
+WORKDIR /app
+This sets the working directory inside the container to /app. This is where we will copy our application files.
+
+COPY go.mod ./
+COPY go.sum ./
+These commands copy the go.mod and go.sum files from our host machine to the container. These files are used by Go modules to manage dependencies.
+
+RUN go mod download
+This command runs go mod download inside the container to download all the required dependencies specified in the go.mod file.
+
+COPY . .
+This command copies all the files from our host machine to the container. This includes our Go code, static files, and any other assets.
+
+RUN go build -o /docker
+This command builds our Go application inside the container and creates an executable binary called docker in the root directory of the container.
+
+EXPOSE 8070
+This specifies that the container should listen on port 8070.
+
+CMD [ "/docker" ]
+This sets the default command to run when the container starts. In this case, it runs the docker executable we built earlier.
+TOOD:
+- change operator to condition in FilterByType 
+optimization tips:
+// if convert is array, no need to call be refrence
+// but if convert is about one object, it would be better if we call them as
+// -- call by refrence
+you say why:
+In Go, arguments are passed by value by default. This means that when we pass a slice as an argument to a function, a copy of the slice header is created and passed to the function. The underlying array is not copied, but both the original slice and the copied slice now point to the same array.
+If we modify the elements of the slice within the function, those changes will be visible outside the function because both slices point to the same array. However, if we modify the slice itself (for example, by appending to it), then the modifications will only affect the copy of the slice within the function, not the original slice.
+In the case of convertPeople, we are not modifying the input slice, so there is no need to pass it by reference. In fact, passing by reference would not provide any performance optimizations in this case, since we are only reading from the slice and not modifying it.
+However, if we did need to modify the input slice within the function, then passing it by reference might be more efficient than making a copy of the header. This is because modifying the slice header (for example, by appending to the slice) requires updating several fields (such as the length and capacity), which can be expensive for large slices. If we pass the slice by reference, then we can modify the header directly without incurring the overhead of copying it.
