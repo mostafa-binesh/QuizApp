@@ -7,14 +7,14 @@ type Question struct {
 	Title    string `json:"title"`
 	Status   string `json:"status"`
 	// relationships
-	Options   []Option `json:"options"`
-	SubjectID uint     `json:"QuestionID"`
-	Subject   Subject  `json:"subject" gorm:"foreignKey:SubjectID;constraint:OnUpdate:CASCADE;OnDelete:CASCADE"`
+	Options  []Option `json:"options"`
+	SystemID uint     `json:"systemID"`
+	System   System   `json:"system" gorm:"foreignKey:SystemID;constraint:OnUpdate:CASCADE;OnDelete:CASCADE"`
 }
-// 
+
+//
 type QuestionList struct {
 	ID     uint   `json:"id"`
 	Title  string `json:"title"`
 	Status string `json:"status"`
 }
-
