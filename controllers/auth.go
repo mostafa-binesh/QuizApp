@@ -91,7 +91,7 @@ func Login(c *fiber.Ctx) error {
 		return U.ResValidationErr(c, errs)
 	}
 	var user M.User
-	result := D.DB().First(&user, "personal_code = ?", strings.ToLower(payload.PersonalCode))
+	result := D.DB().First(&user, "email = ?", strings.ToLower(payload.Email))
 	// ! the reason we didn't handle the error first,
 	// ! - is because not found return error option is disabled
 	if result.RowsAffected == 0 {

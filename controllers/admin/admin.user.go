@@ -7,7 +7,6 @@ import (
 	U "docker/utils"
 	"github.com/gofiber/fiber/v2"
 	"golang.org/x/crypto/bcrypt"
-	"strings"
 )
 
 // ############################
@@ -28,10 +27,10 @@ func IndexUser(c *fiber.Ctx) error {
 	for i := 0; i < len(user); i++ {
 		pass_data = append(pass_data, M.MinUser{
 			ID:           user[i].ID,
-			Name:         user[i].Name,
-			PhoneNumber:  user[i].PhoneNumber,
-			PersonalCode: user[i].PersonalCode,
-			NationalCode: user[i].NationalCode,
+			// Name:         user[i].Name,
+			// PhoneNumber:  user[i].PhoneNumber,
+			// PersonalCode: user[i].PersonalCode,
+			// NationalCode: user[i].NationalCode,
 		})
 	}
 	return c.JSON(fiber.Map{
@@ -57,8 +56,8 @@ func EditUser(c *fiber.Ctx) error {
 	if result1.Error != nil {
 		return U.DBError(c, result1.Error)
 	}
-	user.Name = payload.Name
-	user.NationalCode = payload.NationalCode
+	// user.Name = payload.Name
+	// user.NationalCode = payload.NationalCode
 	if payload.Password != "" {
 		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(payload.Password), bcrypt.DefaultCost)
 		if err != nil {
@@ -66,8 +65,8 @@ func EditUser(c *fiber.Ctx) error {
 		}
 		user.Password = string(hashedPassword)
 	}
-	user.PhoneNumber = payload.PhoneNumber
-	user.PersonalCode = payload.PersonalCode
+	// user.PhoneNumber = payload.PhoneNumber
+	// user.PersonalCode = payload.PersonalCode
 	result := D.DB().Save(&user)
 	if result.Error != nil {
 		return U.DBError(c, result.Error)
@@ -84,10 +83,10 @@ func UserByID(c *fiber.Ctx) error {
 	}
 	minUser := M.MinUser{
 		ID:           user.ID,
-		Name:         user.Name,
-		PhoneNumber:  user.PhoneNumber,
-		PersonalCode: user.PersonalCode,
-		NationalCode: user.NationalCode,
+		// Name:         user.Name,
+		// PhoneNumber:  user.PhoneNumber,
+		// PersonalCode: user.PersonalCode,
+		// NationalCode: user.NationalCode,
 	}
 	return c.JSON(fiber.Map{
 		"data": minUser,
@@ -136,11 +135,11 @@ func AddUser(c *fiber.Ctx) error {
 		U.ResErr(c, err.Error())
 	}
 	newUser := M.User{
-		Name:         payload.Name,
-		PhoneNumber:  strings.ToLower(payload.PhoneNumber),
+		// Name:         payload.Name,
+		// PhoneNumber:  strings.ToLower(payload.PhoneNumber),
 		Password:     string(hashedPassword),
-		PersonalCode: payload.PersonalCode,
-		NationalCode: payload.NationalCode,
+		// PersonalCode: payload.PersonalCode,
+		// NationalCode: payload.NationalCode,
 	}
 	result := D.DB().Create(&newUser)
 	if result.Error != nil {
