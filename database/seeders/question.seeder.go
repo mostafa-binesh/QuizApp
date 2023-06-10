@@ -7,8 +7,9 @@ import (
 	"math/rand"
 	"time"
 )
-// course seeder needed first 
-func QuestionSeeder() {
+
+// course seeder needed first
+func QuestionAndOptionsSeeder() {
 	// Define an array of questions
 	questions := [20]string{
 		"What is the capital of Spain?",
@@ -59,8 +60,13 @@ func QuestionSeeder() {
 
 	// Insert the questions and options into the database
 	rand.Seed(time.Now().UnixNano()) // Seed the random number generator
+	// get systems count for question refrence
+	systems := M.System{}
+	var systemsCount int64
+	D.DB().Model(&systems).Count(&systemsCount)
+	fmt.Printf("systems count: %d\n", systemsCount)
 	for i, questionText := range questions {
-		question := M.Question{CourseID: 1, Title: questionText}
+		question := M.Question{CourseID: 1, Title: questionText, SystemID: uint(rand.Intn(int(systemsCount)))}
 		D.DB().Create(&question)
 		for j, optionText := range options[i] {
 			option := M.Option{

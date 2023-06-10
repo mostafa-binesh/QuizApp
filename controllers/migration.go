@@ -12,10 +12,9 @@ import (
 
 // ! add any migration that you wanna add to the database
 func AutoMigrate(c *fiber.Ctx) error {
+	// ! order doesn't matter in drop and creating the tables
+	// ! > but it does matter in seeding
 	// ! drop all tables if 'dropAllTables' field is 1 in the query
-	// return c.JSON(fiber.Map{
-	// 	"message":c.Query("dropAllTables"),
-	// })
 	fmt.Println("dropAllTables")
 	if c.Query("dropAllTables") == "1" {
 		fmt.Println("dropping all tables")
@@ -29,22 +28,27 @@ func AutoMigrate(c *fiber.Ctx) error {
 			&M.Question{},
 			&M.Option{},
 			&M.UserAnswer{},
+			&M.System{},
 			&M.Subject{},
 		)
+	}
+	if c.QueryInt("justDrop") == 1 {
+		return c.SendString("operation dropped by you")
 	}
 	fmt.Println("Tables migration done...")
 	// ! migrate tables
 	err := D.DB().AutoMigrate(
 		&M.User{},
-		&M.Subject{},
 		&M.Law{},
 		&M.Comment{},
 		&M.Keyword{},
 		&M.File{},
 		&M.Course{},
+		&M.UserAnswer{},
+		&M.Subject{},
+		&M.System{},
 		&M.Question{},
 		&M.Option{},
-		&M.UserAnswer{},
 	)
 	if err != nil {
 		return c.Status(400).SendString(err.Error())

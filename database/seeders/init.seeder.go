@@ -13,6 +13,8 @@ func InitSeeder() {
 	AdminSeeder()
 	fmt.Println("course seeder")
 	CourseSeeder()
+	fmt.Println("subject and system seeder")
+	SubjectAndSystemSeeder()
 	fmt.Println("question seeder")
-	QuestionSeeder()
+	QuestionAndOptionsSeeder()
 }
