@@ -8,18 +8,20 @@ import (
 type User struct {
 	// ID        *uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();primary_key"`
 	// gorm.Model
-	ID           uint   `gorm:"primaryKey"`
-	Name         string `gorm:"type:varchar(100);not null"`
-	PhoneNumber  string `gorm:"type:varchar(100);uniqueIndex;not null"`
-	Password     string `gorm:"type:varchar(100);not null"`
-	Role         uint   `gorm:"default:1;not null"` // 1: normal user, 2: moderator, 3: admin
-	PersonalCode string `gorm:"type:varchar(10);uniqueIndex"`
-	NationalCode string `gorm:"type:varchar(10);uniqueIndex"`
+	ID uint `gorm:"primaryKey"`
+	// Name         string `gorm:"type:varchar(100);not null"`
+	// PhoneNumber  string `gorm:"type:varchar(100);uniqueIndex;not null"`
+	Email    string `gorm:"type:varchar(255);uniqueIndex;not null"`
+	Password string `gorm:"type:varchar(100);not null"`
+	Role     uint   `gorm:"default:1;not null"` // 1: normal user, 2: moderator, 3: admin
+	// PersonalCode string `gorm:"type:varchar(10);uniqueIndex"`
+	// NationalCode string `gorm:"type:varchar(10);uniqueIndex"`
 	// Provider  *string    `gorm:"type:varchar(50);default:'local';not null"`
 	// Photo     *string    `gorm:"not null;default:'default.png'"`
 	Verified  bool       `gorm:"not null;default:false"`
 	CreatedAt *time.Time `gorm:"not null;default:now()"`
 	UpdatedAt *time.Time `gorm:"not null;default:now()"`
+	Courses   []*Course   `gorm:"many2many:user_courses;"`
 }
 type MinUser struct {
 	ID           uint   `json:"Id,omitempty"`
@@ -31,12 +33,14 @@ type MinUser struct {
 
 // ! this model has been used in signup handler
 type SignUpInput struct {
-	Name            string `json:"name" validate:"required"`
-	PhoneNumber     string `json:"PhoneNumber" validate:"required"`
-	Password        string `json:"password" validate:"required,min=8"`
-	PasswordConfirm string `json:"passwordConfirm" validate:"required,min=8,eqfield=Password"`
-	PersonalCode    string `json:"PersonalCode" validate:"required,max=8"`
-	NationalCode    string `json:"NationalCode" validate:"required,len=10"`
+	// Name            string `json:"name" validate:"required"`
+	// PhoneNumber     string `json:"PhoneNumber" validate:"required"`
+	Email    string `json:"email" validate:"required,email"`
+	OrderID  uint   `json:"orderId" validate:"required,numeric"`
+	Password string `json:"password" validate:"required,min=4"`
+	// PasswordConfirm string `json:"passwordConfirm" validate:"required,min=8,eqfield=Password"`
+	// PersonalCode    string `json:"PersonalCode" validate:"required,max=8"`
+	// NationalCode    string `json:"NationalCode" validate:"required,len=10"`
 	// Photo string `json:"photo"`
 }
 

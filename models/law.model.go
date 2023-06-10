@@ -155,7 +155,7 @@ func GetMinimalComment(comments []Comment) []CommentMinimal {
 	for i := 0; i < len(comments); i++ {
 		minimalComment := CommentMinimal{
 			ID:              comments[i].ID,
-			FullName:        comments[i].User.Name,
+			// FullName:        comments[i].User.Name,
 			ParentCommentID: comments[i].ParentCommentID,
 			Body:            comments[i].Body,
 		}
