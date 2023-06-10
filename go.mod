@@ -22,11 +22,13 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.14.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.18.8 // indirect
 	github.com/aws/smithy-go v1.13.5 // indirect
+	github.com/chenyangguang/woocommerce v1.0.1 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/go-playground/validator/v10 v10.11.2 // indirect
 	github.com/go-sql-driver/mysql v1.7.0 // indirect
 	github.com/gofiber/fiber/v2 v2.42.0 // indirect
+	github.com/google/go-querystring v1.0.0 // indirect
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/iancoleman/strcase v0.2.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
