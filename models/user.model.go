@@ -21,7 +21,8 @@ type User struct {
 	Verified  bool       `gorm:"not null;default:false"`
 	CreatedAt *time.Time `gorm:"not null;default:now()"`
 	UpdatedAt *time.Time `gorm:"not null;default:now()"`
-	Courses   []*Course   `gorm:"many2many:user_courses;"`
+	Courses   []*Course  `gorm:"many2many:user_courses;"`
+	Quizzes   []*Quiz    `json:"quizzes" gorm:"foreignKey:UserID"`
 }
 type MinUser struct {
 	ID           uint   `json:"Id,omitempty"`
@@ -56,8 +57,8 @@ type EditInput struct {
 
 // ! this model has been used in login handler
 type SignInInput struct {
-	PersonalCode string `json:"personal_code" validate:"required"`
-	Password     string `json:"password" validate:"required"`
+	Email    string `json:"email" validate:"required"`
+	Password string `json:"password" validate:"required"`
 }
 
 // ! not been used

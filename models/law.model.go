@@ -89,7 +89,7 @@ type Comment struct {
 	ID              uint   `json:"id" gorm:"primary_key"`
 	Body            string `json:"body" gorm:"type:text;not null"`
 	UserID          uint   `json:"userID"`
-	User            User   `json:"user" gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE;OnDelete:CSCADE"`
+	User            User   `json:"user" gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE;OnDelete:CASCADE"`
 	ParentCommentID uint   `json:"parentCommentID" gorm:"foreignKey:UserID;"`
 	// ParentComment   *Comment   `gorm:"foreignKey:ParentCommentID"`
 

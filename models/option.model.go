@@ -5,6 +5,6 @@ type Option struct {
 	Title string `json:"option"`
 	Index string `json:"index"`
 	QuestionID uint   `json:"QuestionID"`
-	Question   User   `json:"course" gorm:"foreignKey:QuestionID;constraint:OnUpdate:CASCADE;OnDelete:CSCADE"`
+	Question   User   `json:"course" gorm:"foreignKey:QuestionID;constraint:OnUpdate:CASCADE;OnDelete:CASCADE"`
 	IsCorrect bool `json:"status"`
 }
