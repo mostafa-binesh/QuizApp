@@ -11,13 +11,16 @@ import (
 )
 
 func main() {
+	// stablish connection to the database
 	D.ConnectToDB(
 		U.Env("DB_HOST"),
 		U.Env("DB_USERNAME"),
 		U.Env("DB_PASSWORD"),
 		U.Env("DB_NAME"),
 		U.Env("DB_PORT"),
-	) // initialize database
+	)
+	// create woocommerce instance
+	U.InitWoomeCommerce(U.Env("WC_CONSUMER_KEY"), U.Env("WC_CONSUMER_SECRET"), U.Env("WC_SHOP_NAME"))
 	// C.Initilize() // initialize controllers value
 	// ! session
 	U.Store = session.New(session.Config{
