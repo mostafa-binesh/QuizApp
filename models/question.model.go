@@ -7,5 +7,5 @@ type Question struct {
 	Title     string   `json:"title"`
 	Options   []Option `json:"options"`
 	SubjectID uint     `json:"QuestionID"`
-	Subject   Subject  `json:"subject" gorm:"foreignKey:QuestionID;constraint:OnUpdate:CASCADE;OnDelete:CSCADE"`
+	Subject   Subject  `json:"subject" gorm:"foreignKey:SubjectID;constraint:OnUpdate:CASCADE;OnDelete:CSCADE"`
 }
