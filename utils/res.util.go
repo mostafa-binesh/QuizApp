@@ -7,6 +7,7 @@ import (
 
 // response error, easier way to return a json error
 func ResErr(c *fiber.Ctx, err string) error {
+	// return FiberCtx().Status(400).JSON(fiber.Map{
 	return c.Status(400).JSON(fiber.Map{
 		"error": err,
 	})
