@@ -45,6 +45,7 @@ var faTranslation = map[string]string{
 	"NationalCode":       "کد ملی",
 	"PhoneNumber":        "شماره همراه",
 	"Category":           "دسته بندی",
+	"OrderID":           "شماره سفارش",
 }
 var IgnoreID uint64
 
