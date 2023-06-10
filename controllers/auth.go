@@ -21,29 +21,54 @@ type Person struct {
 
 func SignUpUser(c *fiber.Ctx) error {
 	payload := new(M.SignUpInput)
-	// ! parse body
-	res, err := BodyParserHandle(c, payload)
-	if err != nil {
-		return res
+	// parsing the payload
+	if err := c.BodyParser(payload); err != nil {
+		U.ResErr(c, err.Error())
 	}
+	fmt.Printf("payload: %v\n", payload)
 	// ! validate request
 	// ! todo: create a shorter function for the validation, like payload.validate(), validate function can get a T template
-	err = validate.Struct(payload)
+	// validate the payload
+	if errs := U.Validate(payload); errs != nil {
+		return c.Status(400).JSON(fiber.Map{"errors": errs})
+	}
+	// ! here we need to check that if the order exists and then if exists
+	// ! > add the courses for ther user
+	order, err := U.WCClient().Order.Get(int64(payload.OrderID), nil)
 	if err != nil {
-		return ValidationHandle(c, err)
+		return U.ResErr(c, fmt.Sprint("خطای ووکامرس, ", err.Error()))
+	}
+	// var courses []M.Course
+	var purchasedOrderIDs []int64
+	for _, item := range order.LineItems {
+		// fmt.Println(item.ProductID)
+		purchasedOrderIDs = append(purchasedOrderIDs, item.ProductID)
+		// courses = append(courses, M.Course{
+		// 	WoocommerceID: uint(item.ProductID),
+		// })
 	}
 	// hash the password
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(payload.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"message": err.Error()})
 	}
+	// get the courses
+	var courses []*M.Course
+	if result := D.DB().Find(&courses, "woocommerce_id IN ?", purchasedOrderIDs); result.Error != nil {
+		return U.DBError(c, result.Error)
+	}
+	fmt.Printf("found courses: %v\n", courses)
+	// inja miad va course ha ham mikhad besze
+	// vali faghay bayad append kone
 	newUser := M.User{
-		Name:         payload.Name,
-		PhoneNumber:  strings.ToLower(payload.PhoneNumber), // ! can use fiber toLower function that has better performance
-		Password:     string(hashedPassword),
-		PersonalCode: payload.PersonalCode,
-		NationalCode: payload.NationalCode,
+		// Name:         payload.Name,
+		Email: payload.Email,
+		// PhoneNumber:  strings.ToLower(payload.PhoneNumber), // ! can use fiber toLower function that has better performance
+		Password: string(hashedPassword),
+		// PersonalCode: payload.PersonalCode,
+		// NationalCode: payload.NationalCode,
 		// Photo:    &payload.Photo, // ? don't know why add & in the payload for photo
+		Courses: courses,
 	}
 	// ! add user to the database
 	result := D.DB().Create(&newUser)
