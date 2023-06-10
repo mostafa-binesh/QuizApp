@@ -15,8 +15,25 @@ func APIInit(router *fiber.App) {
 			"lastChange": "add static files",
 		})
 	})
-	// ! admin Route
+	// ! quiz routes
+	quiz := router.Group("/quiz")
+	quiz.Post("/", C.CreateQuiz)
+	// ! course routes
+	user := router.Group("/user", C.AuthMiddleware)
+	userCourse := user.Group("/courses")
+	userCourse.Get("/", C.AllCourses)
+	userCourse.Post("/", C.CreateQuiz)
+	userCourse.Get("/update", C.UpdateUserCourses)
+	userQuiz := user.Group("/quizes")
+	userQuiz.Get("/", C.AllQuizzes)
+
+	// ! admin routes
 	admin := router.Group("/admin")
+	admin.Get("/courses", AC.AllCourses)
+	admin.Get("/courses/:id<int>", AC.CourseByID)
+	admin.Post("/courses", AC.CreateCourse)
+	admin.Get("/courses/addFromWoocommerce", AC.AddCoursesFromWooCommerce)
+
 	admin.Get("/users", AC.IndexUser)
 	admin.Get("/users/:id<int>", AC.UserByID)
 	admin.Put("/users/:id<int>", AC.EditUser)
@@ -30,9 +47,10 @@ func APIInit(router *fiber.App) {
 	admin.Delete("/laws/:id<int>", AC.DeleteLaw)
 	admin.Delete("/laws/:id<int>/files/:fileID<int>", AC.DeleteFile) // ! TODO : file az storage ham bayad paak she
 	// ! authentication routes
-	router.Post("/signup", C.SignUpUser)
-	router.Post("/login", C.Login)
-	router.Get("/logout", C.Logout)
+	auth := router.Group("/auth")
+	auth.Post("/signup", C.SignUpUser)
+	auth.Post("/login", C.Login)
+	auth.Get("/logout", C.Logout)
 	// ! messaging
 	msg := router.Group("correspondence")
 	msg.Use(encryptcookie.New(encryptcookie.Config{
