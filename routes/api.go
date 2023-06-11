@@ -24,8 +24,10 @@ func APIInit(router *fiber.App) {
 	userCourse.Get("/", C.AllCourses)
 	userCourse.Post("/", C.CreateQuiz)
 	userCourse.Get("/update", C.UpdateUserCourses)
-	userQuiz := user.Group("/quizes")
+	userQuiz := user.Group("/quizzes")
 	userQuiz.Get("/", C.AllQuizzes)
+	userQuiz.Get("/:id<int>", C.QuizByID)
+	userQuiz.Post("/", C.CreateQuiz)
 
 	// ! admin routes
 	admin := router.Group("/admin")
