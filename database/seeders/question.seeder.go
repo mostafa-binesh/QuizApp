@@ -66,14 +66,16 @@ func QuestionAndOptionsSeeder() {
 	D.DB().Model(&systems).Count(&systemsCount)
 	fmt.Printf("systems count: %d\n", systemsCount)
 	for i, questionText := range questions {
-		question := M.Question{CourseID: 1, Title: questionText, SystemID: uint(rand.Intn(int(systemsCount)))}
+		question := M.Question{CourseID: 1, Title: questionText, SystemID: uint(rand.Intn(int(systemsCount))), Status: "unvisited"}
 		D.DB().Create(&question)
+		optionsLen := len(options[i])
+		correctOption := rand.Intn(optionsLen)
 		for j, optionText := range options[i] {
 			option := M.Option{
 				Title:      optionText,
 				Index:      string('A' + j),
 				QuestionID: question.ID,
-				IsCorrect:  j == rand.Intn(4), // Set oneof the options as correct randomly
+				IsCorrect:  j == correctOption, // Set oneof the options as correct randomly
 			}
 			D.DB().Create(&option)
 		}
