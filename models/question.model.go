@@ -1,11 +1,11 @@
 package models
 
 type Question struct {
-	ID       uint   `json:"id" gorm:"primary_key"`
+	ID       uint   `json:"no" gorm:"primary_key"`
 	CourseID uint   `json:"-"`
 	Course   *Course `json:"course,omitempty" gorm:"foreignKey:CourseID;constraint:OnUpdate:CASCADE;OnDelete:CASCADE"`
-	Title    string `json:"title"`
-	Status   string `json:"status"`
+	Title    string `json:"question"`
+	Status   string `json:"-"`
 	// relationships
 	Options  []*Option `json:"options,omitempty"`
 	SystemID uint     `json:"-"`

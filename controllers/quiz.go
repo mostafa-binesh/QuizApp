@@ -32,7 +32,7 @@ func QuizByID(c *fiber.Ctx) error {
 	}
 	// LawByID := M.LawToLawByID(law)
 	return c.JSON(fiber.Map{
-		"data": quiz,
+		"data": quiz.ConvertQuizToQuizToFront(),
 	})
 }
 func CreateQuiz(c *fiber.Ctx) error {
@@ -74,6 +74,7 @@ func CreateQuiz(c *fiber.Ctx) error {
 			QuestionID: questionIDs[randomIndex],
 			IsMarked:   false,
 			UserID:     user.ID,
+			Status:     "unvisited",
 		})
 		U.RemoveElementByRef[uint](&questionIDs, int(randomIndex))
 		questionsCount = len(questionIDs)
