@@ -50,7 +50,7 @@ func SignUpUser(c *fiber.Ctx) error {
 	// hash the password
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(payload.Password), bcrypt.DefaultCost)
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"message": err.Error()})
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
 	// get the courses
 	var courses []*M.Course
@@ -74,9 +74,9 @@ func SignUpUser(c *fiber.Ctx) error {
 	result := D.DB().Create(&newUser)
 	// ! if any error exist in the create process, write the error
 	if result.Error != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"message": "couldn't create the user"})
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "couldn't create the user"})
 	}
-	return c.Status(fiber.StatusCreated).JSON(fiber.Map{"message": "user has been created successfully"})
+	return c.Status(fiber.StatusCreated).JSON(fiber.Map{"msg": "user has been created successfully"})
 
 }
 
@@ -118,7 +118,7 @@ func Logout(c *fiber.Ctx) error {
 	sess, err := U.Store.Get(c)
 	if err != nil {
 		return c.Status(400).JSON(fiber.Map{
-			"message": "not authenticated",
+			"error": "not authenticated",
 		})
 	}
 	if err := sess.Destroy(); err != nil {

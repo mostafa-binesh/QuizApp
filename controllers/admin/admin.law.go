@@ -125,7 +125,7 @@ func UpdateLaw(c *fiber.Ctx) error {
 		// }
 	}
 	return c.JSON(fiber.Map{
-		"message": "به روز رسانی با موفقیت انجام شد",
+		"msg": "به روز رسانی با موفقیت انجام شد",
 	})
 }
 func DeleteLaw(c *fiber.Ctx) error {
@@ -137,7 +137,7 @@ func DeleteLaw(c *fiber.Ctx) error {
 		return U.ResErr(c, "مصوبه یافت نشد")
 	}
 	return c.JSON(fiber.Map{
-		"message": "حذف کردن با موفقیت انجام شد",
+		"msg": "حذف کردن با موفقیت انجام شد",
 	})
 }
 func CreateLaw(c *fiber.Ctx) error {
@@ -249,7 +249,7 @@ func CreateLaw(c *fiber.Ctx) error {
 	}
 	// return response
 	return c.Status(200).JSON(fiber.Map{
-		"message": "مصوبه با موفقیت اضافه شد",
+		"msg": "مصوبه با موفقیت اضافه شد",
 	})
 }
 func LawSearch(c *fiber.Ctx) error {
@@ -301,6 +301,6 @@ func DeleteFile(c *fiber.Ctx) error {
 		return U.ResErr(c, "فایل یافت نشد")
 	}
 	return c.JSON(fiber.Map{
-		"message": "فایل حذف شد",
+		"msg": "فایل حذف شد",
 	})
 }

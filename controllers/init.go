@@ -134,7 +134,7 @@ func ValidationHandle(c *fiber.Ctx, err error) error {
 func BodyParserHandle(c *fiber.Ctx, payload interface{}) (error, error) {
 	if err := c.BodyParser(payload); err != nil {
 		fmt.Println("bodyParserHandle function error")
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"message": err.Error()}), err
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"msg": err.Error()}), err
 	}
 	return nil, nil
 }
@@ -145,7 +145,7 @@ func ReturnError(c *fiber.Ctx, err string, statusCode ...int) error {
 	if len(statusCode) > 0 {
 		x = statusCode[0]
 	}
-	return c.Status(x).JSON(fiber.Map{"message": err})
+	return c.Status(x).JSON(fiber.Map{"error": err})
 }
 
 // ! some of the init.go functions don't belong in here, make a better structure for them

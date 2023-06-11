@@ -30,6 +30,7 @@ func AutoMigrate(c *fiber.Ctx) error {
 			&M.UserAnswer{},
 			&M.System{},
 			&M.Subject{},
+			&M.Quiz{},
 		)
 	}
 	if c.QueryInt("justDrop") == 1 {
@@ -49,6 +50,7 @@ func AutoMigrate(c *fiber.Ctx) error {
 		&M.System{},
 		&M.Question{},
 		&M.Option{},
+		&M.Quiz{},
 	)
 	if err != nil {
 		return c.Status(400).SendString(err.Error())
