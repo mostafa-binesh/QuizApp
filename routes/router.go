@@ -17,7 +17,8 @@ func RouterInit() {
 	// ! add middleware
 	// cors
 	router.Use(cors.New(cors.Config{
-		AllowOrigins: U.Env("APP_ALLOW_ORIGINS"),
+		AllowOrigins:     U.Env("APP_ALLOW_ORIGINS"),
+		AllowCredentials: true,
 	}))
 	// setup utility base url
 	router.Use(func(c *fiber.Ctx) error {
