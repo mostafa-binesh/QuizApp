@@ -80,7 +80,7 @@ func EditUser(c *fiber.Ctx) error {
 // ! user by id with admin/users/{email}
 func UserByEmail(c *fiber.Ctx) error {
 	user := M.User{}
-	result := D.DB().Where("email = ?", c.Params("email")).Find(&user)
+	result := D.DB().Where("email = ?", c.Params("email")).First(&user)
 	if result.RowsAffected == 0 { // can check the same condition with user.Name == ""
 		return U.ResErr(c, "User doesn't exist")
 	}
