@@ -15,7 +15,7 @@ func DBError(c *fiber.Ctx, err error) error {
 	} else if errors.Is(err, gorm.ErrInvalidData) {
 		errorText = "داده نامعتبر است"
 	} else if errors.Is(err, gorm.ErrDuplicatedKey) {
-		errorText = "مقداری از داده ها، قبلا در پایگاه داده وجود دارد"
+		errorText = "مقدار تکراری در پایگاه داده وجود دارد"
 	} else {
 		errorText = "خطای پیش بینی نشده ی پایگاه داده"
 	}
@@ -26,5 +26,5 @@ func DBError(c *fiber.Ctx, err error) error {
 			"debug": err,
 		})
 	}
-	return ResErr(c,errorText)
+	return ResErr(c, errorText)
 }

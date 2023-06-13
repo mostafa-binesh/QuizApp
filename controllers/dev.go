@@ -78,7 +78,6 @@ func UploadFile(c *fiber.Ctx) error {
 	// ! file extension check
 	if !(U.HasImageSuffixCheck(file.Filename) || U.HasSuffixCheck(file.Filename, []string{"pdf"})) {
 		return c.SendString("file should be image or pdf! please fix it")
-
 	}
 	// Save file to disk
 	err = c.SaveFile(file, fmt.Sprintf(U.UploadLocation+"/%s", file.Filename))
