@@ -5,6 +5,8 @@ import (
 	F "docker/database/filters"
 	M "docker/models"
 	U "docker/utils"
+	"fmt"
+
 	"github.com/gofiber/fiber/v2"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -26,7 +28,8 @@ func IndexUser(c *fiber.Ctx) error {
 	pass_data := []M.MinUser{}
 	for i := 0; i < len(user); i++ {
 		pass_data = append(pass_data, M.MinUser{
-			ID:           user[i].ID,
+			ID:    user[i].ID,
+			Email: user[i].Email,
 			// Name:         user[i].Name,
 			// PhoneNumber:  user[i].PhoneNumber,
 			// PersonalCode: user[i].PersonalCode,
@@ -43,21 +46,21 @@ func CheckPasswordHash(password string, hash string) error {
 	return err
 }
 func EditUser(c *fiber.Ctx) error {
-	// return c.SendString("wtf")
-	user := M.User{}
-	payload := new(M.EditInput)
+	payload := new(M.AdminEditUserInput)
+	// parse body
 	if err := c.BodyParser(payload); err != nil {
 		return U.ResErr(c, err.Error())
 	}
+	// validate the payload
 	if errs := U.Validate(payload, c.Params("id")); errs != nil {
 		return c.Status(400).JSON(fiber.Map{"errors": errs})
 	}
-	result1 := D.DB().Where("id = ?", c.Params("id")).First(&user)
-	if result1.Error != nil {
-		return U.DBError(c, result1.Error)
+	// get the user with given id in param
+	user := M.User{}
+	if err := D.DB().Where("id = ?", c.Params("id")).First(&user).Error; err != nil {
+		return U.DBError(c, err)
 	}
-	// user.Name = payload.Name
-	// user.NationalCode = payload.NationalCode
+	// hash the password if password exist in payload
 	if payload.Password != "" {
 		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(payload.Password), bcrypt.DefaultCost)
 		if err != nil {
@@ -65,28 +68,25 @@ func EditUser(c *fiber.Ctx) error {
 		}
 		user.Password = string(hashedPassword)
 	}
-	// user.PhoneNumber = payload.PhoneNumber
-	// user.PersonalCode = payload.PersonalCode
+	user.Email = payload.Email
+	// save the user
 	result := D.DB().Save(&user)
 	if result.Error != nil {
 		return U.DBError(c, result.Error)
 	}
-	return U.ResMessage(c, "کاربر ویرایش شد")
+	return U.ResMessage(c, "User updated successfully")
 }
 
-// ! user by id with admin/users/{id}
-func UserByID(c *fiber.Ctx) error {
+// ! user by id with admin/users/{email}
+func UserByEmail(c *fiber.Ctx) error {
 	user := M.User{}
-	result := D.DB().Where("id = ?", c.Params("id")).Find(&user)
+	result := D.DB().Where("email = ?", c.Params("email")).Find(&user)
 	if result.RowsAffected == 0 { // can check the same condition with user.Name == ""
-		return U.ResErr(c, "کاربر وجود ندارد")
+		return U.ResErr(c, "User doesn't exist")
 	}
 	minUser := M.MinUser{
-		ID:           user.ID,
-		// Name:         user.Name,
-		// PhoneNumber:  user.PhoneNumber,
-		// PersonalCode: user.PersonalCode,
-		// NationalCode: user.NationalCode,
+		ID:    user.ID,
+		Email: user.Email,
 	}
 	return c.JSON(fiber.Map{
 		"data": minUser,
@@ -95,12 +95,22 @@ func UserByID(c *fiber.Ctx) error {
 
 // ! Delete user with admin/users/{}
 func DeleteUser(c *fiber.Ctx) error {
-	result := D.DB().Delete(&M.User{}, c.Params("id"))
+	user := new(M.User)
+	result := D.DB().Preload("Courses").First(user, c.Params("id"))
 	if result.Error != nil {
 		return U.DBError(c, result.Error)
 	}
 	if result.RowsAffected == 0 {
 		return U.ResErr(c, "کاربر یافت نشد")
+	}
+	// Delete all courses associated with the user
+	// err := D.DB().Delete(&user.Courses).Error // deletes the courses
+	err := D.DB().Model(&user).Association("Courses").Clear() // deletes the user_courses
+	if err != nil {
+		return U.DBError(c, err)
+	}
+	if err = D.DB().Delete(&M.User{}, c.Params("id")).Error; err != nil {
+		return U.DBError(c, err)
 	}
 	return U.ResMessage(c, "کاربر حذف شد")
 }
@@ -120,30 +130,34 @@ func UserUnVerification(c *fiber.Ctx) error {
 	return U.ResMessage(c, "کاربر رد شد")
 }
 func AddUser(c *fiber.Ctx) error {
-	payload := new(M.SignUpInput)
-	// ! parse body
+	payload := new(M.AdminCreateUserInput)
+	// parsing the payload
 	if err := c.BodyParser(payload); err != nil {
-		return U.ResErr(c, err.Error())
+		U.ResErr(c, err.Error())
 	}
-	// ! validate request
-	if errs := U.Validate(payload, c.Params("id")); errs != nil {
-		return U.ResValidationErr(c, errs)
+	// validation the payload
+	if errs := U.Validate(payload); errs != nil {
+		return c.Status(400).JSON(fiber.Map{"errors": errs})
 	}
+	fmt.Printf("payload: %v\n", payload)
 	// hash the password
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(payload.Password), bcrypt.DefaultCost)
 	if err != nil {
-		U.ResErr(c, err.Error())
+		return U.ResErr(c, err.Error())
+	}
+	var courses []*M.Course
+	fmt.Printf("till here")
+	if err := D.DB().Find(&courses, payload.Courses).Error; err != nil {
+		return U.DBError(c, err)
 	}
 	newUser := M.User{
-		// Name:         payload.Name,
-		// PhoneNumber:  strings.ToLower(payload.PhoneNumber),
-		Password:     string(hashedPassword),
-		// PersonalCode: payload.PersonalCode,
-		// NationalCode: payload.NationalCode,
+		Email:    payload.Email,
+		Password: string(hashedPassword),
+		Courses:  courses,
 	}
 	result := D.DB().Create(&newUser)
 	if result.Error != nil {
 		return U.DBError(c, result.Error)
 	}
-	return U.ResMessage(c, "کاربر ایجاد شد") // ! TODO talk with mohsen: should i send statusCreated or 200 ?
+	return U.ResMessage(c, "User has been created")
 }

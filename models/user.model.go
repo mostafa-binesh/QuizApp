@@ -25,24 +25,25 @@ type User struct {
 	Quizzes   []*Quiz    `json:"quizzes" gorm:"foreignKey:UserID"`
 }
 type MinUser struct {
-	ID           uint   `json:"Id,omitempty"`
-	Name         string `json:"Name"`
-	PhoneNumber  string `json:"PhoneNumber"`
-	PersonalCode string `json:"PersonalCode"`
-	NationalCode string `json:"NationalCode"`
+	ID    uint   `json:"id"`
+	Email string `json:"email"`
 }
 
 // ! this model has been used in signup handler
 type SignUpInput struct {
-	// Name            string `json:"name" validate:"required"`
-	// PhoneNumber     string `json:"PhoneNumber" validate:"required"`
 	Email    string `json:"email" validate:"required,email"`
 	OrderID  uint   `json:"orderId" validate:"required,numeric"`
 	Password string `json:"password" validate:"required,min=4"`
-	// PasswordConfirm string `json:"passwordConfirm" validate:"required,min=8,eqfield=Password"`
-	// PersonalCode    string `json:"PersonalCode" validate:"required,max=8"`
-	// NationalCode    string `json:"NationalCode" validate:"required,len=10"`
-	// Photo string `json:"photo"`
+}
+type AdminCreateUserInput struct {
+	Email    string `json:"email" validate:"required,email"`
+	Password string `json:"password" validate:"required,min=4"`
+	Courses  []uint `json:"courses" validate:"required"`
+}
+type AdminEditUserInput struct {
+	Email    string `json:"email" validate:"required,email,dunique=users.email"`
+	Password string `json:"password" validate:"required,min=4"`
+	// Courses  []uint `json:"courses" validate:"required"`
 }
 
 // ! this model has been used in Edit user handler

@@ -9,7 +9,6 @@ type Course struct {
 
 // model used for creating new course
 type CourseInput struct {
-	ID            uint   `json:"id" validate:"required"`
 	WoocommerceID uint   `json:"wc_id" validate:"required"`
 	Title         string `json:"title" validate:"required"`
 }

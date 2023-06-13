@@ -28,7 +28,8 @@ func APIInit(router *fiber.App) {
 	userQuiz.Get("/", C.AllQuizzes)
 	userQuiz.Get("/:id<int>", C.QuizByID)
 	userQuiz.Post("/", C.CreateQuiz)
-
+	userNotes := user.Group("/notes")
+	userNotes.Get("/", C.AllNotes)
 	// ! admin routes
 	admin := router.Group("/admin")
 	admin.Get("/courses", AC.AllCourses)
@@ -36,11 +37,15 @@ func APIInit(router *fiber.App) {
 	admin.Post("/courses", AC.CreateCourse)
 	admin.Get("/courses/addFromWoocommerce", AC.AddCoursesFromWooCommerce)
 
-	admin.Get("/users", AC.IndexUser)
-	admin.Get("/users/:id<int>", AC.UserByID)
-	admin.Put("/users/:id<int>", AC.EditUser)
+	admin.Get("/users/:email<string>", AC.UserByEmail)
 	admin.Post("/users", AC.AddUser)
+	admin.Put("/users/:id<int>", AC.EditUser)
 	admin.Delete("/users/:id<int>", AC.DeleteUser)
+	admin.Post("/questions", AC.AddQuestion)
+	admin.Post("/uploadImages", AC.UploadImage)
+
+	admin.Get("/users", AC.IndexUser)
+	// admin.Get("/users/:id<int>", AC.UserByID)
 	admin.Get("/laws", AC.IndexLaw)
 	admin.Get("/laws/search", AC.LawSearch)
 	admin.Get("laws/:id<int>", C.LawByID)

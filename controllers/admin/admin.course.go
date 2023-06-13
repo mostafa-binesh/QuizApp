@@ -51,7 +51,6 @@ func CreateCourse(c *fiber.Ctx) error {
 	}
 	// craete the course into the database
 	result := D.DB().Create(&M.Course{
-		ID:            payload.ID,
 		Title:         payload.Title,
 		WoocommerceID: payload.WoocommerceID,
 	})

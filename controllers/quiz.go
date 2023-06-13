@@ -11,6 +11,7 @@ import (
 	U "docker/utils"
 
 	"github.com/gofiber/fiber/v2"
+	"gorm.io/gorm"
 )
 
 func AllQuizzes(c *fiber.Ctx) error {
@@ -23,14 +24,14 @@ func AllQuizzes(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"data": userQuizzes})
 }
 
-// ! CHECK: files ham preload mishe. aya niazi?
 func QuizByID(c *fiber.Ctx) error {
 	quiz := &M.Quiz{}
-	// if err := D.DB().Preload("UserAnswers").Preload("UserAnswers.Question").First(quiz, c.Params("id")).Error; err != nil {
-	if err := D.DB().Preload("UserAnswers.Question.Options").First(quiz, c.Params("id")).Error; err != nil {
+	if err := D.DB().Preload("UserAnswers", func(db *gorm.DB) *gorm.DB { // could do this as well : Preload("Comments", "ORDER BY ? ASC > ?", "id")
+		db = db.Order("id ASC")
+		return db
+	}).Preload("UserAnswers.Question.Options").First(quiz, c.Params("id")).Error; err != nil {
 		return U.DBError(c, err)
 	}
-	// LawByID := M.LawToLawByID(law)
 	return c.JSON(fiber.Map{
 		"data": quiz.ConvertQuizToQuizToFront(),
 	})
@@ -49,8 +50,9 @@ func CreateQuiz(c *fiber.Ctx) error {
 	user := c.Locals("user").(M.User)
 	// create the quiz
 	quiz := M.Quiz{
-		UserID: user.ID,
-		Status: "pending",
+		UserID:  user.ID,
+		Status:  "pending",
+		EndTime: time.Now().Add(time.Hour * 1),
 	}
 	result := D.DB().Create(&quiz)
 	if result.Error != nil {

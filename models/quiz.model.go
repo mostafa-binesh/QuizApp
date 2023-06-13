@@ -12,8 +12,8 @@ type Quiz struct {
 	// TODO add lesson : lesson >> ? lesson == course ?
 	Status      string        `json:"status,omitempty"`
 	UserAnswers []*UserAnswer `json:"userAnswers,omitempty"`
-	CreatedAt   *time.Time    `json:"date" gorm:"not null;default:now()"`
-	EndTime     *time.Time    `json:"-" gorm:"not null;default:now()"`
+	CreatedAt   time.Time     `json:"date" gorm:"not null;default:now()"`
+	EndTime     time.Time     `json:"-" gorm:"not null;default:now()"`
 }
 
 // used for creating new quiz
@@ -43,7 +43,7 @@ type QuizToFront struct {
 	RemainingMinutes  int         `json:"remainingMinutes"`
 	RemainingSeconds  int         `json:"remainingSeconds"`
 	QuizState         string      `json:"quizState"`
-	CreatedAt         *time.Time  `json:"date"`
+	CreatedAt         string      `json:"date"`
 	Course            *string     `json:"courseName"`
 }
 
@@ -74,12 +74,12 @@ func (quiz *Quiz) ConvertQuizToQuizToFront() QuizToFront {
 	quizFront.SubmitedQuestions = submitedQuestions
 	quizFront.QuestionsStatus = questionsStatus
 	quizFront.SpentTimes = spentTimes
-	hour, min, sec := U.TimeDiff(*quiz.EndTime, *quiz.CreatedAt)
+	hour, min, sec := U.TimeDiff(time.Now(), quiz.EndTime)
 	quizFront.RemainingHours = hour
 	quizFront.RemainingMinutes = min
 	quizFront.RemainingSeconds = sec
 	quizFront.QuizState = quiz.Status
-	quizFront.CreatedAt = quiz.CreatedAt
+	quizFront.CreatedAt = quiz.CreatedAt.Format("2006-01-02T15:04:05.000Z")
 	return quizFront
 }
 
