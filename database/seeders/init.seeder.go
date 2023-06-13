@@ -11,7 +11,7 @@ func InitSeeder() {
 	// LawCommentsSeeder()
 	fmt.Println("admin seeder")
 	AdminSeeder()
-	fmt.Println("course seeder")
+	// fmt.Println("course seeder")
 	CourseSeeder()
 	fmt.Println("subject and system seeder")
 	SubjectAndSystemSeeder()

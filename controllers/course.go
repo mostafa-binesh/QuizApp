@@ -30,6 +30,27 @@ func AllCourses(c *fiber.Ctx) error {
 	coursesWithTitleOnly := M.ConvertCourseToCourseWithTitleOnly(user.Courses)
 	return c.JSON(fiber.Map{"data": coursesWithTitleOnly})
 }
+func AllSubjects(c *fiber.Ctx) error {
+	// get authenticated user
+	user := c.Locals("user").(M.User)
+	// get user's course with id of param with subject with system of the user
+	result := D.DB().Model(&user).Preload("Courses", "id = ?", c.Params("courseID")).Preload("Courses.Subjects.Systems").Find(&user)
+	if result.Error != nil {
+		return U.DBError(c, result.Error)
+	}
+	// change subject model to subjectWithSystems model
+	subjectWithSystems := []M.SubjectWithSystems{}
+	for i := 0; i < len(user.Courses); i++ {
+		for j := 0; j < len(user.Courses[i].Subjects); j++ {
+			subjectWithSystems = append(subjectWithSystems, M.SubjectWithSystems{
+				ID:      user.Courses[i].Subjects[j].ID,
+				Title:   user.Courses[i].Subjects[j].Title,
+				Systems: user.Courses[i].Subjects[j].Systems,
+			})
+		}
+	}
+	return c.JSON(fiber.Map{"data": subjectWithSystems})
+}
 
 func UpdateUserCourses(c *fiber.Ctx) error {
 	app := WC.App{

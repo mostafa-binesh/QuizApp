@@ -1,10 +1,11 @@
 package models
 
 type Course struct {
-	ID            uint    `json:"id" gorm:"primary_key"`
-	WoocommerceID uint    `json:"woocommerce_id"`
-	Title         string  `json:"title"`
-	Users         []*User `gorm:"many2many:user_courses;"`
+	ID            uint       `json:"id" gorm:"primary_key"`
+	WoocommerceID uint       `json:"woocommerce_id"`
+	Title         string     `json:"title"`
+	Users         []*User    `gorm:"many2many:user_courses;"`
+	Subjects      []*Subject `json:"subjects" gorm:"foreignKey:CourseID"`
 }
 
 // model used for creating new course

@@ -24,7 +24,7 @@ func SubjectAndSystemSeeder() {
 	// Insert the questions and options into the database
 	rand.Seed(time.Now().UnixNano()) // Seed the random number generator
 	for i, subject := range subjects {
-		newSubject := M.Subject{Title: subject}
+		newSubject := M.Subject{Title: subject, CourseID: 1}
 		D.DB().Create(&newSubject)
 		for _, systemText := range systems[i] {
 			option := M.System{
