@@ -2,7 +2,7 @@ package utils
 
 import (
 	"strings"
-	// "unicode"
+	"path/filepath"
 )
 
 var uppercaseAcronym = map[string]string{
@@ -61,6 +61,7 @@ func ToCamel(s string) string {
 func ToLowerCamel(s string) string {
 	return toCamelInitCase(s, false)
 }
+// need to write test for this function, not work properly
 func HasSuffixCheck(name string, checks []string) bool {
 	for _, check := range checks {
 		if !strings.HasSuffix(name, "."+check) {
@@ -72,4 +73,13 @@ func HasSuffixCheck(name string, checks []string) bool {
 func HasImageSuffixCheck(name string) bool {
 	imageExtensions := []string{"jpg", "jpeg", "png", "gif", "bmp", "tif", "tiff", "webp"}
 	return HasSuffixCheck(name, imageExtensions)
+}
+func IsImageFile(fileName string) bool {
+	ext := strings.ToLower(filepath.Ext(fileName))
+	switch ext {
+	case ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".tif", ".tiff", ".webp":
+		return true
+	default:
+		return false
+	}
 }
