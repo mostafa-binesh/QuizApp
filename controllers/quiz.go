@@ -82,6 +82,7 @@ func CreateQuiz(c *fiber.Ctx) error {
 		questionsCount = len(questionIDs)
 	}
 	return c.Status(200).JSON(fiber.Map{
-		"msg": "کوییز ساخته شد",
+		"msg":    "کوییز ساخته شد",
+		"quizID": quiz.ID,
 	})
 }
