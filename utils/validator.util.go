@@ -45,10 +45,11 @@ var faTranslation = map[string]string{
 	"NationalCode":       "کد ملی",
 	"PhoneNumber":        "شماره همراه",
 	"Category":           "دسته بندی",
-	"OrderID":           "شماره سفارش",
+	"OrderID":            "شماره سفارش",
 }
 var IgnoreID uint64
 
+// gets fields as interface and ignoreID if you want to ignore a certain id
 func Validate(fields interface{}, ignoreID ...string) map[string]string {
 	if len(ignoreID) > 0 {
 		ignoreIDUint64, err := strconv.ParseUint(ignoreID[0], 10, 64)
