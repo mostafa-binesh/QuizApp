@@ -39,7 +39,6 @@ func APIInit(router *fiber.App) {
 	admin.Post("/courses", AC.CreateCourse)
 	admin.Get("/courses/addFromWoocommerce", AC.AddCoursesFromWooCommerce)
 
-
 	admin.Get("/users/:email<string>", AC.UserByEmail)
 	admin.Post("/users", AC.AddUser)
 	admin.Put("/users/:id<int>", AC.EditUser)
@@ -48,14 +47,6 @@ func APIInit(router *fiber.App) {
 	admin.Post("/uploadImages", AC.UploadImage)
 
 	admin.Get("/users", AC.IndexUser)
-	// admin.Get("/users/:id<int>", AC.UserByID)
-	admin.Get("/laws", AC.IndexLaw)
-	admin.Get("/laws/search", AC.LawSearch)
-	admin.Get("laws/:id<int>", C.LawByID)
-	admin.Post("/laws", AC.CreateLaw)
-	admin.Put("/laws/:id<int>", AC.UpdateLaw)
-	admin.Delete("/laws/:id<int>", AC.DeleteLaw)
-	admin.Delete("/laws/:id<int>/files/:fileID<int>", AC.DeleteFile) // ! TODO : file az storage ham bayad paak she
 	// ! authentication routes
 	auth := router.Group("/auth")
 	auth.Post("/signup", C.SignUpUser)

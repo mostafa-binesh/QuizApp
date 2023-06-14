@@ -14,13 +14,6 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-// const (
-// 	baseURL        = "https://medical-exam.ir/wp-json/wc/v3"       // Replace with your store URL
-// 	consumerKey    = "ck_55811829f8ca38d699e49fe23b2703052d73dafd" // Replace with your consumer key
-// 	consumerSecret = "cs_df84e6e9585b055a402187885979f4f67baa7c5f" // Replace with your consumer secret
-// 	shopName       = "medical-exam.ir"                             // Replace with your shop name
-// )
-
 func AllCourses(c *fiber.Ctx) error {
 	user := c.Locals("user").(M.User)
 	result := D.DB().Model(&user).Preload("Courses").Find(&user)

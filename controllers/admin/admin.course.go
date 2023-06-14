@@ -24,12 +24,22 @@ func AddCoursesFromWooCommerce(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"data": courses})
 }
 func AllCourses(c *fiber.Ctx) error {
+	// get all courses
 	courses := []M.Course{}
 	result := D.DB().Find(&courses)
 	if result.Error != nil {
 		return U.DBError(c, result.Error)
 	}
-	return c.JSON(fiber.Map{"data": courses})
+	// convert course to courseWithTitleOnly
+	var CoursesWithTitleOnly []M.CourseWithTitleOnly
+	for _, course := range courses {
+		CoursesWithTitleOnly = append(CoursesWithTitleOnly, M.CourseWithTitleOnly{
+			ID:    course.ID,
+			Title: course.Title,
+		})
+	}
+	// return courses
+	return c.JSON(fiber.Map{"data": CoursesWithTitleOnly})
 }
 func CourseByID(c *fiber.Ctx) error {
 	course := &M.Course{}

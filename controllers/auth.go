@@ -61,14 +61,9 @@ func SignUpUser(c *fiber.Ctx) error {
 	// inja miad va course ha ham mikhad besze
 	// vali faghay bayad append kone
 	newUser := M.User{
-		// Name:         payload.Name,
-		Email: payload.Email,
-		// PhoneNumber:  strings.ToLower(payload.PhoneNumber), // ! can use fiber toLower function that has better performance
+		Email:    payload.Email,
 		Password: string(hashedPassword),
-		// PersonalCode: payload.PersonalCode,
-		// NationalCode: payload.NationalCode,
-		// Photo:    &payload.Photo, // ? don't know why add & in the payload for photo
-		Courses: courses,
+		Courses:  courses,
 	}
 	// ! add user to the database
 	result := D.DB().Create(&newUser)
