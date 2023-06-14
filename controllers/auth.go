@@ -104,14 +104,14 @@ func Login(c *fiber.Ctx) error {
 	// ! compare the password of payload and returned user from database
 	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(payload.Password))
 	if err != nil {
-		return U.ResErr(c, "کد پرسنلی یا رمز عبور اشتباه است")
+		return U.ResErr(c, "ایمیل یا رمز عبور اشتباه است")
 	}
 	sess := U.Session(c)
 	sess.Set(U.USER_ID, user.ID)
 	if err := sess.Save(); err != nil {
 		return U.ResErr(c, "خطا در ورود")
 	}
-	return U.ResMessage(c, "ورود انجام شد")
+	return c.JSON(fiber.Map{"data": fiber.Map{"role": user.RoleString()}})
 }
 func Logout(c *fiber.Ctx) error {
 	// ! just removing the session
