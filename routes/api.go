@@ -30,6 +30,7 @@ func APIInit(router *fiber.App) {
 	userQuiz.Get("/", C.AllQuizzes)
 	userQuiz.Get("/:id<int>", C.QuizByID)
 	userQuiz.Post("/", C.CreateQuiz)
+	userQuiz.Post("/createFakeQuiz", C.CreateFakeQuiz)
 	userNotes := user.Group("/notes")
 	userNotes.Get("/", C.AllNotes)
 	// ! admin routes
