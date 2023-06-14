@@ -16,6 +16,7 @@ import (
 // ############################
 
 // ! Index User with admin/users route
+// ! admin/users
 func IndexUser(c *fiber.Ctx) error {
 	user := []M.User{}
 	pagination := U.ParsedPagination(c)
@@ -30,10 +31,6 @@ func IndexUser(c *fiber.Ctx) error {
 		pass_data = append(pass_data, M.MinUser{
 			ID:    user[i].ID,
 			Email: user[i].Email,
-			// Name:         user[i].Name,
-			// PhoneNumber:  user[i].PhoneNumber,
-			// PersonalCode: user[i].PersonalCode,
-			// NationalCode: user[i].NationalCode,
 		})
 	}
 	return c.JSON(fiber.Map{
@@ -80,16 +77,22 @@ func EditUser(c *fiber.Ctx) error {
 // ! user by id with admin/users/{email}
 func UserByEmail(c *fiber.Ctx) error {
 	user := M.User{}
-	result := D.DB().Where("email = ?", c.Params("email")).First(&user)
+	result := D.DB().Where("email = ?", c.Params("email")).Preload("Courses").First(&user)
 	if result.RowsAffected == 0 { // can check the same condition with user.Name == ""
 		return U.ResErr(c, "User doesn't exist")
 	}
-	minUser := M.MinUser{
-		ID:    user.ID,
-		Email: user.Email,
+	// extract user's courses ids
+	var userCoursesIDs []uint
+	for _, course := range user.Courses {
+		userCoursesIDs = append(userCoursesIDs, course.ID)
+	}
+	minUserWithCoursesIDs := M.MinUserWithCoursesIDs{
+		ID:      user.ID,
+		Email:   user.Email,
+		Courses: userCoursesIDs,
 	}
 	return c.JSON(fiber.Map{
-		"data": minUser,
+		"data": minUserWithCoursesIDs,
 	})
 }
 

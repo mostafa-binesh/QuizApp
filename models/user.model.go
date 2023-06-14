@@ -4,6 +4,13 @@ import (
 	"time"
 )
 
+type Role uint
+
+const (
+	UserRole  Role = 1
+	AdminRole Role = 2
+)
+
 // ! the model that been used for migration and retrieve and add data to the database
 type User struct {
 	// ID        *uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();primary_key"`
@@ -24,9 +31,26 @@ type User struct {
 	Courses   []*Course  `gorm:"many2many:user_courses;"`
 	Quizzes   []*Quiz    `json:"quizzes" gorm:"foreignKey:UserID"`
 }
+
+func (c *User) RoleString() string {
+	switch c.Role {
+	case uint(AdminRole):
+		return "admin"
+	case uint(UserRole):
+		return "user"
+	default:
+		return "none"
+	}
+}
+
 type MinUser struct {
 	ID    uint   `json:"id"`
 	Email string `json:"email"`
+}
+type MinUserWithCoursesIDs struct {
+	ID      uint   `json:"id"`
+	Email   string `json:"email"`
+	Courses []uint `json:"courses"`
 }
 
 // ! this model has been used in signup handler
