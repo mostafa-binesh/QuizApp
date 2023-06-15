@@ -13,23 +13,16 @@ const (
 
 // ! the model that been used for migration and retrieve and add data to the database
 type User struct {
-	// ID        *uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();primary_key"`
-	// gorm.Model
-	ID uint `gorm:"primaryKey"`
-	// Name         string `gorm:"type:varchar(100);not null"`
-	// PhoneNumber  string `gorm:"type:varchar(100);uniqueIndex;not null"`
-	Email    string `gorm:"type:varchar(255);uniqueIndex;not null"`
-	Password string `gorm:"type:varchar(100);not null"`
-	Role     uint   `gorm:"default:1;not null"` // 1: normal user, 2: moderator, 3: admin
-	// PersonalCode string `gorm:"type:varchar(10);uniqueIndex"`
-	// NationalCode string `gorm:"type:varchar(10);uniqueIndex"`
-	// Provider  *string    `gorm:"type:varchar(50);default:'local';not null"`
-	// Photo     *string    `gorm:"not null;default:'default.png'"`
-	Verified  bool       `gorm:"not null;default:false"`
-	CreatedAt *time.Time `gorm:"not null;default:now()"`
-	UpdatedAt *time.Time `gorm:"not null;default:now()"`
-	Courses   []*Course  `gorm:"many2many:user_courses;"`
-	Quizzes   []*Quiz    `json:"quizzes" gorm:"foreignKey:UserID"`
+	ID         uint          `gorm:"primaryKey"`
+	Email      string        `gorm:"type:varchar(255);uniqueIndex;not null"`
+	Password   string        `gorm:"type:varchar(100);not null"`
+	Role       uint          `gorm:"default:1;not null"` // 1: normal user, 2: moderator, 3: admin
+	Verified   bool          `gorm:"not null;default:false"`
+	CreatedAt  *time.Time    `gorm:"not null;default:now()"`
+	UpdatedAt  *time.Time    `gorm:"not null;default:now()"`
+	Courses    []*Course     `gorm:"many2many:user_courses;"`
+	Quizzes    []*Quiz       `json:"quizzes" gorm:"foreignKey:UserID"`
+	UserAnswer []*UserAnswer `json:"userAnswer" gorm:"foreignKey:UserID"`
 }
 
 func (c *User) RoleString() string {

@@ -12,7 +12,7 @@ func AddCoursesFromWooCommerce(c *fiber.Ctx) error {
 	// get all woocommerce products from its service
 	courses, err := S.GetAllProducts()
 	if err != nil {
-		return c.JSON(fiber.Map{"error": err.Error()})
+		return U.ResErr(c, err.Error())
 	}
 	// create every course in the database
 	for _, course := range courses {

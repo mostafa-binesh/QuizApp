@@ -19,8 +19,8 @@ func AutoMigrate(c *fiber.Ctx) error {
 	if c.Query("dropAllTables") == "1" {
 		fmt.Println("dropping all tables")
 		D.DB().Migrator().DropTable(
-			&M.Course{},
 			&M.User{},
+			&M.Course{},
 			&M.Law{},
 			&M.Comment{},
 			&M.Keyword{},
@@ -40,17 +40,13 @@ func AutoMigrate(c *fiber.Ctx) error {
 	// ! migrate tables
 	err := D.DB().AutoMigrate(
 		&M.User{},
-		&M.Law{},
-		&M.Comment{},
-		&M.Keyword{},
-		&M.File{},
 		&M.Course{},
+		&M.Quiz{},
 		&M.UserAnswer{},
 		&M.Subject{},
 		&M.System{},
 		&M.Question{},
 		&M.Option{},
-		&M.Quiz{},
 	)
 	if err != nil {
 		return c.Status(400).SendString(err.Error())

@@ -9,11 +9,10 @@ type UserAnswer struct {
 	Submitted  bool      `json:"submitted,omitempty" gorm:"default:false;"`
 	Status     string    `json:"status,omitempty"`
 	SpentTime  uint      `json:"spentTime,omitempty"`
-
-	UserID uint  `json:"-"`
-	User   *User `json:"user,omitempty" gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE;OnDelete:CASCADE"`
-	QuizID uint  `json:"-"`
-	Quiz   *Quiz `json:"quiz,omitempty" gorm:"foreignKey:QuizID;constraint:OnUpdate:CASCADE;OnDelete:CASCADE"`
+	UserID     uint      `json:"-"`
+	User       *User     `json:"user,omitempty" gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE;OnDelete:CASCADE"`
+	QuizID     uint      `json:"-"`
+	Quiz       *Quiz     `json:"quiz,omitempty" gorm:"foreignKey:QuizID;constraint:OnUpdate:CASCADE;OnDelete:CASCADE"`
 	// ! multiple-choice option
 	// Answers    []*Answer `json:"answers,omitempty"`
 	// ! single-choice option
