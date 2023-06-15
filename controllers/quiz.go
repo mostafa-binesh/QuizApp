@@ -15,11 +15,17 @@ import (
 
 func AllQuizzes(c *fiber.Ctx) error {
 	user := c.Locals("user").(M.User)
-	result := D.DB().Model(&user).Preload("Quizzes").Find(&user)
-	if result.Error != nil {
-		return U.DBError(c, result.Error)
+	quizzes := []M.Quiz{}
+	if err := D.DB().Model(&user).Preload("UserAnswers", func(db *gorm.DB) *gorm.DB { // could do this as well : Preload("Comments", "ORDER BY ? ASC > ?", "id")
+		db = db.Order("id ASC")
+		return db
+	}).Preload("UserAnswers.Question.Options").Find(&quizzes).Error; err != nil {
+		return U.DBError(c, err)
 	}
-	userQuizzes := M.ConvertQuizToQuizList(user.Quizzes)
+	var userQuizzes []M.QuizToFront
+	for _, quiz := range quizzes {
+		userQuizzes = append(userQuizzes, quiz.ConvertQuizToQuizToFront())
+	}
 	return c.JSON(fiber.Map{"data": userQuizzes})
 }
 
