@@ -13,16 +13,16 @@ const (
 
 // ! the model that been used for migration and retrieve and add data to the database
 type User struct {
-	ID         uint          `gorm:"primaryKey"`
-	Email      string        `gorm:"type:varchar(255);uniqueIndex;not null"`
-	Password   string        `gorm:"type:varchar(100);not null"`
-	Role       uint          `gorm:"default:1;not null"` // 1: normal user, 2: moderator, 3: admin
-	Verified   bool          `gorm:"not null;default:false"`
-	CreatedAt  *time.Time    `gorm:"not null;default:now()"`
-	UpdatedAt  *time.Time    `gorm:"not null;default:now()"`
-	Courses    []*Course     `gorm:"many2many:user_courses;"`
-	Quizzes    []*Quiz       `json:"quizzes" gorm:"foreignKey:UserID"`
-	UserAnswer []*UserAnswer `json:"userAnswer" gorm:"foreignKey:UserID"`
+	ID          uint          `gorm:"primaryKey"`
+	Email       string        `gorm:"type:varchar(255);uniqueIndex;not null"`
+	Password    string        `gorm:"type:varchar(100);not null"`
+	Role        uint          `gorm:"default:1;not null"` // 1: normal user, 2: moderator, 3: admin
+	Verified    bool          `gorm:"not null;default:false"`
+	CreatedAt   *time.Time    `gorm:"not null;default:now()"`
+	UpdatedAt   *time.Time    `gorm:"not null;default:now()"`
+	Courses     []*Course     `gorm:"many2many:user_courses;"`
+	Quizzes     []*Quiz       `json:"quizzes" gorm:"foreignKey:UserID"`
+	UserAnswers []*UserAnswer `json:"userAnswer" gorm:"foreignKey:UserID"`
 }
 
 func (c *User) RoleString() string {
@@ -58,9 +58,8 @@ type AdminCreateUserInput struct {
 	Courses  []uint `json:"courses" validate:"required"`
 }
 type AdminEditUserInput struct {
-	Email    string `json:"email" validate:"required,email,dunique=users.email"`
-	Password string `json:"password" validate:"required,min=4"`
-	// Courses  []uint `json:"courses" validate:"required"`
+	Password string `json:"password" validate:"omitempty,min=4"`
+	Courses  []uint `json:"courses" validate:"required"`
 }
 
 // ! this model has been used in Edit user handler

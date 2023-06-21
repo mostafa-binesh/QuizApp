@@ -65,7 +65,6 @@ func EditUser(c *fiber.Ctx) error {
 		}
 		user.Password = string(hashedPassword)
 	}
-	user.Email = payload.Email
 	// save the user
 	result := D.DB().Save(&user)
 	if result.Error != nil {
