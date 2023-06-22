@@ -25,15 +25,14 @@ func AllNotes(c *fiber.Ctx) error {
 		return U.DBError(c, err)
 	}
 	// get notes only
-	notes := []M.AnswerNote
+	var notes []M.AnswerNote
 	for _, quiz := range user.Quizzes {
 		for _, answer := range quiz.UserAnswers {
-			notes = append(notes, *answer.Note)
 			notes = append(notes, M.AnswerNote{
 				ID:         answer.ID,
 				QuestionID: answer.QuestionID,
-				Note:       answer.Note
-			}
+				Note:       answer.Note,
+			})
 		}
 	}
 	return c.JSON(fiber.Map{"data": notes})
