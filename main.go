@@ -24,10 +24,11 @@ func main() {
 	// C.Initilize() // initialize controllers value
 	// ! session
 	U.Store = session.New(session.Config{
-		CookieHTTPOnly: true,
 		Expiration:     time.Hour * 8760,
+		CookieSecure:   false,
+		CookieHTTPOnly: true,
+		CookieSameSite: "None",
 		KeyGenerator: func() string {
-			// secretKey, err := C.GetEnvVar("SESSION_SECRET_KEY")
 			secretKey := U.Env("SESSION_SECRET_KEY")
 			var sessionID string
 			sessionID, err := U.GenerateSessionID(secretKey)
@@ -36,6 +37,7 @@ func main() {
 			}
 			return sessionID
 		},
+		CookieName: "",
 	})
 	R.RouterInit()
 
