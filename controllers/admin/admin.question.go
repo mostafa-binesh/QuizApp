@@ -29,9 +29,10 @@ func AddQuestion(c *fiber.Ctx) error {
 	options = append(options, &M.Option{Title: payload.Option4, Index: "D"})
 	options[payload.CorrectOption-1].IsCorrect = true
 	newQuestion := M.Question{
-		Title:    payload.Question,
-		Options:  options,
-		SystemID: payload.SystemID,
+		Title:       payload.Question,
+		Options:     options,
+		SystemID:    payload.SystemID,
+		Description: payload.Description,
 	}
 	result := D.DB().Create(&newQuestion)
 	if result.Error != nil {
