@@ -59,7 +59,7 @@ type AdminCreateUserInput struct {
 }
 type AdminEditUserInput struct {
 	Password string `json:"password" validate:"omitempty,min=4"`
-	Courses  []uint `json:"courses" validate:"required"`
+	CoursesIDs  []uint `json:"courses" validate:"required"`
 }
 
 // ! this model has been used in Edit user handler

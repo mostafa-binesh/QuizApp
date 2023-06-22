@@ -65,6 +65,12 @@ func EditUser(c *fiber.Ctx) error {
 		}
 		user.Password = string(hashedPassword)
 	}
+	// create or update user's courses:
+	// Get the courses by IDs
+	var courses []M.Course
+	D.DB().Where("id IN (?)", payload.CoursesIDs).Find(&courses)
+	// Update the user's courses
+	D.DB().Model(&user).Association("Courses").Replace(&courses)
 	// save the user
 	result := D.DB().Save(&user)
 	if result.Error != nil {
