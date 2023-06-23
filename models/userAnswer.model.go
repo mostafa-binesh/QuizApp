@@ -23,3 +23,6 @@ type AnswerNote struct {
 	QuestionID uint    `json:"questionID"`
 	Note       *string `json:"note"`
 }
+type EditNoteInput struct {
+	Note *string `json:"note" validator:"required"`
+}
