@@ -161,11 +161,13 @@ func AddUser(c *fiber.Ctx) error {
 	newUser := M.User{
 		Email:    payload.Email,
 		Password: string(hashedPassword),
-		Courses:  courses,
+		// Courses:  courses,
 	}
 	result := D.DB().Create(&newUser)
 	if result.Error != nil {
 		return U.DBError(c, result.Error)
 	}
+	// add courses to the user
+	D.DB().Model(&newUser).Association("Courses").Replace(&courses)
 	return U.ResMessage(c, "User has been created")
 }
