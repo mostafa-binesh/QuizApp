@@ -13,7 +13,7 @@ type Quiz struct {
 	Status      string        `json:"status,omitempty"`
 	UserAnswers []*UserAnswer `json:"userAnswers,omitempty"`
 	CreatedAt   time.Time     `json:"date" gorm:"not null;default:now()"`
-	EndTime     time.Time     `json:"-" gorm:"not null;default:now()"`
+	EndTime     *time.Time     `json:"-" gorm:"not null;default:now()"`
 }
 
 // used for creating new quiz
@@ -74,7 +74,7 @@ func (quiz *Quiz) ConvertQuizToQuizToFront() QuizToFront {
 	quizFront.SubmitedQuestions = submitedQuestions
 	quizFront.QuestionsStatus = questionsStatus
 	quizFront.SpentTimes = spentTimes
-	hour, min, sec := U.TimeDiff(time.Now(), quiz.EndTime)
+	hour, min, sec := U.TimeDiff(time.Now(), *quiz.EndTime)
 	quizFront.RemainingHours = hour
 	quizFront.RemainingMinutes = min
 	quizFront.RemainingSeconds = sec
