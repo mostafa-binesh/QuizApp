@@ -67,8 +67,8 @@ func QuestionAndOptionsSeeder() {
 	fmt.Printf("systems count: %d\n", systemsCount)
 	for i, questionText := range questions {
 		question := M.Question{
-			// CourseID: 1,
-			Title: questionText, SystemID: uint(rand.Intn(int(systemsCount))), Status: "unvisited"}
+			// ! rand int may return 0 ! so i added 1 to solve this
+			Title: questionText, SystemID: uint(rand.Intn(int(systemsCount))) + 1, Status: "unvisited", Description: "Random description for " + questionText}
 		D.DB().Create(&question)
 		optionsLen := len(options[i])
 		correctOption := rand.Intn(optionsLen)
