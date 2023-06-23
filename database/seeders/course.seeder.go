@@ -13,9 +13,10 @@ func CourseSeeder() {
         "Pathophysiology",
         "Medical Ethics",
     }
-	for _, course := range medicalCourses {
+	for i, course := range medicalCourses {
 		D.DB().Create(&M.Course{
 			Title: course,
+			WoocommerceID: uint(i+1),
 		})
 	}
 }
