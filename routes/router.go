@@ -12,7 +12,7 @@ import (
 func RouterInit() {
 	router := fiber.New(fiber.Config{
 		ServerHeader: "Kurox",
-		AppName:      "Higher Education Council",
+		AppName:      "Medical Exam Quiz Application",
 	})
 	// ! add middleware
 	// cors
