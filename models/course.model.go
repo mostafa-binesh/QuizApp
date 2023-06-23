@@ -6,6 +6,7 @@ type Course struct {
 	Title         string     `json:"title"`
 	Users         []*User    `gorm:"many2many:user_courses;"`
 	Subjects      []*Subject `json:"subjects" gorm:"foreignKey:CourseID"`
+	Duration      uint64     `json:"duration"`
 }
 
 // model used for creating new course
