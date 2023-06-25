@@ -29,7 +29,7 @@ func APIInit(router *fiber.App) {
 	userQuiz := user.Group("/quizzes")
 	userQuiz.Get("/", C.AllQuizzes)
 	userQuiz.Get("/:id<int>", C.QuizByID)
-	userQuiz.Put("/:id<int>", C.UpdateQuiz)
+	userQuiz.Put("/:id<int>", C.UpdateQuiz) // TODO not tested yet
 	userQuiz.Post("/", C.CreateQuiz)
 	userQuiz.Post("/createFakeQuiz", C.CreateFakeQuiz)
 	userNotes := user.Group("/notes")
@@ -40,6 +40,7 @@ func APIInit(router *fiber.App) {
 	admin.Get("/courses", AC.AllCourses)
 	admin.Get("/courses/:id<int>", AC.CourseByID)
 	admin.Post("/courses", AC.CreateCourse)
+	admin.Get("/courses/:courseID<int>/subjects", AC.AllSubjects)
 	admin.Get("/courses/addFromWoocommerce", AC.AddCoursesFromWooCommerce)
 
 	admin.Get("/users/:email<string>", AC.UserByEmail)

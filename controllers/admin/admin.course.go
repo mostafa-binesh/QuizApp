@@ -93,3 +93,24 @@ func UpdateCourse(c *fiber.Ctx) error {
 	}
 	return U.ResMessage(c, "دوره بروز شد")
 }
+func AllSubjects(c *fiber.Ctx) error {
+	// get user's course with id of param with subject with system of the user
+	course := M.Course{}
+	result := D.DB().Preload("Subjects.Systems").Find(&course)
+	if result.Error != nil {
+		return U.DBError(c, result.Error)
+	}
+	if result.RowsAffected != 1 {
+		return U.ResErr(c, "Course not found")
+	}
+	// change subject model to subjectWithSystems model
+	subjectWithSystems := []M.SubjectWithSystems{}
+	for j := 0; j < len(course.Subjects); j++ {
+		subjectWithSystems = append(subjectWithSystems, M.SubjectWithSystems{
+			ID:      course.Subjects[j].ID,
+			Title:   course.Subjects[j].Title,
+			Systems: course.Subjects[j].Systems,
+		})
+	}
+	return c.JSON(fiber.Map{"data": subjectWithSystems})
+}

@@ -31,6 +31,9 @@ func AllSubjects(c *fiber.Ctx) error {
 	if result.Error != nil {
 		return U.DBError(c, result.Error)
 	}
+	if len(user.Courses) != 1 {
+		return U.ResErr(c, "Course not found")
+	}
 	// change subject model to subjectWithSystems model
 	subjectWithSystems := []M.SubjectWithSystems{}
 	for i := 0; i < len(user.Courses); i++ {
