@@ -33,7 +33,9 @@ func RouterInit() {
 	// logger
 	router.Use(logger.New())
 	// recovery from panic
-	router.Use(recover.New())
+	router.Use(recover.New(recover.Config{
+		EnableStackTrace: true,
+	}))
 	// #######################
 	router.Static("/public", "./public") // static files, local public folder to public url
 
