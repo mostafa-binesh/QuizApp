@@ -28,18 +28,35 @@ func AddQuestion(c *fiber.Ctx) error {
 	options = append(options, &M.Option{Title: payload.Option3, Index: "C"})
 	options = append(options, &M.Option{Title: payload.Option4, Index: "D"})
 	options[payload.CorrectOption-1].IsCorrect = true
+	img, _ := c.FormFile("image")
+	var imgName *string
+	if img != nil {
+		uuid := uuid.New().String()
+		newFileName := uuid + "-" + img.Filename
+		c.SaveFile(img, fmt.Sprintf(U.UploadLocation+"/%s", newFileName))
+		imgName = &newFileName
+	}
 	newQuestion := M.Question{
 		Title:       payload.Question,
 		Options:     options,
 		SystemID:    payload.SystemID,
 		Description: payload.Description,
+		Image:       imgName,
 	}
 	result := D.DB().Create(&newQuestion)
 	if result.Error != nil {
 		return U.DBError(c, result.Error)
 	}
-	return U.ResMessage(c, "Question has been created")
+	return c.JSON(fiber.Map{"msg": "Question created successfully", "id": newQuestion.ID})
 }
+func QuestionByID(c *fiber.Ctx) error {
+	question := &M.Question{}
+	if err := D.DB().Preload("Course").Preload("System.Subject").First(question, c.Params("id")).Error; err != nil {
+		return U.DBError(c, err)
+	}
+	return c.JSON(fiber.Map{"data": question})
+}
+
 func UploadImage(c *fiber.Ctx) error {
 	type Upload struct {
 		File string `json:"file" validate:"required"`
