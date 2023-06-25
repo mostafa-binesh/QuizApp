@@ -29,10 +29,12 @@ func APIInit(router *fiber.App) {
 	userQuiz := user.Group("/quizzes")
 	userQuiz.Get("/", C.AllQuizzes)
 	userQuiz.Get("/:id<int>", C.QuizByID)
+	userQuiz.Put("/:id<int>", C.UpdateQuiz)
 	userQuiz.Post("/", C.CreateQuiz)
 	userQuiz.Post("/createFakeQuiz", C.CreateFakeQuiz)
 	userNotes := user.Group("/notes")
 	userNotes.Get("/", C.AllNotes)
+	userNotes.Put("/:id<int>", C.EditNote)
 	// ! admin routes
 	admin := router.Group("/admin")
 	admin.Get("/courses", AC.AllCourses)
@@ -45,6 +47,7 @@ func APIInit(router *fiber.App) {
 	admin.Put("/users/:id<int>", AC.EditUser)
 	admin.Delete("/users/:id<int>", AC.DeleteUser)
 	admin.Post("/questions", AC.AddQuestion)
+	admin.Get("/questions/:id<int>", AC.QuestionByID)
 	admin.Post("/uploadImages", AC.UploadImage)
 
 	admin.Get("/users", AC.IndexUser)
@@ -56,7 +59,7 @@ func APIInit(router *fiber.App) {
 	// ! messaging
 	msg := router.Group("correspondence")
 	msg.Use(encryptcookie.New(encryptcookie.Config{
-		// ! only base64 charasters
+		// ! only base64 characters
 		// ! A-Z | a-z | 0-9 | + | /
 		Key: "S6e5+xc65+4dfs/nb4/f56+EW+56N4d6",
 	}))

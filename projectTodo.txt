@@ -1,0 +1,32 @@
+in admin edit user:
+password 
+ya null ya ye chizi
+courses id
+DONE
+================================================================
+bug add user and add course
+================================================================
+debug: 
+not authenticated error in courses route | user
+DONE
+================================================================
+debug:
+why add woocommerce courses append to courses !
+DONE
+================================================================
+add description to add question admin
+! bayad correctAnswer ro az 1 ta 4 befresti
+NIME DONE > need database migration
+================================================================
+add file to create question
+DONE 
+================================================================
+time manfi in all quizzes > goft behet migam
+
+create quiz:
+-- in timed, remaining time is null
+
+
+notes:
+-- add edit to edit notes     DONE
+-- all notes: question id and id ID     DONE
