@@ -1,17 +1,13 @@
 package controllers
 
 import (
-	"fmt"
-	// "github.com/go-playground/validator/v10"
 	D "docker/database"
 	M "docker/models"
 	U "docker/utils"
-
+	"fmt"
 	"github.com/gofiber/fiber/v2"
-
-	"strings"
-
 	"golang.org/x/crypto/bcrypt"
+	"strings"
 )
 
 type Person struct {
@@ -26,26 +22,25 @@ func SignUpUser(c *fiber.Ctx) error {
 		U.ResErr(c, err.Error())
 	}
 	fmt.Printf("payload: %v\n", payload)
-	// ! validate request
-	// ! todo: create a shorter function for the validation, like payload.validate(), validate function can get a T template
 	// validate the payload
 	if errs := U.Validate(payload); errs != nil {
 		return c.Status(400).JSON(fiber.Map{"errors": errs})
 	}
 	// ! here we need to check that if the order exists and then if exists
-	// ! > add the courses for ther user
+	// ! > add the courses for the user
+	// get user orders
 	order, err := U.WCClient().Order.Get(int64(payload.OrderID), nil)
 	if err != nil {
-		return U.ResErr(c, fmt.Sprint("خطای ووکامرس, ", err.Error()))
+		return U.ResErr(c, fmt.Sprint("Woocommerce Error: , ", err.Error()))
 	}
-	// var courses []M.Course
+	// add bought courses to user's courses
+	var courses []*M.Course
 	var purchasedOrderIDs []int64
 	for _, item := range order.LineItems {
-		// fmt.Println(item.ProductID)
 		purchasedOrderIDs = append(purchasedOrderIDs, item.ProductID)
-		// courses = append(courses, M.Course{
-		// 	WoocommerceID: uint(item.ProductID),
-		// })
+		courses = append(courses, &M.Course{
+			WoocommerceID: uint(item.ProductID),
+		})
 	}
 	// hash the password
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(payload.Password), bcrypt.DefaultCost)
@@ -53,27 +48,26 @@ func SignUpUser(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
 	// get the courses
-	var courses []*M.Course
 	if result := D.DB().Find(&courses, "woocommerce_id IN ?", purchasedOrderIDs); result.Error != nil {
 		return U.DBError(c, result.Error)
 	}
 	fmt.Printf("found courses: %v\n", courses)
-	// inja miad va course ha ham mikhad besze
-	// vali faghay bayad append kone
 	newUser := M.User{
 		Email:    payload.Email,
 		Password: string(hashedPassword),
 		Courses:  courses,
 	}
-	// ! add user to the database
+	//  add created user to the database
 	result := D.DB().Create(&newUser)
-	// ! if any error exist in the create process, write the error
+	//  if any error exist in the create process, write the error
 	if result.Error != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "couldn't create the user"})
 	}
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{"msg": "user has been created successfully"})
 
 }
+
+var loginError string = "Invalid email or password"
 
 func Login(c *fiber.Ctx) error {
 	payload := new(M.SignInInput)
@@ -90,8 +84,7 @@ func Login(c *fiber.Ctx) error {
 	// ! the reason we didn't handle the error first,
 	// ! - is because not found return error option is disabled
 	if result.RowsAffected == 0 {
-		// return ReturnError(c, "ایمیل یا رمز عبور اشتباه است")
-		return U.ResErr(c, "کد پرسنلی یا رمز عبور اشتباه است")
+		return U.ResErr(c, loginError)
 	}
 	if result.Error != nil {
 		return U.DBError(c, result.Error)
@@ -99,12 +92,13 @@ func Login(c *fiber.Ctx) error {
 	// ! compare the password of payload and returned user from database
 	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(payload.Password))
 	if err != nil {
-		return U.ResErr(c, "ایمیل یا رمز عبور اشتباه است")
+		return U.ResErr(c, loginError)
 	}
+	// login successful, setting up session
 	sess := U.Session(c)
 	sess.Set(U.USER_ID, user.ID)
 	if err := sess.Save(); err != nil {
-		return U.ResErr(c, "خطا در ورود")
+		return U.ResErr(c, "Login error")
 	}
 	return c.JSON(fiber.Map{"data": fiber.Map{"role": user.RoleString()}})
 }
@@ -113,7 +107,7 @@ func Logout(c *fiber.Ctx) error {
 	sess, err := U.Store.Get(c)
 	if err != nil {
 		return c.Status(400).JSON(fiber.Map{
-			"error": "not authenticated",
+			"error": "Not Authenticated",
 		})
 	}
 	if err := sess.Destroy(); err != nil {
