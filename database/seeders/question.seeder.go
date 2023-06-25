@@ -61,14 +61,19 @@ func QuestionAndOptionsSeeder() {
 	// Insert the questions and options into the database
 	rand.Seed(time.Now().UnixNano()) // Seed the random number generator
 	// get systems count for question refrence
-	systems := M.System{}
-	var systemsCount int64
-	D.DB().Model(&systems).Count(&systemsCount)
+	systems := []M.System{}
+	D.DB().Preload("Subject.Course").Find(&systems)
+	systemsCount := len(systems)
 	fmt.Printf("systems count: %d\n", systemsCount)
 	for i, questionText := range questions {
+		systemID := uint(rand.Intn(int(systemsCount)))
 		question := M.Question{
 			// ! rand int may return 0 ! so i added 1 to solve this
-			Title: questionText, SystemID: uint(rand.Intn(int(systemsCount))) + 1, Status: "unvisited", Description: "Random description for " + questionText}
+			Title:    questionText,
+			SystemID: systemID,
+			Status:   "unvisited", Description: "Random description for " + questionText,
+			CourseID: &systems[systemID].Subject.CourseID,
+		}
 		D.DB().Create(&question)
 		optionsLen := len(options[i])
 		correctOption := rand.Intn(optionsLen)
