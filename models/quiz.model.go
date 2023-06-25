@@ -13,7 +13,9 @@ type Quiz struct {
 	Status      string        `json:"status,omitempty"`
 	UserAnswers []*UserAnswer `json:"userAnswers,omitempty"`
 	CreatedAt   time.Time     `json:"date" gorm:"not null;default:now()"`
-	EndTime     *time.Time     `json:"-" gorm:"not null;default:now()"`
+	EndTime     *time.Time    `json:"-" gorm:"not null;default:now()"`
+	CourseID    uint          `json:"-"`
+	Course      *Course       `json:"course,omitempty" gorm:"foreignKey:CourseID;constraint:OnUpdate:CASCADE;OnDelete:CASCADE"`
 }
 
 // used for creating new quiz
@@ -44,7 +46,8 @@ type QuizToFront struct {
 	RemainingSeconds  int         `json:"remainingSeconds"`
 	QuizState         string      `json:"quizState"`
 	CreatedAt         string      `json:"date"`
-	Course            *string     `json:"courseName"`
+	Course            string      `json:"courseName"`
+	// TODO add quizID
 }
 
 // convert quiz model to mocked front quiz structure
@@ -79,8 +82,23 @@ func (quiz *Quiz) ConvertQuizToQuizToFront() QuizToFront {
 	quizFront.RemainingMinutes = min
 	quizFront.RemainingSeconds = sec
 	quizFront.QuizState = quiz.Status
+	quizFront.Course = quiz.Course.Title
 	quizFront.CreatedAt = quiz.CreatedAt.Format("2006-01-02T15:04:05.000Z")
 	return quizFront
+}
+
+// convert quiz model to mocked front quiz structure
+func (frontQuiz *QuizToFront) ConvertQuizFrontToQuiz(userAnswers []*UserAnswer) []*UserAnswer {
+	// go through each frontQuiz, get the values and insert them into userAnswers array
+	// handling user answers
+	for i := range userAnswers {
+		userAnswers[i].Answer = frontQuiz.UserAnswers[i]
+		userAnswers[i].Note = frontQuiz.UserNotes[i]
+		userAnswers[i].IsMarked = frontQuiz.UserMarks[i]
+		userAnswers[i].Status = *frontQuiz.QuestionsStatus[i]
+		userAnswers[i].SpentTime = *frontQuiz.SpentTimes[i]
+	}
+	return userAnswers
 }
 
 // its used for user.Courses so i needed to make the argument refrence
