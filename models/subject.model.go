@@ -5,7 +5,7 @@ type Subject struct {
 	Title string `json:"title"`
 	// relationships
 	CourseID uint      `json:"course_id"`
-	Course   *Course   `json:"course"`
+	Course   *Course   `json:"course,omitempty"`
 	Systems  []*System `json:"systems" gorm:"foreignKey:SubjectID"`
 }
 type SubjectWithSystems struct {
