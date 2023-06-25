@@ -21,7 +21,7 @@ type User struct {
 	CreatedAt   *time.Time    `gorm:"not null;default:now()"`
 	UpdatedAt   *time.Time    `gorm:"not null;default:now()"`
 	Courses     []*Course     `gorm:"many2many:user_courses;"`
-	Quizzes     []*Quiz       `json:"quizzes" gorm:"foreignKey:UserID"`
+	Quizzes     []Quiz       `json:"quizzes" gorm:"foreignKey:UserID"`
 	UserAnswers []*UserAnswer `json:"userAnswer" gorm:"foreignKey:UserID"`
 }
 
