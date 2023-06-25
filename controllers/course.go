@@ -16,12 +16,12 @@ import (
 
 func AllCourses(c *fiber.Ctx) error {
 	user := c.Locals("user").(M.User)
-	result := D.DB().Model(&user).Preload("Courses").Find(&user)
+	// get all courses with subjects and systems
+	result := D.DB().Model(&user).Preload("Courses.Subjects.Systems").Find(&user)
 	if result.Error != nil {
 		return U.DBError(c, result.Error)
 	}
-	coursesWithTitleOnly := M.ConvertCourseToCourseWithTitleOnly(user.Courses)
-	return c.JSON(fiber.Map{"data": coursesWithTitleOnly})
+	return c.JSON(fiber.Map{"data": user.Courses})
 }
 func AllSubjects(c *fiber.Ctx) error {
 	// get authenticated user
