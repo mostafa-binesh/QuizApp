@@ -25,8 +25,8 @@ func main() {
 	// ! session
 	U.Store = session.New(session.Config{
 		Expiration:     time.Hour * 8760, // 365 days
-		CookieSecure:   false,
-		CookieHTTPOnly: true,
+		CookieSecure:   true,
+		// CookieHTTPOnly: true,
 		CookieSameSite: U.Env("COOKIE_SAME_SITE"),
 		KeyGenerator: func() string {
 			secretKey := U.Env("SESSION_SECRET_KEY")
