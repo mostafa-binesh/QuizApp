@@ -96,7 +96,7 @@ func UpdateCourse(c *fiber.Ctx) error {
 func AllSubjects(c *fiber.Ctx) error {
 	// get user's course with id of param with subject with system of the user
 	course := M.Course{}
-	result := D.DB().Preload("Subjects.Systems").Find(&course)
+	result := D.DB().Preload("Subjects.Systems").First(&course, c.Params("courseID"))
 	if result.Error != nil {
 		return U.DBError(c, result.Error)
 	}
