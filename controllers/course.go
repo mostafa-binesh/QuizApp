@@ -39,9 +39,10 @@ func AllSubjects(c *fiber.Ctx) error {
 	for i := 0; i < len(user.Courses); i++ {
 		for j := 0; j < len(user.Courses[i].Subjects); j++ {
 			subjectWithSystems = append(subjectWithSystems, M.SubjectWithSystems{
-				ID:      user.Courses[i].Subjects[j].ID,
-				Title:   user.Courses[i].Subjects[j].Title,
-				Systems: user.Courses[i].Subjects[j].Systems,
+				ID:       user.Courses[i].Subjects[j].ID,
+				Title:    user.Courses[i].Subjects[j].Title,
+				Systems:  user.Courses[i].Subjects[j].Systems,
+				CourseID: user.Courses[i].Subjects[j].CourseID,
 			})
 		}
 	}

@@ -9,7 +9,8 @@ type Subject struct {
 	Systems  []*System `json:"systems" gorm:"foreignKey:SubjectID"`
 }
 type SubjectWithSystems struct {
-	ID      uint      `json:"id" gorm:"primary_key"`
-	Title   string    `json:"title"`
-	Systems []*System `json:"systems"`
+	ID       uint      `json:"id" gorm:"primary_key"`
+	Title    string    `json:"title"`
+	Systems  []*System `json:"systems"`
+	CourseID uint      `json:"courseID"`
 }
