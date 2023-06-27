@@ -35,6 +35,9 @@ func APIInit(router *fiber.App) {
 	userNotes := user.Group("/notes")
 	userNotes.Get("/", C.AllNotes)
 	userNotes.Put("/:id<int>", C.EditNote)
+	userQuestions := user.Group("/questions")
+	userQuestions.Get("/search", C.AllQuestions)
+
 	// ! admin routes
 	admin := router.Group("/admin")
 	admin.Get("/courses", AC.AllCourses)
