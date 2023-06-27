@@ -13,15 +13,32 @@ import (
 func AllNotes(c *fiber.Ctx) error {
 	// select all userAnswers of the authenticated user
 	user := c.Locals("user").(M.User)
-	if err := D.DB().Model(&user).Preload("Quizzes.UserAnswers", func(db *gorm.DB) *gorm.DB { // could do this as well : Preload("Comments", "ORDER BY ? ASC > ?", "id")
-		// if "title" query exists, search it in the database
-		if c.Query("title") != "" {
-			db = db.Where("Note LIKE ?", fmt.Sprintf("%%%s%%", c.Query("title")))
+	if err := D.DB().Model(&user).Preload("Quizzes", func(db *gorm.DB) *gorm.DB { // could do this as well : Preload("Comments", "ORDER BY ? ASC > ?", "id")
+		// if "quizID" query exists, search it in the database
+		if c.Query("quizID") != "" {
+			db = db.Where(c.QueryInt("quizID"))
 		}
-		// select rows that Note field is not null
-		db = db.Where("Note IS NOT NULL")
 		return db
-	}).Find(&user).Error; err != nil {
+	}).Preload("Quizzes.UserAnswers",
+		func(db *gorm.DB) *gorm.DB { // could do this as well : Preload("Comments", "ORDER BY ? ASC > ?", "id")
+			// if "title" query exists, search it in the database
+			if c.Query("title") != "" {
+				db = db.Where("Note LIKE ?", fmt.Sprintf("%%%s%%", c.Query("title")))
+			}
+			if c.Query("sort") != "" {
+				switch c.Query("sort") {
+				case "newer":
+					db = db.Order("id desc")
+				case "older":
+					db = db.Order("id asc")
+				case "questionID":
+					db = db.Order("QuestionID asc")
+				}
+			}
+			// required: select rows that Note field is not null
+			db = db.Where("Note IS NOT NULL")
+			return db
+		}).Find(&user).Error; err != nil {
 		return U.DBError(c, err)
 	}
 	// get notes only
@@ -32,6 +49,7 @@ func AllNotes(c *fiber.Ctx) error {
 				ID:         answer.ID,
 				QuestionID: answer.QuestionID,
 				Note:       answer.Note,
+				QuizID:     answer.QuizID,
 			})
 		}
 	}
