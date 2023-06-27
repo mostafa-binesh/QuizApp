@@ -11,7 +11,7 @@ import (
 
 func RouterInit() {
 	router := fiber.New(fiber.Config{
-		ServerHeader: "Kurox",
+		ServerHeader: "ubirockteam@gmail.com",
 		AppName:      "Medical Exam Quiz Application",
 	})
 	// ! add middleware
@@ -43,4 +43,9 @@ func RouterInit() {
 	APIInit(router)
 	// ! listen
 	router.Listen(":" + U.Env("APP_PORT"))
+	// if U.Env("environment") == "development" {
+	// 	router.Listen("localhost:" + U.Env("APP_PORT"))
+	// } else if U.Env("environment") == "production" {
+	// 	router.Listen(":" + U.Env("APP_PORT"))
+	// }
 }
