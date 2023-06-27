@@ -22,8 +22,8 @@ func AllNotes(c *fiber.Ctx) error {
 	}).Preload("Quizzes.UserAnswers",
 		func(db *gorm.DB) *gorm.DB { // could do this as well : Preload("Comments", "ORDER BY ? ASC > ?", "id")
 			// if "title" query exists, search it in the database
-			if c.Query("title") != "" {
-				db = db.Where("Note LIKE ?", fmt.Sprintf("%%%s%%", c.Query("title")))
+			if c.Query("body") != "" {
+				db = db.Where("Note ILIKE ?", fmt.Sprintf("%%%s%%", c.Query("title")))
 			}
 			if c.Query("sort") != "" {
 				switch c.Query("sort") {
