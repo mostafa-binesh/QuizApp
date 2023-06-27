@@ -33,6 +33,12 @@ func AllQuestions(c *fiber.Ctx) error {
 			db = db.Where("title ILIKE ?", fmt.Sprintf("%%%s%%", c.Query("search")))
 		}
 		return db
+	}).Preload("Quizzes.UserAnswers.Question.System.Subject.Course", func(db *gorm.DB) *gorm.DB { // could do this as well : Preload("Comments", "ORDER BY ? ASC > ?", "id")
+		// if filterType is subject and search query exists, search in question's title
+		if c.Query("filterBy") == "course" && c.Query("search") != "" {
+			db = db.Where("title ILIKE ?", fmt.Sprintf("%%%s%%", c.Query("search")))
+		}
+		return db
 	}).Find(&user).Error; err != nil {
 		return U.DBError(c, err)
 	}
@@ -41,11 +47,13 @@ func AllQuestions(c *fiber.Ctx) error {
 		for _, answer := range quiz.UserAnswers {
 			if answer.Question != nil &&
 				answer.Question.System != nil &&
-				answer.Question.System.Subject != nil {
+				answer.Question.System.Subject != nil &&
+				answer.Question.System.Subject.Course != nil {
 				questions = append(questions, M.QuestionSearch{
 					ID:      answer.Question.ID,
-					Subject: answer.Question.System.Subject.Title,
 					System:  answer.Question.System.Title,
+					Subject: answer.Question.System.Subject.Title,
+					Course:  answer.Question.System.Subject.Course.Title,
 					Body:    answer.Question.Title,
 				})
 			}

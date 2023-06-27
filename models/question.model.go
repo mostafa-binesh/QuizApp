@@ -34,6 +34,8 @@ type QuestionSearch struct {
 	ID      uint   `json:"id"`
 	Subject string `json:"subject"`
 	System  string `json:"system"`
+	Body    string `json:"body"`
+	Course  string `json:"course"`
 }
 type AdminCreateQuestionInput struct {
 	Question      string `json:"email" validate:"required"`
