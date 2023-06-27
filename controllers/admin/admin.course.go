@@ -26,7 +26,7 @@ func AddCoursesFromWooCommerce(c *fiber.Ctx) error {
 func AllCourses(c *fiber.Ctx) error {
 	// get all courses
 	courses := []M.Course{}
-	result := D.DB().Find(&courses)
+	result := D.DB().Preload("Subjects.Systems").Find(&courses)
 	if result.Error != nil {
 		return U.DBError(c, result.Error)
 	}
