@@ -15,13 +15,13 @@ const (
 type User struct {
 	ID          uint          `gorm:"primaryKey"`
 	Email       string        `gorm:"type:varchar(255);uniqueIndex;not null"`
-	Password    string        `gorm:"type:varchar(100);not null"`
+	Password    string        `json:"-" gorm:"type:varchar(100);not null"`
 	Role        uint          `gorm:"default:1;not null"` // 1: normal user, 2: moderator, 3: admin
 	Verified    bool          `gorm:"not null;default:false"`
 	CreatedAt   *time.Time    `gorm:"not null;default:now()"`
 	UpdatedAt   *time.Time    `gorm:"not null;default:now()"`
 	Courses     []*Course     `gorm:"many2many:user_courses;"`
-	Quizzes     []Quiz       `json:"quizzes" gorm:"foreignKey:UserID"`
+	Quizzes     []Quiz        `json:"quizzes" gorm:"foreignKey:UserID"`
 	UserAnswers []*UserAnswer `json:"userAnswer" gorm:"foreignKey:UserID"`
 }
 
@@ -58,8 +58,8 @@ type AdminCreateUserInput struct {
 	Courses  []uint `json:"courses" validate:"required"`
 }
 type AdminEditUserInput struct {
-	Password string `json:"password" validate:"omitempty,min=4"`
-	CoursesIDs  []uint `json:"courses" validate:"required"`
+	Password   string `json:"password" validate:"omitempty,min=4"`
+	CoursesIDs []uint `json:"courses" validate:"required"`
 }
 
 // ! this model has been used in Edit user handler
