@@ -4,6 +4,7 @@ import (
 	D "docker/database"
 	M "docker/models"
 	U "docker/utils"
+	"fmt"
 
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
@@ -16,20 +17,20 @@ func AllQuestions(c *fiber.Ctx) error {
 		Preload("Quizzes.UserAnswers.Question", func(db *gorm.DB) *gorm.DB { // could do this as well : Preload("Comments", "ORDER BY ? ASC > ?", "id")
 			// if filterType is body and search query exists, search in question's title
 			if c.Query("filterBy") == "body" && c.Query("search") != "" {
-				db = db.Where("title = ?", c.Query("search"))
+				db = db.Where("title ILIKE ?", fmt.Sprintf("%%%s%%", c.Query("search")))
 			}
 			return db
 		}).
 		Preload("Quizzes.UserAnswers.Question.System", func(db *gorm.DB) *gorm.DB { // could do this as well : Preload("Comments", "ORDER BY ? ASC > ?", "id")
 			// if filterType is system and search query exists, search in subject's title
 			if c.Query("filterBy") == "system" && c.Query("search") != "" {
-				db = db.Where("title = ?", c.Query("search"))
+				db = db.Where("title ILIKE ?", fmt.Sprintf("%%%s%%", c.Query("search")))
 			}
 			return db
 		}).Preload("Quizzes.UserAnswers.Question.System.Subject", func(db *gorm.DB) *gorm.DB { // could do this as well : Preload("Comments", "ORDER BY ? ASC > ?", "id")
 		// if filterType is subject and search query exists, search in question's title
 		if c.Query("filterBy") == "subject" && c.Query("search") != "" {
-			db = db.Where("title = ?", c.Query("search"))
+			db = db.Where("title ILIKE ?", fmt.Sprintf("%%%s%%", c.Query("search")))
 		}
 		return db
 	}).Find(&user).Error; err != nil {
@@ -38,11 +39,16 @@ func AllQuestions(c *fiber.Ctx) error {
 	var questions []M.QuestionSearch
 	for _, quiz := range user.Quizzes {
 		for _, answer := range quiz.UserAnswers {
-			questions = append(questions, M.QuestionSearch{
-				ID:      0,
-				Subject: answer.Question.System.Subject.Title,
-				System:  answer.Question.System.Title,
-			})
+			if answer.Question != nil &&
+				answer.Question.System != nil &&
+				answer.Question.System.Subject != nil {
+				questions = append(questions, M.QuestionSearch{
+					ID:      answer.Question.ID,
+					Subject: answer.Question.System.Subject.Title,
+					System:  answer.Question.System.Title,
+					Body:    answer.Question.Title,
+				})
+			}
 		}
 	}
 	return c.JSON(fiber.Map{"data": questions})
