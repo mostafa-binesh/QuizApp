@@ -135,6 +135,7 @@ func UpdateQuiz(c *fiber.Ctx) error {
 	if err := D.DB().Save(convertedUserAnswer).Error; err != nil {
 		return U.DBError(c, err)
 	}
+	// todo not tested yet
 	return c.JSON(fiber.Map{"asd": convertedUserAnswer})
 	return U.ResMessage(c, "Quiz been updated")
 }
