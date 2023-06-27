@@ -25,7 +25,7 @@ func main() {
 	// ! session
 	U.Store = session.New(session.Config{
 		Expiration:     time.Hour * 8760, // 365 days
-		CookieSecure:   true,
+		CookieSecure:   true, // false for postman, true for react localhost
 		// CookieHTTPOnly: true,
 		CookieSameSite: U.Env("COOKIE_SAME_SITE"),
 		KeyGenerator: func() string {
