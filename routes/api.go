@@ -24,7 +24,7 @@ func APIInit(router *fiber.App) {
 	userCourse.Get("/", C.AllCourses)
 	userCourse.Post("/", C.CreateQuiz)
 	userCourse.Get("/update", C.UpdateUserCourses)
-	userCourse.Get("/:courseID<int>/subjects", C.AllSubjects)
+	userCourse.Get("/:courseID<int>/subjects", C.CourseSubjects)
 
 	userQuiz := user.Group("/quizzes")
 	userQuiz.Get("/", C.AllQuizzes)

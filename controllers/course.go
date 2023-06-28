@@ -23,11 +23,12 @@ func AllCourses(c *fiber.Ctx) error {
 	}
 	return c.JSON(fiber.Map{"data": user.Courses})
 }
-func AllSubjects(c *fiber.Ctx) error {
+// all subject of course with id of courseID
+func CourseSubjects(c *fiber.Ctx) error {
 	// get authenticated user
 	user := c.Locals("user").(M.User)
 	// get user's course with id of param with subject with system of the user
-	result := D.DB().Model(&user).Preload("Courses", "id = ?", c.Params("courseID")).Preload("Courses.Subjects.Systems").Find(&user)
+	result := D.DB().Preload("Courses", "id = ?", c.Params("courseID")).Preload("Courses.Subjects.Systems").Find(&user)
 	if result.Error != nil {
 		return U.DBError(c, result.Error)
 	}
