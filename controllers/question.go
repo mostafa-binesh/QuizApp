@@ -9,8 +9,9 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
 )
-
-func AllQuestions(c *fiber.Ctx) error {
+// sorry that this function is long 
+// all logic are continuous and need to be done in a single function  
+func AllQuestionsWithSearch(c *fiber.Ctx) error {
 	// select all userAnswers of the authenticated user
 	user := c.Locals("user").(M.User)
 	if err := D.DB().Model(&user).

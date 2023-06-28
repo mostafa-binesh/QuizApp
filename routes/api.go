@@ -36,7 +36,7 @@ func APIInit(router *fiber.App) {
 	userNotes.Get("/", C.AllNotes)
 	userNotes.Put("/:id<int>", C.EditNote)
 	userQuestions := user.Group("/questions")
-	userQuestions.Get("/search", C.AllQuestions)
+	userQuestions.Get("/search", C.AllQuestionsWithSearch)
 
 	// ! admin routes
 	admin := router.Group("/admin")
