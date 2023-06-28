@@ -93,7 +93,7 @@ func UpdateCourse(c *fiber.Ctx) error {
 	}
 	return U.ResMessage(c, "دوره بروز شد")
 }
-func AllSubjects(c *fiber.Ctx) error {
+func CourseSubjects(c *fiber.Ctx) error {
 	// get user's course with id of param with subject with system of the user
 	course := M.Course{}
 	result := D.DB().Preload("Subjects.Systems").First(&course, c.Params("courseID"))
@@ -107,9 +107,10 @@ func AllSubjects(c *fiber.Ctx) error {
 	subjectWithSystems := []M.SubjectWithSystems{}
 	for j := 0; j < len(course.Subjects); j++ {
 		subjectWithSystems = append(subjectWithSystems, M.SubjectWithSystems{
-			ID:      course.Subjects[j].ID,
-			Title:   course.Subjects[j].Title,
-			Systems: course.Subjects[j].Systems,
+			ID:       course.Subjects[j].ID,
+			Title:    course.Subjects[j].Title,
+			Systems:  course.Subjects[j].Systems,
+			CourseID: course.ID,
 		})
 	}
 	return c.JSON(fiber.Map{"data": subjectWithSystems})

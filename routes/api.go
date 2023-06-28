@@ -43,7 +43,7 @@ func APIInit(router *fiber.App) {
 	admin.Get("/courses", AC.AllCourses)
 	admin.Get("/courses/:id<int>", AC.CourseByID)
 	admin.Post("/courses", AC.CreateCourse)
-	admin.Get("/courses/:courseID<int>/subjects", AC.AllSubjects)
+	admin.Get("/courses/:courseID<int>/subjects", AC.CourseSubjects)
 	admin.Get("/courses/addFromWoocommerce", AC.AddCoursesFromWooCommerce)
 
 	admin.Get("/users/:email<string>", AC.UserByEmail)
