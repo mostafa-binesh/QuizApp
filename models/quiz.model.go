@@ -2,6 +2,7 @@ package models
 
 import (
 	U "docker/utils"
+	// "fmt"
 	"time"
 )
 
@@ -88,15 +89,25 @@ func (quiz *Quiz) ConvertQuizToQuizToFront() QuizToFront {
 }
 
 // convert quiz model to mocked front quiz structure
+// userAnswers come from database user's quiz.userAnswers field
 func (frontQuiz *QuizToFront) ConvertQuizFrontToQuiz(userAnswers []*UserAnswer) []*UserAnswer {
 	// go through each frontQuiz, get the values and insert them into userAnswers array
 	// handling user answers
 	for i := range userAnswers {
-		userAnswers[i].Answer = frontQuiz.UserAnswers[i]
-		userAnswers[i].Note = frontQuiz.UserNotes[i]
+		// fmt.Printf(*userAnswers[i].Answer + "\n")
+		if frontQuiz.UserAnswers[i] != nil {
+			userAnswers[i].Answer = frontQuiz.UserAnswers[i]
+		}
+		if frontQuiz.UserNotes[i] != nil {
+			userAnswers[i].Note = frontQuiz.UserNotes[i]
+		}
 		userAnswers[i].IsMarked = frontQuiz.UserMarks[i]
-		userAnswers[i].Status = *frontQuiz.QuestionsStatus[i]
-		userAnswers[i].SpentTime = *frontQuiz.SpentTimes[i]
+		if frontQuiz.QuestionsStatus[i] != nil {
+			userAnswers[i].Status = *frontQuiz.QuestionsStatus[i]
+		}
+		if frontQuiz.SpentTimes[i] != nil {
+			userAnswers[i].SpentTime = *frontQuiz.SpentTimes[i]
+		}
 	}
 	return userAnswers
 }
