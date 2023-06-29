@@ -30,3 +30,13 @@ func RemoveElementByRef[T any](arr *[]T, index int) {
 	// Truncate the slice to remove the last element
 	*arr = (*arr)[:len(*arr)-1]
 }
+
+// ExistsInArray checks if a number exists in an array of comparable type.
+func ExistsInArray[T comparable](elems []T, v T) bool {
+	for _, s := range elems {
+		if v == s {
+			return true
+		}
+	}
+	return false
+}
