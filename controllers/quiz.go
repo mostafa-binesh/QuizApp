@@ -124,19 +124,33 @@ func UpdateQuiz(c *fiber.Ctx) error {
 	}).Preload("Quizzes.UserAnswers.Question.Options").First(&user).Error; err != nil {
 		return U.DBError(c, err)
 	}
-	if !(len(user.Quizzes) == 1) {
+	fmt.Printf("user's quizzes count: %d\n", len(user.Quizzes))
+	fmt.Printf("user's quizzes: %v\n", user.Quizzes)
+	quiz := M.Quiz{}
+	for _, q := range user.Quizzes {
+		// return c.JSON(fiber.Map{"data": q})
+		quiz = q
+		break
+	}
+	if len(user.Quizzes) == 0 {
 		return U.ResErr(c, "This quiz doesn't exist")
 	}
-	quiz := M.Quiz{}
-	quiz = user.Quizzes[0]
+	if user.Quizzes[0].Status == "" {
+		return U.ResErr(c, "This quiz doesn't exist")
+	}
+	// quiz = user.Quizzes[0]
 	convertedUserAnswer := payload.ConvertQuizFrontToQuiz(quiz.UserAnswers)
 	// update the user answers into database
 	fmt.Printf("convertedUserAnswer = %v\n", convertedUserAnswer)
 	if err := D.DB().Save(convertedUserAnswer).Error; err != nil {
 		return U.DBError(c, err)
 	}
+	quiz.Status = payload.QuizState
+	if err := D.DB().Save(&quiz).Error; err != nil {
+		return U.DBError(c, err)
+	}
 	// todo not tested yet
-	return c.JSON(fiber.Map{"asd": convertedUserAnswer})
+	// return c.JSON(fiber.Map{"asd": convertedUserAnswer})
 	return U.ResMessage(c, "Quiz been updated")
 }
 func CreateFakeQuiz(c *fiber.Ctx) error {
