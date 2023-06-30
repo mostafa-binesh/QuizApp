@@ -12,6 +12,7 @@ func CourseSeeder() {
         "Medical Terminology",
         "Pathophysiology",
         "Medical Ethics",
+		"NC-LEX RN", // main course , id  = 5
     }
 	for i, course := range medicalCourses {
 		D.DB().Create(&M.Course{
