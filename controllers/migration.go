@@ -18,6 +18,8 @@ func AutoMigrate(c *fiber.Ctx) error {
 	fmt.Println("dropAllTables")
 	if c.Query("dropAllTables") == "1" {
 		fmt.Println("dropping all tables")
+		D.DB().Exec("DELETE FROM user_courses")
+		D.DB().Exec("DELETE FROM user_answers")
 		D.DB().Migrator().DropTable(
 			&M.User{},
 			&M.Course{},
