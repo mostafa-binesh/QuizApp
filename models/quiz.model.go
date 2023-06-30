@@ -108,6 +108,7 @@ func (frontQuiz *QuizToFront) ConvertQuizFrontToQuiz(userAnswers []*UserAnswer) 
 		if frontQuiz.SpentTimes[i] != nil {
 			userAnswers[i].SpentTime = *frontQuiz.SpentTimes[i]
 		}
+		userAnswers[i].Submitted = frontQuiz.SubmitedQuestions[i]
 	}
 	return userAnswers
 }
