@@ -23,9 +23,13 @@ func main() {
 	U.InitWoomeCommerce(U.Env("WC_CONSUMER_KEY"), U.Env("WC_CONSUMER_SECRET"), U.Env("WC_SHOP_NAME"))
 	// C.Initilize() // initialize controllers value
 	// ! session
+	cookieSecure := false
+	if U.Env("COOKIE_SECURE") == "true" {
+		cookieSecure = true
+	}
 	U.Store = session.New(session.Config{
-		Expiration:     time.Hour * 8760, // 365 days
-		CookieSecure:   true, // false for postman, true for react localhost
+		Expiration:   time.Hour * 8760, // 365 days
+		CookieSecure: cookieSecure,     // false for postman, true for react localhost
 		// CookieHTTPOnly: true,
 		CookieSameSite: U.Env("COOKIE_SAME_SITE"),
 		KeyGenerator: func() string {
