@@ -38,7 +38,7 @@ type QuestionSearch struct {
 	Course  string `json:"course"`
 }
 type AdminCreateQuestionInput struct {
-	Question      string `json:"email" validate:"required"`
+	Question      string `json:"question" validate:"required"`
 	Option1       string `json:"option1" validate:"required"`
 	Option2       string `json:"option2" validate:"required"`
 	Option3       string `json:"option3" validate:"required"`
