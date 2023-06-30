@@ -23,7 +23,7 @@ func AllNotes(c *fiber.Ctx) error {
 		func(db *gorm.DB) *gorm.DB { // could do this as well : Preload("Comments", "ORDER BY ? ASC > ?", "id")
 			// if "title" query exists, search it in the database
 			if c.Query("body") != "" {
-				db = db.Where("Note ILIKE ?", fmt.Sprintf("%%%s%%", c.Query("title")))
+				db = db.Where("Note ILIKE ?", fmt.Sprintf("%%%s%%", c.Query("body")))
 			}
 			if c.Query("sort") != "" {
 				switch c.Query("sort") {
@@ -38,7 +38,7 @@ func AllNotes(c *fiber.Ctx) error {
 			// required: select rows that Note field is not null
 			db = db.Where("Note IS NOT NULL")
 			return db
-		}).Find(&user).Error; err != nil {
+		}).Preload("Quizzes.UserAnswers.Question").Find(&user).Error; err != nil {
 		return U.DBError(c, err)
 	}
 	// get notes only
@@ -46,10 +46,10 @@ func AllNotes(c *fiber.Ctx) error {
 	for _, quiz := range user.Quizzes {
 		for _, answer := range quiz.UserAnswers {
 			notes = append(notes, M.AnswerNote{
-				ID:         answer.ID,
-				QuestionID: answer.QuestionID,
-				Note:       answer.Note,
-				QuizID:     answer.QuizID,
+				ID:       answer.ID,
+				Question: answer.Question,
+				Note:     answer.Note,
+				QuizID:   answer.QuizID,
 			})
 		}
 	}
