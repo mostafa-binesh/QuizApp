@@ -58,13 +58,20 @@ func CreateQuiz(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"errors": errs})
 	}
 	user := c.Locals("user").(M.User)
+	// get course id using first system id
+	if len(payload.SystemIDs) == 0 {
+		return U.ResErr(c, "You must at least select one system")
+	}
+	systemID := payload.SystemIDs[0]
+	system := M.System{}
+	D.DB().Preload("Subject.Course").Find(&system, systemID)
 	// create the quiz
-	endTime := time.Now().Add(time.Hour * 1)
+	endTime := time.Now().Add(time.Hour * 1) // todo: hardcoded
 	quiz := M.Quiz{
 		UserID:   user.ID,
 		Status:   "pending",
 		EndTime:  &endTime,
-		CourseID: 1, // TODO hardcoded !
+		CourseID: system.Subject.CourseID,
 	}
 	result := D.DB().Create(&quiz)
 	if result.Error != nil {
@@ -166,13 +173,20 @@ func CreateFakeQuiz(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"errors": errs})
 	}
 	user := c.Locals("user").(M.User)
+
+	if len(payload.SystemIDs) == 0 {
+		return U.ResErr(c, "You must at least select one system")
+	}
+	systemID := payload.SystemIDs[0]
+	system := M.System{}
+	D.DB().Preload("Subject.Course").Find(&system, systemID)
 	// create the quiz
 	endTime := time.Now().Add(time.Hour * 1)
 	quiz := M.Quiz{
 		UserID:   user.ID,
 		Status:   "pending",
 		EndTime:  &endTime,
-		CourseID: 1, // TODO hardcoded !
+		CourseID: system.Subject.CourseID, // TODO hardcoded !
 	}
 	result := D.DB().Create(&quiz)
 	if result.Error != nil {
