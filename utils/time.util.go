@@ -11,3 +11,11 @@ func TimeDiff(t1, t2 time.Time) (int, int, int) {
 	seconds := int(diff.Seconds()) % 60
 	return hours, minutes, seconds
 }
+// todo add this function to quiz model
+func CalculateRemainingTime(remainingSeconds uint) (hours, minutes, seconds int) {
+    hours = int(remainingSeconds / 3600)
+    remainingSeconds %= 3600
+    minutes = int(remainingSeconds / 60)
+    seconds = int(remainingSeconds % 60)
+    return hours, minutes, seconds
+}
