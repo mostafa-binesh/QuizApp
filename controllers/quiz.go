@@ -67,10 +67,14 @@ func CreateQuiz(c *fiber.Ctx) error {
 	D.DB().Preload("Subject.Course").Find(&system, systemID)
 	// create the quiz
 	endTime := time.Now().Add(time.Hour * 1) // todo: hardcoded
+	currentTime := time.Now()
+	duration := endTime.Sub(currentTime)
+	remainingSeconds := uint(duration.Seconds())
 	quiz := M.Quiz{
 		UserID:   user.ID,
 		Status:   "pending",
 		EndTime:  &endTime,
+		Duration: remainingSeconds,
 		CourseID: system.Subject.CourseID,
 	}
 	result := D.DB().Create(&quiz)
@@ -153,6 +157,7 @@ func UpdateQuiz(c *fiber.Ctx) error {
 		return U.DBError(c, err)
 	}
 	quiz.Status = payload.QuizState
+	quiz.CalculateRemainingSeconds(payload.RemainingHours, payload.RemainingMinutes, payload.RemainingSeconds)
 	if err := D.DB().Save(&quiz).Error; err != nil {
 		return U.DBError(c, err)
 	}
@@ -182,10 +187,14 @@ func CreateFakeQuiz(c *fiber.Ctx) error {
 	D.DB().Preload("Subject.Course").Find(&system, systemID)
 	// create the quiz
 	endTime := time.Now().Add(time.Hour * 1)
+	currentTime := time.Now()
+	duration := endTime.Sub(currentTime)
+	remainingSeconds := uint(duration.Seconds())
 	quiz := M.Quiz{
 		UserID:   user.ID,
 		Status:   "pending",
 		EndTime:  &endTime,
+		Duration: remainingSeconds,
 		CourseID: system.Subject.CourseID, // TODO hardcoded !
 	}
 	result := D.DB().Create(&quiz)
@@ -222,5 +231,84 @@ func CreateFakeQuiz(c *fiber.Ctx) error {
 	return c.Status(200).JSON(fiber.Map{
 		"msg":    "Quiz been created",
 		"quizID": quiz.ID,
+	})
+}
+func ReportQuiz(c *fiber.Ctx) error {
+	user := c.Locals("user").(M.User)
+	user2 := c.Locals("user").(M.User)
+	var userAnswers []M.UserAnswer
+	if err := D.DB().Preload("Quizzes.UserAnswers.Question.Options").Find(&user).Error; err != nil {
+		return U.DBError(c, err)
+	}
+	if err := D.DB().Preload("Courses.Subjects.Systems.Questions").Find(&user2).Error; err != nil {
+		return U.DBError(c, err)
+	}
+	var totalQuestionsCount int
+	for _, course := range user2.Courses {
+		for _, subject := range course.Subjects {
+			for _, system := range subject.Systems {
+				totalQuestionsCount += len(system.Questions)
+			}
+		}
+	}
+	// var questions []M.QuestionSearch
+	var selectedQuestions []uint
+	for _, quiz := range user.Quizzes {
+		for _, answer := range quiz.UserAnswers {
+			if answer.Question != nil &&
+				answer.Question.System != nil &&
+				answer.Question.System.Subject != nil &&
+				answer.Question.System.Subject.Course != nil {
+				if !U.ExistsInArray[uint](selectedQuestions, answer.Question.ID) {
+					selectedQuestions = append(selectedQuestions, answer.Question.ID)
+				}
+			}
+		}
+	}
+	usedQuestionsCount := len(selectedQuestions)
+	createdTests := len(user.Quizzes)
+	var finishedTests int
+	var suspendedTests int
+	for _, quiz := range user.Quizzes {
+		if quiz.Status == "finished" { // todo: inha (finsihed, pending) ro variable konam 
+			finishedTests++
+		} else if quiz.Status == "pending" {
+			suspendedTests++
+		}
+		for _, answer := range quiz.UserAnswers {
+			userAnswers = append(userAnswers, *answer)
+		}
+	}
+	var correctAnswerCount uint
+	var incorrectAnswerCount uint
+	var omittedAnswerCount uint
+	var found bool
+	for _, answer := range userAnswers {
+		if answer.Answer == nil {
+			omittedAnswerCount++
+		}
+		for _, option := range answer.Question.Options {
+			if answer.Answer == &option.Title {
+				correctAnswerCount++
+				found = true
+				continue
+			}
+		}
+		if !found {
+			incorrectAnswerCount++
+		}
+	}
+	return c.JSON(fiber.Map{
+		"data": fiber.Map{
+			"correctAnswerCount":   correctAnswerCount,
+			"incorrectAnswerCount": incorrectAnswerCount,
+			"omittedAnswerCount":   omittedAnswerCount,
+			"createdTests":         createdTests,
+			"completedTests":       finishedTests,
+			"suspendedTests":       suspendedTests,
+			"totalQuestionsCount":  totalQuestionsCount,
+			"usedQuestionsCount":   usedQuestionsCount,
+			"unusedQuestionsCount": totalQuestionsCount - usedQuestionsCount,
+		},
 	})
 }

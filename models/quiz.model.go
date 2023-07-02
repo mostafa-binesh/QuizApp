@@ -15,6 +15,7 @@ type Quiz struct {
 	UserAnswers []*UserAnswer `json:"userAnswers,omitempty"`
 	CreatedAt   time.Time     `json:"date" gorm:"not null;default:now()"`
 	EndTime     *time.Time    `json:"-" gorm:"not null;default:now()"`
+	Duration    uint          `json:"duration" gorm:"not null"`
 	CourseID    uint          `json:"-"`
 	Course      *Course       `json:"course,omitempty" gorm:"foreignKey:CourseID;constraint:OnUpdate:CASCADE;OnDelete:CASCADE"`
 }
@@ -78,7 +79,7 @@ func (quiz *Quiz) ConvertQuizToQuizToFront() QuizToFront {
 	quizFront.SubmitedQuestions = submitedQuestions
 	quizFront.QuestionsStatus = questionsStatus
 	quizFront.SpentTimes = spentTimes
-	hour, min, sec := U.TimeDiff(time.Now(), *quiz.EndTime)
+	hour, min, sec := U.CalculateRemainingTime(quiz.Duration) // todo make this a quiz function
 	quizFront.RemainingHours = hour
 	quizFront.RemainingMinutes = min
 	quizFront.RemainingSeconds = sec
@@ -111,6 +112,10 @@ func (frontQuiz *QuizToFront) ConvertQuizFrontToQuiz(userAnswers []*UserAnswer) 
 		userAnswers[i].Submitted = frontQuiz.SubmitedQuestions[i]
 	}
 	return userAnswers
+}
+func (quiz *Quiz) CalculateRemainingSeconds(hours, minutes, seconds int) {
+	totalSeconds := (hours * 3600) + (minutes * 60) + seconds
+	quiz.Duration = uint(totalSeconds)
 }
 
 // its used for user.Courses so i needed to make the argument refrence
