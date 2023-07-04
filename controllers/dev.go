@@ -170,6 +170,7 @@ func SeeMessages(c *fiber.Ctx) error {
 	// }
 	return U.ResErr(c, "شما باید وارد شوید")
 }
+
 // func FiberContextMemoryAddress(c *fiber.Ctx) error {
 // 	fmt.Printf("utility memory: %p\n, function context memory ad.: %p\n", U.FiberCtx(), c)
 // 	return c.SendString("ss")
@@ -193,4 +194,8 @@ func StructInfo(c *fiber.Ctx) error {
 		fmt.Printf("%s %s %s\n", field.Name, field.Type, field.Tag.Get("gorm"))
 	}
 	return c.SendString("sdassds")
+}
+func ResetMemory(c *fiber.Ctx) error {
+	U.Memory.Reset()
+	return c.SendString("done")
 }
