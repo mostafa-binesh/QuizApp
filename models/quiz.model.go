@@ -18,16 +18,16 @@ type Quiz struct {
 	Duration    uint          `json:"duration" gorm:"not null"`
 	CourseID    uint          `json:"-"`
 	Course      *Course       `json:"course,omitempty" gorm:"foreignKey:CourseID;constraint:OnUpdate:CASCADE;OnDelete:CASCADE"`
-	Mode        string        `json:"mode"`
-	Type        string        `json:"type"`
+	Mode        []string      `json:"mode"`
+	Type        []string      `json:"type"`
 }
 
 // used for creating new quiz
 type QuizInput struct {
-	QuestionsCount int    `json:"questionsCount" validate:"required,min=1"`
-	SystemIDs      []uint `json:"systemIDs" validate:"required"`
-	QuizMode       string `json:"quizMode"`
-	QuizType       string `json:"quizType"`
+	QuestionsCount int      `json:"questionsCount" validate:"required,min=1"`
+	SystemIDs      []uint   `json:"systemIDs" validate:"required"`
+	QuizMode       []string `json:"quizMode" validate:"required"`
+	QuizType       []string `json:"quizType" validate:"required"`
 }
 
 // used for listing the user's quizzes
@@ -53,8 +53,8 @@ type QuizToFront struct {
 	QuizState         string      `json:"quizState"`
 	CreatedAt         string      `json:"date"`
 	Course            string      `json:"courseName"`
-	Mode              string      `json:"mode"`
-	Type              string      `json:"type"`
+	Mode              []string    `json:"mode"`
+	Type              []string    `json:"type"`
 	// TODO add quizID
 }
 
