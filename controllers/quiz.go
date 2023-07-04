@@ -109,7 +109,6 @@ func CreateQuiz(c *fiber.Ctx) error {
 		U.RemoveElementByRef[uint](&questionIDs, int(randomIndex))
 		questionsCount = len(questionIDs)
 	}
-	fmt.Printf("printing the result\n")
 	return c.Status(200).JSON(fiber.Map{
 		"msg":    "Quiz been created",
 		"quizID": quiz.ID,
@@ -197,7 +196,7 @@ func CreateFakeQuiz(c *fiber.Ctx) error {
 		Status:   "pending",
 		EndTime:  &endTime,
 		Duration: remainingSeconds,
-		CourseID: system.Subject.CourseID, 
+		CourseID: system.Subject.CourseID,
 		Mode:     payload.QuizMode,
 		Type:     payload.QuizType,
 	}
@@ -240,7 +239,7 @@ func CreateFakeQuiz(c *fiber.Ctx) error {
 func ReportQuiz(c *fiber.Ctx) error {
 	user := c.Locals("user").(M.User)
 	user2 := c.Locals("user").(M.User)
-	var userAnswers []M.UserAnswer
+	// options is needed in user preload in correct and incorrect answer coount
 	if err := D.DB().Preload("Quizzes.UserAnswers.Question.Options").Find(&user).Error; err != nil {
 		return U.DBError(c, err)
 	}
@@ -248,6 +247,7 @@ func ReportQuiz(c *fiber.Ctx) error {
 		return U.DBError(c, err)
 	}
 	var totalQuestionsCount int
+	// todo: if we add course id to question model, here would be better solution
 	for _, course := range user2.Courses {
 		for _, subject := range course.Subjects {
 			for _, system := range subject.Systems {
@@ -255,28 +255,32 @@ func ReportQuiz(c *fiber.Ctx) error {
 			}
 		}
 	}
-	// var questions []M.QuestionSearch
-	var selectedQuestions []uint
+	var usedQuestions []uint
+	// we need to get all unique questions
 	for _, quiz := range user.Quizzes {
 		for _, answer := range quiz.UserAnswers {
-			if answer.Question != nil &&
-				answer.Question.System != nil &&
-				answer.Question.System.Subject != nil &&
-				answer.Question.System.Subject.Course != nil {
-				if !U.ExistsInArray[uint](selectedQuestions, answer.Question.ID) {
-					selectedQuestions = append(selectedQuestions, answer.Question.ID)
+			if answer.Question != nil {
+				// answer.Question.System != nil &&
+				// answer.Question.System.Subject != nil &&
+				// answer.Question.System.Subject.Course != nil {
+				if !U.ExistsInArray[uint](usedQuestions, answer.Question.ID) {
+					usedQuestions = append(usedQuestions, answer.Question.ID)
 				}
 			}
 		}
 	}
-	usedQuestionsCount := len(selectedQuestions)
+	usedQuestionsCount := len(usedQuestions)
 	createdTests := len(user.Quizzes)
 	var finishedTests int
 	var suspendedTests int
+	var userAnswers []M.UserAnswer
 	for _, quiz := range user.Quizzes {
 		if quiz.Status == "finished" { // todo: inha (finsihed, pending) ro variable konam
 			finishedTests++
-		} else if quiz.Status == "pending" {
+			// todo: in structure ro khosham nemiad
+			// todo suspend vaghtiye ke taze sakhte shode
+			// todo pending vaghtiye ke khode user suspend karde
+		} else if quiz.Status == "suspend" || quiz.Status == "pending" {
 			suspendedTests++
 		}
 		for _, answer := range quiz.UserAnswers {
@@ -292,7 +296,7 @@ func ReportQuiz(c *fiber.Ctx) error {
 			omittedAnswerCount++
 		}
 		for _, option := range answer.Question.Options {
-			if answer.Answer == &option.Title {
+			if answer.Answer == &option.Index {
 				correctAnswerCount++
 				found = true
 				continue
