@@ -8,7 +8,6 @@ import (
 	// ut "github.com/go-playground/universal-translator"
 	// "github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/session"
 	"os"
 	"reflect"
 )

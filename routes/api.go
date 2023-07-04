@@ -82,7 +82,6 @@ func APIInit(router *fiber.App) {
 	dev.Post("/upload", C.UploadFile)
 	dev.Post("/fileExistenaceCheck", C.ExistenceCheck)
 	dev.Post("/gormUnique", C.GormG)
-	dev.Get("varSize", C.VariableSizeTest)
 	// router.Get("/contextMemoryAddress", C.FiberContextMemoryAddress)
 	devPanel := dev.Group("/admin")
 	devPanel.Get("/structInfo", C.StructInfo)
