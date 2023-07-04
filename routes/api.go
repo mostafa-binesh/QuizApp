@@ -32,6 +32,7 @@ func APIInit(router *fiber.App) {
 	userQuiz.Put("/:id<int>", C.UpdateQuiz) // TODO not tested yet
 	userQuiz.Post("/", C.CreateQuiz)
 	userQuiz.Post("/createFakeQuiz", C.CreateFakeQuiz)
+	userQuiz.Get("/report", C.ReportQuiz)
 	userNotes := user.Group("/notes")
 	userNotes.Get("/", C.AllNotes)
 	userNotes.Put("/:id<int>", C.EditNote)
@@ -81,7 +82,8 @@ func APIInit(router *fiber.App) {
 	dev.Post("/upload", C.UploadFile)
 	dev.Post("/fileExistenaceCheck", C.ExistenceCheck)
 	dev.Post("/gormUnique", C.GormG)
-	router.Get("/contextMemoryAddress", C.FiberContextMemoryAddress)
+	dev.Get("varSize", C.VariableSizeTest)
+	// router.Get("/contextMemoryAddress", C.FiberContextMemoryAddress)
 	devPanel := dev.Group("/admin")
 	devPanel.Get("/structInfo", C.StructInfo)
 }
