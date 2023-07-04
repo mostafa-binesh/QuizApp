@@ -4,6 +4,7 @@ import (
 	D "docker/database"
 	"fmt"
 	"math/rand"
+	"strings"
 	"time"
 
 	// F "docker/database/filters"
@@ -76,8 +77,8 @@ func CreateQuiz(c *fiber.Ctx) error {
 		EndTime:  &endTime,
 		Duration: remainingSeconds,
 		CourseID: system.Subject.CourseID,
-		Mode:     payload.QuizMode,
-		Type:     payload.QuizType,
+		Mode:     strings.Join(payload.QuizMode, ","),
+		Type:     strings.Join(payload.QuizType, ","),
 	}
 	result := D.DB().Create(&quiz)
 	if result.Error != nil {
@@ -197,8 +198,8 @@ func CreateFakeQuiz(c *fiber.Ctx) error {
 		EndTime:  &endTime,
 		Duration: remainingSeconds,
 		CourseID: system.Subject.CourseID,
-		Mode:     payload.QuizMode,
-		Type:     payload.QuizType,
+		Mode:     strings.Join(payload.QuizMode, ","),
+		Type:     strings.Join(payload.QuizType, ","),
 	}
 	result := D.DB().Create(&quiz)
 	if result.Error != nil {
@@ -320,3 +321,8 @@ func ReportQuiz(c *fiber.Ctx) error {
 		},
 	})
 }
+
+// report correct, incorrect and omitted answers count of every subject and system
+// func OveralReport(c *fiber.Ctx) error {
+
+// }

@@ -2,6 +2,7 @@ package models
 
 import (
 	U "docker/utils"
+	"strings"
 	// "fmt"
 	"time"
 )
@@ -18,8 +19,8 @@ type Quiz struct {
 	Duration    uint          `json:"duration" gorm:"not null"`
 	CourseID    uint          `json:"-"`
 	Course      *Course       `json:"course,omitempty" gorm:"foreignKey:CourseID;constraint:OnUpdate:CASCADE;OnDelete:CASCADE"`
-	Mode        []string      `json:"mode" gorm:"type:varchar(255)[]"`
-	Type        []string      `json:"type" gorm:"type:varchar(255)[]"`
+	Mode        string        `json:"mode" gorm:"type:varchar(255)"`
+	Type        string        `json:"type" gorm:"type:varchar(255)"`
 }
 
 // used for creating new quiz
@@ -92,8 +93,8 @@ func (quiz *Quiz) ConvertQuizToQuizToFront() QuizToFront {
 	quizFront.QuizState = quiz.Status
 	quizFront.Course = quiz.Course.Title
 	quizFront.CreatedAt = quiz.CreatedAt.Format("2006-01-02T15:04:05.000Z")
-	quizFront.Mode = quiz.Mode
-	quizFront.Type = quiz.Type
+	quizFront.Mode = strings.Split(quiz.Mode, ",")
+	quizFront.Type = strings.Split(quiz.Type, ",")
 	return quizFront
 }
 
