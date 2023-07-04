@@ -32,7 +32,7 @@ func CreateQuestion(c *fiber.Ctx) error {
 	options[payload.CorrectOption-1].IsCorrect = true
 	// get images from request
 	form, err := c.MultipartForm()
-	images := form.File["images[]"]
+	images := form.File["images"]
 	if err != nil {
 		return U.ResErr(c, err.Error())
 	}
