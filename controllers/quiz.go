@@ -298,8 +298,9 @@ func ReportQuiz(c *fiber.Ctx) error {
 			omittedAnswerCount++
 		}
 		for _, option := range answer.Question.Options {
-			fmt.Printf("answer and option index: %s , %s\n", *answer.Answer, option.Index)
-			if answer.Answer == &option.Index {
+			// had to make option a separated value to be able to compare with answer.answer
+			option := option.Index
+			if *answer.Answer == option {
 				correctAnswerCount++
 				found = true
 				break
