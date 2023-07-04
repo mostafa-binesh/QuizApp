@@ -7,6 +7,7 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
+	"github.com/gofiber/fiber/v2/middleware/pprof"
 )
 
 func RouterInit() {
@@ -25,11 +26,6 @@ func RouterInit() {
 		U.BaseURL = c.BaseURL()
 		return c.Next()
 	})
-	// setup fiber context utility
-	router.Use(func(c *fiber.Ctx) error {
-		U.SetFiberContext(c)
-		return c.Next()
-	})
 	// logger
 	router.Use(logger.New())
 	// recovery from panic
@@ -41,6 +37,7 @@ func RouterInit() {
 
 	// ! api routes
 	APIInit(router)
+	router.Use(pprof.New(pprof.Config{Prefix: "/profiler"}))
 	// ! listen
 	router.Listen(":" + U.Env("APP_PORT"))
 	// if U.Env("environment") == "development" {
