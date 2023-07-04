@@ -52,7 +52,7 @@ func CreateQuestion(c *fiber.Ctx) error {
 		Options:     options,
 		SystemID:    payload.SystemID,
 		Description: payload.Description,
-		Image:       imagesNames,
+		// Image:       imagesNames,
 	}
 	// insert new question to the database
 	result := D.DB().Create(&newQuestion)

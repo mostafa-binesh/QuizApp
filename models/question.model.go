@@ -6,11 +6,11 @@ import (
 )
 
 type Question struct {
-	ID          uint     `json:"no" gorm:"primary_key"`
-	Title       string   `json:"question"`
-	Status      string   `json:"-"`
-	Description string   `json:"description"`
-	Image       []string `json:"image" gorm:"type:varchar(255)[]"`
+	ID          uint    `json:"no" gorm:"primary_key"`
+	Title       string  `json:"question"`
+	Status      string  `json:"-"`
+	Description string  `json:"description"`
+	Image       *string `json:"image" gorm:"type:varchar(255)"`
 	// relationships
 	Options  []*Option `json:"options,omitempty"`
 	SystemID uint      `json:"-"`
@@ -47,12 +47,18 @@ type AdminCreateQuestionInput struct {
 
 // GORM HOOKS
 func (u *Question) AfterFind(tx *gorm.DB) (err error) {
+	// if u.Image != nil {
+	// 	for i := 0; i < len(u.Image); i++ {
+	// 		// image exists
+	// 		imageURL := U.BaseURL + "/" + u.Image[i]
+	// 		u.Image[i] = imageURL
+	// 	}
+	// }
+	// return nil
 	if u.Image != nil {
-		for i := 0; i < len(u.Image); i++ {
-			// image exists
-			imageURL := U.BaseURL + "/" + u.Image[i]
-			u.Image[i] = imageURL
-		}
+		// image exists
+		imageURL := U.BaseURL + "/" + *u.Image
+		u.Image = &imageURL
 	}
 	return nil
 }
