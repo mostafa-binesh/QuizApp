@@ -52,7 +52,7 @@ func APIInit(router *fiber.App) {
 	admin.Post("/users", AC.AddUser)
 	admin.Put("/users/:id<int>", AC.EditUser)
 	admin.Delete("/users/:id<int>", AC.DeleteUser)
-	admin.Post("/questions", AC.AddQuestion)
+	admin.Post("/questions", AC.CreateQuestion)
 	admin.Get("/questions/:id<int>", AC.QuestionByID)
 	admin.Post("/uploadImages", AC.UploadImage)
 

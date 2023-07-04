@@ -2,18 +2,15 @@ package models
 
 import (
 	U "docker/utils"
-
-	"fmt"
-
 	"gorm.io/gorm"
 )
 
 type Question struct {
-	ID          uint    `json:"no" gorm:"primary_key"`
-	Title       string  `json:"question"`
-	Status      string  `json:"-"`
-	Description string  `json:"description"`
-	Image       *string `json:"image"`
+	ID          uint     `json:"no" gorm:"primary_key"`
+	Title       string   `json:"question"`
+	Status      string   `json:"-"`
+	Description string   `json:"description"`
+	Image       []string `json:"image"`
 	// relationships
 	Options  []*Option `json:"options,omitempty"`
 	SystemID uint      `json:"-"`
@@ -51,10 +48,11 @@ type AdminCreateQuestionInput struct {
 // GORM HOOKS
 func (u *Question) AfterFind(tx *gorm.DB) (err error) {
 	if u.Image != nil {
-		fmt.Printf("in afterfind\n")
-		// image exists
-		imageURL := U.BaseURL + "/" + *u.Image
-		u.Image = &imageURL
+		for i := 0; i < len(u.Image); i++ {
+			// image exists
+			imageURL := U.BaseURL + "/" + u.Image[i]
+			u.Image[i] = imageURL
+		}
 	}
 	return nil
 }

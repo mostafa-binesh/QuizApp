@@ -3,6 +3,7 @@ package admin
 import (
 	D "docker/database"
 	"fmt"
+
 	// F "docker/database/filters"
 	M "docker/models"
 	U "docker/utils"
@@ -11,7 +12,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func AddQuestion(c *fiber.Ctx) error {
+func CreateQuestion(c *fiber.Ctx) error {
 	payload := new(M.AdminCreateQuestionInput)
 	// parse body
 	if err := c.BodyParser(payload); err != nil {
@@ -29,21 +30,31 @@ func AddQuestion(c *fiber.Ctx) error {
 	options = append(options, &M.Option{Title: payload.Option4, Index: "D"})
 	// if first option is correct, client needs to send 1
 	options[payload.CorrectOption-1].IsCorrect = true
-	img, _ := c.FormFile("image")
-	var imgName *string
-	if img != nil {
-		uuid := uuid.New().String()
-		newFileName := uuid + "-" + img.Filename
-		c.SaveFile(img, fmt.Sprintf(U.UploadLocation+"/%s", newFileName))
-		imgName = &newFileName
+	// get images from request
+	form, err := c.MultipartForm()
+	images := form.File["images[]"]
+	if err != nil {
+		return U.ResErr(c, err.Error())
 	}
+	fmt.Printf("images variable %v\n", images)
+	// create appropriate name for images and save them int disc
+	var imagesNames []string
+	for _, image := range images {
+		fmt.Printf("image name: %v\n", image.Filename)
+		uuid := uuid.New().String()
+		newFileName := uuid + "-" + image.Filename
+		c.SaveFile(image, fmt.Sprintf(U.UploadLocation+"/%s", newFileName))
+		imagesNames = append(imagesNames, newFileName)
+	}
+	// create new question with given info
 	newQuestion := M.Question{
 		Title:       payload.Question,
 		Options:     options,
 		SystemID:    payload.SystemID,
 		Description: payload.Description,
-		Image:       imgName,
+		Image:       imagesNames,
 	}
+	// insert new question to the database
 	result := D.DB().Create(&newQuestion)
 	if result.Error != nil {
 		return U.DBError(c, result.Error)
