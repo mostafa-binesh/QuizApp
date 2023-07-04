@@ -10,7 +10,7 @@ type Question struct {
 	Title       string   `json:"question"`
 	Status      string   `json:"-"`
 	Description string   `json:"description"`
-	Image       []string `json:"image"`
+	Image       []string `json:"image" gorm:"type:varchar(255)[]"`
 	// relationships
 	Options  []*Option `json:"options,omitempty"`
 	SystemID uint      `json:"-"`

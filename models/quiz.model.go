@@ -18,8 +18,8 @@ type Quiz struct {
 	Duration    uint          `json:"duration" gorm:"not null"`
 	CourseID    uint          `json:"-"`
 	Course      *Course       `json:"course,omitempty" gorm:"foreignKey:CourseID;constraint:OnUpdate:CASCADE;OnDelete:CASCADE"`
-	Mode        []string      `json:"mode"`
-	Type        []string      `json:"type"`
+	Mode        []string      `json:"mode" gorm:"type:varchar(255)[]"`
+	Type        []string      `json:"type" gorm:"type:varchar(255)[]"`
 }
 
 // used for creating new quiz
