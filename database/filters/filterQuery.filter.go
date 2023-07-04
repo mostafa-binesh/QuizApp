@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"reflect"
 
-	U "docker/utils"
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
 )
@@ -85,11 +84,10 @@ func FilterByInterface(c *fiber.Ctx, u interface{}) func(db *gorm.DB) *gorm.DB {
 // ! eg. filterType{ QueryName: "startDate",ColumnName: "release_date", Operator: ">="}
 // ! columnName is optional, if not exist, queryName will be considered as columnName
 // ! Operator is optional as well, default is =
-func FilterByType(filterTypes ...FilterType) func(db *gorm.DB) *gorm.DB {
+func FilterByType(c *fiber.Ctx, filterTypes ...FilterType) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		var value string
 		var queryValue string
-		c := U.FiberCtx()
 		for _, filter := range filterTypes {
 			queryValue = c.Query(filter.QueryName)
 			if queryValue == "" {

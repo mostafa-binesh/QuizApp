@@ -18,10 +18,6 @@ import (
 	// en_translations "github.com/go-playground/validator/v10/translations/en"
 )
 
-var (
-	uni      *ut.UniversalTranslator
-	validate *validator.Validate
-)
 var faTranslation = map[string]string{
 	"Name":               "نام",
 	"FirstName":          "نام",
@@ -60,12 +56,12 @@ func Validate(fields interface{}, ignoreID ...string) map[string]string {
 	}
 	en := en.New()
 	fa := fa.New()
-	uni = ut.New(en, fa)
+	uni := ut.New(en, fa)
 
 	// this is usually know or extracted from http 'Accept-Language' header
 	// also see uni.FindTranslator(...)
 	trans, _ := uni.GetTranslator("fa")
-	validate = validator.New()
+	validate := validator.New()
 	fa_translations.RegisterDefaultTranslations(validate, trans)
 	// ! custom names registration
 	validate.RegisterTagNameFunc(func(field reflect.StructField) string {

@@ -27,6 +27,7 @@ func AddQuestion(c *fiber.Ctx) error {
 	options = append(options, &M.Option{Title: payload.Option2, Index: "B"})
 	options = append(options, &M.Option{Title: payload.Option3, Index: "C"})
 	options = append(options, &M.Option{Title: payload.Option4, Index: "D"})
+	// if first option is correct, client needs to send 1
 	options[payload.CorrectOption-1].IsCorrect = true
 	img, _ := c.FormFile("image")
 	var imgName *string
@@ -59,19 +60,10 @@ func QuestionByID(c *fiber.Ctx) error {
 
 func UploadImage(c *fiber.Ctx) error {
 	type Upload struct {
-		File string `json:"file" validate:"required"`
+		File string `validate:"required"`
 	}
 	payload := new(Upload)
-	if err := c.BodyParser(payload); err != nil {
-		return c.JSON(fiber.Map{
-			"error": err,
-		})
-	}
 	file, err := c.FormFile("file")
-	// if err != nil {
-	// ! if file not exists, we get error: there is no uploaded file associated with the given key
-	// 	return c.JSON(fiber.Map{"error": err.Error()})
-	// }
 	if file != nil {
 		payload.File = file.Filename
 	}

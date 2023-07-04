@@ -76,6 +76,8 @@ func CreateQuiz(c *fiber.Ctx) error {
 		EndTime:  &endTime,
 		Duration: remainingSeconds,
 		CourseID: system.Subject.CourseID,
+		Mode:     payload.QuizMode,
+		Type:     payload.QuizType,
 	}
 	result := D.DB().Create(&quiz)
 	if result.Error != nil {
@@ -195,7 +197,9 @@ func CreateFakeQuiz(c *fiber.Ctx) error {
 		Status:   "pending",
 		EndTime:  &endTime,
 		Duration: remainingSeconds,
-		CourseID: system.Subject.CourseID, // TODO hardcoded !
+		CourseID: system.Subject.CourseID, 
+		Mode:     payload.QuizMode,
+		Type:     payload.QuizType,
 	}
 	result := D.DB().Create(&quiz)
 	if result.Error != nil {
@@ -270,7 +274,7 @@ func ReportQuiz(c *fiber.Ctx) error {
 	var finishedTests int
 	var suspendedTests int
 	for _, quiz := range user.Quizzes {
-		if quiz.Status == "finished" { // todo: inha (finsihed, pending) ro variable konam 
+		if quiz.Status == "finished" { // todo: inha (finsihed, pending) ro variable konam
 			finishedTests++
 		} else if quiz.Status == "pending" {
 			suspendedTests++
