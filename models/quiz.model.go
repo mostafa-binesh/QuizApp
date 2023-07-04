@@ -18,12 +18,16 @@ type Quiz struct {
 	Duration    uint          `json:"duration" gorm:"not null"`
 	CourseID    uint          `json:"-"`
 	Course      *Course       `json:"course,omitempty" gorm:"foreignKey:CourseID;constraint:OnUpdate:CASCADE;OnDelete:CASCADE"`
+	Mode        string        `json:"mode"`
+	Type        string        `json:"type"`
 }
 
 // used for creating new quiz
 type QuizInput struct {
 	QuestionsCount int    `json:"questionsCount" validate:"required,min=1"`
 	SystemIDs      []uint `json:"systemIDs" validate:"required"`
+	QuizMode       string `json:"quizMode"`
+	QuizType       string `json:"quizType"`
 }
 
 // used for listing the user's quizzes
@@ -49,6 +53,8 @@ type QuizToFront struct {
 	QuizState         string      `json:"quizState"`
 	CreatedAt         string      `json:"date"`
 	Course            string      `json:"courseName"`
+	Mode              string      `json:"mode"`
+	Type              string      `json:"type"`
 	// TODO add quizID
 }
 
@@ -86,6 +92,8 @@ func (quiz *Quiz) ConvertQuizToQuizToFront() QuizToFront {
 	quizFront.QuizState = quiz.Status
 	quizFront.Course = quiz.Course.Title
 	quizFront.CreatedAt = quiz.CreatedAt.Format("2006-01-02T15:04:05.000Z")
+	quizFront.Mode = quiz.Mode
+	quizFront.Type = quiz.Type
 	return quizFront
 }
 
