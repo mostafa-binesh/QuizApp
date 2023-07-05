@@ -237,9 +237,8 @@ func CreateFakeQuiz(c *fiber.Ctx) error {
 		"quizID": quiz.ID,
 	})
 }
-func ReportQuiz(c *fiber.Ctx) error {
+func OverallReport(c *fiber.Ctx) error {
 	user := c.Locals("user").(M.User)
-	// user2 := c.Locals("user").(M.User)
 	// options is needed in user preload in correct and incorrect answer coount
 	if err := D.DB().Preload("Quizzes.UserAnswers.Question.Options").Preload("Courses.Subjects.Systems.Questions").Find(&user).Error; err != nil {
 		return U.DBError(c, err)
@@ -282,33 +281,10 @@ func ReportQuiz(c *fiber.Ctx) error {
 			suspendedTests++
 		}
 		for _, answer := range quiz.UserAnswers {
-			userAnswers = append(userAnswers, *answer)
+			userAnswers = append(userAnswers, answer)
 		}
 	}
-	var correctAnswerCount uint
-	var incorrectAnswerCount uint
-	var omittedAnswerCount uint
-	var found bool
-	for _, answer := range userAnswers {
-		found = false
-		if answer.Answer == nil {
-			omittedAnswerCount++
-			continue
-		}
-		for _, option := range answer.Question.Options {
-			// had to make option a separated value to be able to compare with answer.answer
-			optionIndex := option.Index
-			userAnswerIndex := answer.Answer
-			if *userAnswerIndex == optionIndex {
-				correctAnswerCount++
-				found = true
-				break
-			}
-		}
-		if !found {
-			incorrectAnswerCount++
-		}
-	}
+	correctAnswerCount, incorrectAnswerCount, omittedAnswerCount := M.CalculateAnswersStats(userAnswers)
 	unusedQuestions := totalQuestionsCount - usedQuestionsCount
 	// in some cases (no course but user has quizzes), the unused questions may be negative
 	if unusedQuestions < 0 {
@@ -330,6 +306,55 @@ func ReportQuiz(c *fiber.Ctx) error {
 }
 
 // report correct, incorrect and omitted answers count of every subject and system
-// func OveralReport(c *fiber.Ctx) error {
-
-// }
+func ReportQuiz(c *fiber.Ctx) error {
+	// 1. get all user's quizzes
+	user := c.Locals("user").(M.User)
+	// options is needed in user preload in correct and incorrect answer coount
+	if err := D.DB().Preload("Quizzes.UserAnswers.Question.Options").
+		Preload("Quizzes.UserAnswers.Question.System.Subject").
+		Find(&user).Error; err != nil {
+		return U.DBError(c, err)
+	}
+	// 2. group answers by subject and system and calculate every answer stat
+	// create this object for every system and subject
+	subjects := []M.QuizAnswerStats{}
+	systems := []M.QuizAnswerStats{}
+	// insert every user's quizzes subject and system into subjects and systems array
+	subjectIDs := []uint{}
+	systemIDs := []uint{}
+	for _, quiz := range user.Quizzes {
+		for _, answer := range quiz.UserAnswers {
+			// every answer's stat should be calculate separately for subject and system
+			// if system doesn't exist already in their array create it
+			if !U.ExistsInArray[uint](systemIDs, answer.Question.SystemID) {
+				systemIDs = append(systemIDs, answer.Question.SystemID)
+				systems = append(systems, M.QuizAnswerStats{
+					ID:    answer.Question.SystemID,
+					Title: answer.Question.System.Title,
+				})
+				quizStat := M.FindQuizAnswerStats(systems, answer.Question.SystemID)
+				quizStat.UpdateQuizStat(answer)
+			} else { // if this system already exists, just update it
+				quizStat := M.FindQuizAnswerStats(systems, answer.Question.SystemID)
+				quizStat.UpdateQuizStat(answer)
+			}
+			// if subject  doesn't exist already in their array create it
+			if !U.ExistsInArray[uint](subjectIDs, answer.Question.System.SubjectID) {
+				subjectIDs = append(subjectIDs, answer.Question.System.SubjectID)
+				subjects = append(subjects, M.QuizAnswerStats{
+					ID:    answer.Question.System.SubjectID,
+					Title: answer.Question.System.Subject.Title,
+				})
+				quizStat := M.FindQuizAnswerStats(subjects, answer.Question.System.SubjectID)
+				quizStat.UpdateQuizStat(answer)
+			} else { // if this subject already exists, just update it
+				quizStat := M.FindQuizAnswerStats(subjects, answer.Question.System.SubjectID)
+				quizStat.UpdateQuizStat(answer)
+			}
+		}
+	}
+	return c.JSON(fiber.Map{"data": fiber.Map{
+		"subjects": subjects,
+		"systems":  systems,
+	}})
+}
