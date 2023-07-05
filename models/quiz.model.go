@@ -12,15 +12,15 @@ type Quiz struct {
 	UserID uint  `json:"-"`
 	User   *User `json:"user,omitempty" gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE;OnDelete:CASCADE"`
 	// TODO add lesson : lesson >> ? lesson == course ?
-	Status      string        `json:"status,omitempty"`
-	UserAnswers []*UserAnswer `json:"userAnswers,omitempty"`
-	CreatedAt   time.Time     `json:"date" gorm:"not null;default:now()"`
-	EndTime     *time.Time    `json:"-" gorm:"not null;default:now()"`
-	Duration    uint          `json:"duration" gorm:"not null"`
-	CourseID    uint          `json:"-"`
-	Course      *Course       `json:"course,omitempty" gorm:"foreignKey:CourseID;constraint:OnUpdate:CASCADE;OnDelete:CASCADE"`
-	Mode        string        `json:"mode" gorm:"type:varchar(255)"`
-	Type        string        `json:"type" gorm:"type:varchar(255)"`
+	Status      string       `json:"status,omitempty"`
+	UserAnswers []UserAnswer `json:"userAnswers,omitempty"`
+	CreatedAt   time.Time    `json:"date" gorm:"not null;default:now()"`
+	EndTime     *time.Time   `json:"-" gorm:"not null;default:now()"`
+	Duration    uint         `json:"duration" gorm:"not null"`
+	CourseID    uint         `json:"-"`
+	Course      *Course      `json:"course,omitempty" gorm:"foreignKey:CourseID;constraint:OnUpdate:CASCADE;OnDelete:CASCADE"`
+	Mode        string       `json:"mode" gorm:"type:varchar(255)"`
+	Type        string       `json:"type" gorm:"type:varchar(255)"`
 }
 
 // used for creating new quiz
@@ -100,7 +100,7 @@ func (quiz *Quiz) ConvertQuizToQuizToFront() QuizToFront {
 
 // convert quiz model to mocked front quiz structure
 // userAnswers come from database user's quiz.userAnswers field
-func (frontQuiz *QuizToFront) ConvertQuizFrontToQuiz(userAnswers []*UserAnswer) []*UserAnswer {
+func (frontQuiz *QuizToFront) ConvertQuizFrontToQuiz(userAnswers []UserAnswer) []UserAnswer {
 	// go through each frontQuiz, get the values and insert them into userAnswers array
 	// handling user answers
 	for i := range userAnswers {
