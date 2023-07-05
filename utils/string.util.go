@@ -1,8 +1,8 @@
 package utils
 
 import (
-	"strings"
 	"path/filepath"
+	"strings"
 )
 
 var uppercaseAcronym = map[string]string{
@@ -61,6 +61,7 @@ func ToCamel(s string) string {
 func ToLowerCamel(s string) string {
 	return toCamelInitCase(s, false)
 }
+
 // need to write test for this function, not work properly
 func HasSuffixCheck(name string, checks []string) bool {
 	for _, check := range checks {
@@ -82,4 +83,25 @@ func IsImageFile(fileName string) bool {
 	default:
 		return false
 	}
+}
+func SplitString(input string, separator ...string) []string {
+	if input == "" {
+		return nil
+	}
+	var stringSeperator string
+	if separator[0] == "" {
+		stringSeperator = ","
+	}
+
+	return strings.Split(input, stringSeperator)
+}
+
+// returns xth of english alphabet letter in upper case
+func GetNthAlphabeticUpperLetter(x int) string {
+	if x < 1 || x > 26 {
+		return "" // Invalid input range, return an empty string or handle error as needed
+	}
+
+	letter := 'A' + rune(x-1)
+	return string(letter)
 }
