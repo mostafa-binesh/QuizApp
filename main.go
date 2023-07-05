@@ -30,7 +30,7 @@ func main() {
 	// Initialize custom config
 	U.Store = session.New(session.Config{
 		Storage:      U.NewMemory(),
-		Expiration:   time.Hour * 8760, // 365 days
+		Expiration:   time.Hour * 168, // 7 days
 		CookieSecure: cookieSecure,     // false for postman, true for react localhost
 		// CookieHTTPOnly: true,
 		CookieSameSite: U.Env("COOKIE_SAME_SITE"),
