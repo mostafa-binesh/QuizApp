@@ -239,17 +239,14 @@ func CreateFakeQuiz(c *fiber.Ctx) error {
 }
 func ReportQuiz(c *fiber.Ctx) error {
 	user := c.Locals("user").(M.User)
-	user2 := c.Locals("user").(M.User)
+	// user2 := c.Locals("user").(M.User)
 	// options is needed in user preload in correct and incorrect answer coount
-	if err := D.DB().Preload("Quizzes.UserAnswers.Question.Options").Find(&user).Error; err != nil {
-		return U.DBError(c, err)
-	}
-	if err := D.DB().Preload("Courses.Subjects.Systems.Questions").Find(&user2).Error; err != nil {
+	if err := D.DB().Preload("Quizzes.UserAnswers.Question.Options").Preload("Courses.Subjects.Systems.Questions").Find(&user).Error; err != nil {
 		return U.DBError(c, err)
 	}
 	var totalQuestionsCount int
 	// todo: if we add course id to question model, here would be better solution
-	for _, course := range user2.Courses {
+	for _, course := range user.Courses {
 		for _, subject := range course.Subjects {
 			for _, system := range subject.Systems {
 				totalQuestionsCount += len(system.Questions)
@@ -311,6 +308,11 @@ func ReportQuiz(c *fiber.Ctx) error {
 		if !found {
 			incorrectAnswerCount++
 		}
+	}
+	unusedQuestions := totalQuestionsCount - usedQuestionsCount
+	// in some cases (no course but user has quizzes), the unused questions may be negative
+	if unusedQuestions < 0 {
+		unusedQuestions = 0
 	}
 	return c.JSON(fiber.Map{
 		"data": fiber.Map{
