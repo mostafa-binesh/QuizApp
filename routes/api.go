@@ -32,8 +32,8 @@ func APIInit(router *fiber.App) {
 	userQuiz.Put("/:id<int>", C.UpdateQuiz) // TODO not tested yet
 	userQuiz.Post("/", C.CreateQuiz)
 	userQuiz.Post("/createFakeQuiz", C.CreateFakeQuiz)
-	userQuiz.Get("/overall", C.OverallReport) // todo: swap report and overal route
-	userQuiz.Get("/report", C.ReportQuiz)     // todo: swap report and overal route
+	userQuiz.Get("/overall", C.OverallReport)
+	userQuiz.Get("/report", C.ReportQuiz)
 	userNotes := user.Group("/notes")
 	userNotes.Get("/", C.AllNotes)
 	userNotes.Put("/:id<int>", C.EditNote)
