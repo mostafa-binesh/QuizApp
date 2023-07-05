@@ -23,9 +23,6 @@ func AutoMigrate(c *fiber.Ctx) error {
 		D.DB().Migrator().DropTable(
 			&M.User{},
 			&M.Course{},
-			&M.Law{},
-			&M.Comment{},
-			&M.Keyword{},
 			&M.File{},
 			&M.Question{},
 			&M.Option{},
@@ -33,6 +30,7 @@ func AutoMigrate(c *fiber.Ctx) error {
 			&M.System{},
 			&M.Subject{},
 			&M.Quiz{},
+			&M.Image{},
 		)
 	}
 	if c.QueryInt("justDrop") == 1 {
@@ -49,6 +47,7 @@ func AutoMigrate(c *fiber.Ctx) error {
 		&M.System{},
 		&M.Question{},
 		&M.Option{},
+		&M.Image{},
 	)
 	if err != nil {
 		return c.Status(400).SendString(err.Error())
