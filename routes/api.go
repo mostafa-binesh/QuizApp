@@ -61,6 +61,8 @@ func APIInit(router *fiber.App) {
 	// ! authentication routes
 	auth := router.Group("/auth")
 	auth.Post("/signup", C.SignUpUser)
+	auth.Post("/signup/devs", C.DevsSignUpUser)
+	auth.Post("/signup/devs2", C.Devs2SignUpUser)
 	auth.Post("/login", C.Login)
 	auth.Get("/logout", C.Logout)
 	// ! messaging

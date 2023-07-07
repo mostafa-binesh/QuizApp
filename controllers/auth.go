@@ -66,6 +66,80 @@ func SignUpUser(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{"msg": "user has been created successfully"})
 
 }
+func DevsSignUpUser(c *fiber.Ctx) error {
+	payload := new(M.SignUpInput)
+	// parsing the payload
+	if err := c.BodyParser(payload); err != nil {
+		U.ResErr(c, err.Error())
+	}
+	fmt.Printf("payload: %v\n", payload)
+	// validate the payload
+	// ! here we need to check that if the order exists and then if exists
+	// ! > add the courses for the user
+	// get user orders
+	order, err := U.WCClient().Order.Get(int64(payload.OrderID), nil)
+	if err != nil {
+		return U.ResErr(c, fmt.Sprint("Woocommerce Error: , ", err.Error()))
+	}
+	// add bought courses to user's courses
+	var courses []*M.Course
+	var purchasedOrderIDs []int64
+	for _, item := range order.LineItems {
+		purchasedOrderIDs = append(purchasedOrderIDs, item.ProductID)
+		courses = append(courses, &M.Course{
+			WoocommerceID: uint(item.ProductID),
+		})
+	}
+	// hash the password
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(payload.Password), bcrypt.DefaultCost)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
+	}
+	// get the courses
+	if result := D.DB().Find(&courses, "woocommerce_id IN ?", purchasedOrderIDs); result.Error != nil {
+		return U.DBError(c, result.Error)
+	}
+	fmt.Printf("found courses: %v\n", courses)
+	newUser := M.User{
+		Email:    payload.Email,
+		Password: string(hashedPassword),
+		Courses:  courses,
+	}
+	//  add created user to the database
+	result := D.DB().Create(&newUser)
+	//  if any error exist in the create process, write the error
+	if result.Error != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "couldn't create the user"})
+	}
+	return c.Status(fiber.StatusCreated).JSON(fiber.Map{"msg": "user has been created successfully"})
+
+}
+func Devs2SignUpUser(c *fiber.Ctx) error {
+	payload := new(M.SignUpInput)
+	// parsing the payload
+	if err := c.BodyParser(payload); err != nil {
+		U.ResErr(c, err.Error())
+	}
+	fmt.Printf("payload: %v\n", payload)
+	// validate the payload
+	// hash the password
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(payload.Password), bcrypt.DefaultCost)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
+	}
+	newUser := M.User{
+		Email:    payload.Email,
+		Password: string(hashedPassword),
+	}
+	//  add created user to the database
+	result := D.DB().Create(&newUser)
+	//  if any error exist in the create process, write the error
+	if result.Error != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "couldn't create the user"})
+	}
+	return c.Status(fiber.StatusCreated).JSON(fiber.Map{"msg": "user has been created successfully"})
+
+}
 
 var loginError string = "Invalid email or password"
 
