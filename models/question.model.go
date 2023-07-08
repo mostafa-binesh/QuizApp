@@ -30,26 +30,8 @@ type QuestionSearch struct {
 	Course  string `json:"course"`
 }
 type AdminCreateQuestionInput struct {
-	Question      string             `json:"question" validate:"required"`
-	Options       []AdminOptionInput `json:"options" validate:"required"`
-	Description   string             `json:"description" validate:"required"`
-	SystemID      uint               `json:"systemID" validate:"required"`
+	Question    string             `json:"question" validate:"required"`
+	Options     []AdminOptionInput `json:"options" validate:"required"`
+	Description string             `json:"description" validate:"required"`
+	SystemID    uint               `json:"systemID" validate:"required"`
 }
-
-// GORM HOOKS
-// func (u *Question) AfterFind(tx *gorm.DB) (err error) {
-// if u.Image != nil {
-// 	for i := 0; i < len(u.Image); i++ {
-// 		// image exists
-// 		imageURL := U.BaseURL + "/" + u.Image[i]
-// 		u.Image[i] = imageURL
-// 	}
-// }
-// return nil
-// // if u.Image != nil {
-// // 	// image exists
-// // 	imageURL := U.BaseURL + "/" + *u.Image
-// // 	u.Image = &imageURL
-// // }
-// // return nil
-// }

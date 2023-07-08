@@ -4,6 +4,7 @@ import (
 	C "docker/controllers"
 	AC "docker/controllers/admin"
 
+	// "github.com/gofiber/contrib/swagger"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/encryptcookie"
 )
@@ -32,8 +33,8 @@ func APIInit(router *fiber.App) {
 	userQuiz.Put("/:id<int>", C.UpdateQuiz) // TODO not tested yet
 	userQuiz.Post("/", C.CreateQuiz)
 	userQuiz.Post("/createFakeQuiz", C.CreateFakeQuiz)
-	userQuiz.Get("/overall", C.OverallReport) // todo: swap report and overal route
-	userQuiz.Get("/report", C.ReportQuiz)     // todo: swap report and overal route
+	userQuiz.Get("/overall", C.OverallReport)
+	userQuiz.Get("/report", C.ReportQuiz)
 	userNotes := user.Group("/notes")
 	userNotes.Get("/", C.AllNotes)
 	userNotes.Put("/:id<int>", C.EditNote)
@@ -79,14 +80,12 @@ func APIInit(router *fiber.App) {
 	dev := router.Group("/devs")
 	dev.Get("/autoMigrate", C.AutoMigrate)
 	dev.Get("/translation", C.TranslationTest)
-	dev.Get("/pagination", C.PaginationTest) // ?: send limit and page in the query
-	dev.Get("/allUsers", C.DevAllUsers)      // ?: send limit and page in the query
+	dev.Get("/allUsers", C.DevAllUsers) // ?: send limit and page in the query
 	dev.Get("/panic", func(c *fiber.Ctx) error { panic("PANIC!") })
 	dev.Post("/upload", C.UploadFile)
 	dev.Post("/fileExistenaceCheck", C.ExistenceCheck)
 	dev.Post("/gormUnique", C.GormG)
 	dev.Get("/resetMemory", C.ResetMemory)
-	// router.Get("/contextMemoryAddress", C.FiberContextMemoryAddress)
 	devPanel := dev.Group("/admin")
 	devPanel.Get("/structInfo", C.StructInfo)
 }

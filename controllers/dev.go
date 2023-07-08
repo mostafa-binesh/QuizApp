@@ -5,11 +5,14 @@ import (
 	M "docker/models"
 	U "docker/utils"
 	"fmt"
+	"runtime"
+
 	// ut "github.com/go-playground/universal-translator"
 	// "github.com/go-playground/validator/v10"
-	"github.com/gofiber/fiber/v2"
 	"os"
 	"reflect"
+
+	"github.com/gofiber/fiber/v2"
 )
 
 func TranslationTest(c *fiber.Ctx) error {
@@ -23,18 +26,6 @@ func TranslationTest(c *fiber.Ctx) error {
 		return c.JSON(fiber.Map{"errors": U.Validate(user)})
 	}
 	return c.JSON(fiber.Map{"msg": "everything is fine"})
-}
-func PaginationTest(c *fiber.Ctx) error {
-	enactments := []M.Law{}
-	pagination := new(U.Pagination)
-	if err := c.QueryParser(pagination); err != nil {
-		U.ResErr(c, err.Error())
-	}
-	D.DB().Where("type = ?", 3).Scopes(U.Paginate(enactments, pagination)).Find(&enactments)
-	return c.JSON(fiber.Map{
-		"meta": pagination,
-		"data": enactments,
-	})
 }
 
 func DevAllUsers(c *fiber.Ctx) error {
