@@ -2,7 +2,7 @@ package utils
 
 import (
 	"fmt"
-	"reflect"
+	// "reflect"
 	"strconv"
 	"strings"
 
@@ -64,37 +64,37 @@ func Validate(fields interface{}, ignoreID ...string) map[string]string {
 	validate := validator.New()
 	fa_translations.RegisterDefaultTranslations(validate, trans)
 	// ! custom names registration
-	validate.RegisterTagNameFunc(func(field reflect.StructField) string {
-		return faTranslation[field.Name]
-	})
+	// validate.RegisterTagNameFunc(func(field reflect.StructField) string {
+	// 	return faTranslation[field.Name]
+	// })
 	// ! custom translations
 	// ? required
-	validate.RegisterTranslation("required", trans, func(ut ut.Translator) error {
-		return ut.Add("required", "{0} الزامی است", true) // see universal-translator for details
-	}, func(ut ut.Translator, fe validator.FieldError) string {
-		t, _ := ut.T("required", fe.Field())
-		return t
-	})
-	// ? gorm unique
-	if err := validate.RegisterValidation("dunique", uniqueValidator); err != nil {
-		panic(err)
-	}
-	validate.RegisterTranslation("dunique", trans, func(ut ut.Translator) error {
-		return ut.Add("dunique", "{0} ثبت شده است", true) // see universal-translator for details
-	}, func(ut ut.Translator, fe validator.FieldError) string {
-		t, _ := ut.T("dunique", fe.Field())
-		return t
-	})
-	// ? gorm exists
-	if err := validate.RegisterValidation("dexists", existValidator); err != nil {
-		panic(err)
-	}
-	validate.RegisterTranslation("dexists", trans, func(ut ut.Translator) error {
-		return ut.Add("dexists", "{0} ثبت نشده است", true) // see universal-translator for details
-	}, func(ut ut.Translator, fe validator.FieldError) string {
-		t, _ := ut.T("dexists", fe.Field())
-		return t
-	})
+	// validate.RegisterTranslation("required", trans, func(ut ut.Translator) error {
+	// 	return ut.Add("required", "{0} الزامی است", true) // see universal-translator for details
+	// }, func(ut ut.Translator, fe validator.FieldError) string {
+	// 	t, _ := ut.T("required", fe.Field())
+	// 	return t
+	// })
+	// // ? gorm unique
+	// if err := validate.RegisterValidation("dunique", uniqueValidator); err != nil {
+	// 	panic(err)
+	// }
+	// validate.RegisterTranslation("dunique", trans, func(ut ut.Translator) error {
+	// 	return ut.Add("dunique", "{0} ثبت شده است", true) // see universal-translator for details
+	// }, func(ut ut.Translator, fe validator.FieldError) string {
+	// 	t, _ := ut.T("dunique", fe.Field())
+	// 	return t
+	// })
+	// // ? gorm exists
+	// if err := validate.RegisterValidation("dexists", existValidator); err != nil {
+	// 	panic(err)
+	// }
+	// validate.RegisterTranslation("dexists", trans, func(ut ut.Translator) error {
+	// 	return ut.Add("dexists", "{0} ثبت نشده است", true) // see universal-translator for details
+	// }, func(ut ut.Translator, fe validator.FieldError) string {
+	// 	t, _ := ut.T("dexists", fe.Field())
+	// 	return t
+	// })
 	// ! possible issues: if fields have another struct in it, getJSONTag
 	// ! > won't work properly
 	err := validate.Struct(fields)

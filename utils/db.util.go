@@ -8,16 +8,17 @@ import (
 	"gorm.io/gorm"
 )
 
+// returns status 400 of { "error": DBError}
 func DBError(c *fiber.Ctx, err error) error {
 	var errorText string
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		errorText = "داده یافت نشد"
+		errorText = "Data not found"
 	} else if errors.Is(err, gorm.ErrInvalidData) {
-		errorText = "داده نامعتبر است"
+		errorText = "Invalid Data"
 	} else if errors.Is(err, gorm.ErrDuplicatedKey) {
-		errorText = "مقدار تکراری در پایگاه داده وجود دارد"
+		errorText = "Duplicate Key Error"
 	} else {
-		errorText = "خطای پیش بینی نشده ی پایگاه داده"
+		errorText = "Unpredicted Database Error"
 	}
 	fmt.Printf("Database error: %v\n", err)
 	if Env("APP_DEBUG") == "true" {

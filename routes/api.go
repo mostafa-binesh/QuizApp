@@ -4,6 +4,7 @@ import (
 	C "docker/controllers"
 	AC "docker/controllers/admin"
 
+	// "github.com/gofiber/contrib/swagger"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/encryptcookie"
 )
@@ -56,6 +57,7 @@ func APIInit(router *fiber.App) {
 	admin.Post("/questions", AC.CreateQuestion)
 	admin.Get("/questions/:id<int>", AC.QuestionByID)
 	admin.Post("/uploadImages", AC.UploadImage)
+	admin.Post("/uploadImages2", AC.UploadImage2)
 
 	admin.Get("/users", AC.IndexUser)
 	// ! authentication routes
@@ -79,14 +81,12 @@ func APIInit(router *fiber.App) {
 	dev := router.Group("/devs")
 	dev.Get("/autoMigrate", C.AutoMigrate)
 	dev.Get("/translation", C.TranslationTest)
-	dev.Get("/pagination", C.PaginationTest) // ?: send limit and page in the query
-	dev.Get("/allUsers", C.DevAllUsers)      // ?: send limit and page in the query
+	dev.Get("/allUsers", C.DevAllUsers) // ?: send limit and page in the query
 	dev.Get("/panic", func(c *fiber.Ctx) error { panic("PANIC!") })
 	dev.Post("/upload", C.UploadFile)
 	dev.Post("/fileExistenaceCheck", C.ExistenceCheck)
 	dev.Post("/gormUnique", C.GormG)
 	dev.Get("/resetMemory", C.ResetMemory)
-	// router.Get("/contextMemoryAddress", C.FiberContextMemoryAddress)
 	devPanel := dev.Group("/admin")
 	devPanel.Get("/structInfo", C.StructInfo)
 }

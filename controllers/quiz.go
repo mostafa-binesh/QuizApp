@@ -67,7 +67,7 @@ func CreateQuiz(c *fiber.Ctx) error {
 	system := M.System{}
 	D.DB().Preload("Subject.Course").Find(&system, systemID)
 	// create the quiz
-	endTime := time.Now().Add(time.Hour * 1) // todo: hardcoded
+	endTime := time.Now().Add(time.Hour * 1) // todo: hardcoded, should get it from woocommerce.course.duration
 	currentTime := time.Now()
 	duration := endTime.Sub(currentTime)
 	remainingSeconds := uint(duration.Seconds())
@@ -306,6 +306,7 @@ func OverallReport(c *fiber.Ctx) error {
 }
 
 // report correct, incorrect and omitted answers count of every subject and system
+// TODO optimize this code
 func ReportQuiz(c *fiber.Ctx) error {
 	// 1. get all user's quizzes
 	user := c.Locals("user").(M.User)

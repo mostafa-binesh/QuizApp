@@ -23,7 +23,6 @@ func AutoMigrate(c *fiber.Ctx) error {
 		D.DB().Migrator().DropTable(
 			&M.User{},
 			&M.Course{},
-			&M.File{},
 			&M.Question{},
 			&M.Option{},
 			&M.UserAnswer{},

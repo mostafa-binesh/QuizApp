@@ -1,5 +1,13 @@
 package models
 
+import "fmt"
+
+const (
+	MultipleSelect uint = iota
+	SingleSelect
+	NextGeneration
+)
+
 type Question struct {
 	ID          uint    `json:"no" gorm:"primary_key"`
 	Title       string  `json:"question"`
@@ -14,6 +22,7 @@ type Question struct {
 	//  cost resource, i rather add a courseID to the Question table and get it directly
 	CourseID *uint   `json:"-"`
 	Course   *Course `json:"course,omitempty" gorm:"foreignKey:CourseID;constraint:OnUpdate:CASCADE;OnDelete:CASCADE"`
+	Type     uint    `json:"type"`
 }
 
 //
@@ -30,26 +39,23 @@ type QuestionSearch struct {
 	Course  string `json:"course"`
 }
 type AdminCreateQuestionInput struct {
-	Question      string             `json:"question" validate:"required"`
-	Options       []AdminOptionInput `json:"options" validate:"required"`
-	Description   string             `json:"description" validate:"required"`
-	SystemID      uint               `json:"systemID" validate:"required"`
+	Question     string             `json:"question" validate:"required"`
+	Options      []AdminOptionInput `json:"options" validate:"required"`
+	Description  string             `json:"description" validate:"required"`
+	SystemID     uint               `json:"systemID" validate:"required"`
+	QuestionType uint               `json:"questionType" validate:"required"`
 }
 
-// GORM HOOKS
-// func (u *Question) AfterFind(tx *gorm.DB) (err error) {
-// if u.Image != nil {
-// 	for i := 0; i < len(u.Image); i++ {
-// 		// image exists
-// 		imageURL := U.BaseURL + "/" + u.Image[i]
-// 		u.Image[i] = imageURL
-// 	}
-// }
-// return nil
-// // if u.Image != nil {
-// // 	// image exists
-// // 	imageURL := U.BaseURL + "/" + *u.Image
-// // 	u.Image = &imageURL
-// // }
-// // return nil
-// }
+func (question *Question) ConvertTypeStringToTypeInt(value string) error {
+	switch value {
+	case "multipleSelect":
+		question.Type = MultipleSelect
+	case "singleSelect":
+		question.Type = SingleSelect
+	case "nextGeneration":
+		question.Type = NextGeneration
+	default:
+		return fmt.Errorf("Question type should be 'multipleSelect' or 'singleSelect or 'nextGeneration'")
+	}
+	return nil
+}
