@@ -14,6 +14,7 @@ type Question struct {
 	//  cost resource, i rather add a courseID to the Question table and get it directly
 	CourseID *uint   `json:"-"`
 	Course   *Course `json:"course,omitempty" gorm:"foreignKey:CourseID;constraint:OnUpdate:CASCADE;OnDelete:CASCADE"`
+	Type     uint    `json:"type"`
 }
 
 //
@@ -30,8 +31,9 @@ type QuestionSearch struct {
 	Course  string `json:"course"`
 }
 type AdminCreateQuestionInput struct {
-	Question    string             `json:"question" validate:"required"`
-	Options     []AdminOptionInput `json:"options" validate:"required"`
-	Description string             `json:"description" validate:"required"`
-	SystemID    uint               `json:"systemID" validate:"required"`
+	Question     string             `json:"question" validate:"required"`
+	Options      []AdminOptionInput `json:"options" validate:"required"`
+	Description  string             `json:"description" validate:"required"`
+	SystemID     uint               `json:"systemID" validate:"required"`
+	QuestionType uint               `json:"questionType" validate:"required"`
 }
