@@ -57,6 +57,7 @@ func APIInit(router *fiber.App) {
 	admin.Post("/questions", AC.CreateQuestion)
 	admin.Get("/questions/:id<int>", AC.QuestionByID)
 	admin.Post("/uploadImages", AC.UploadImage)
+	admin.Post("/uploadImages2", AC.UploadImage2)
 
 	admin.Get("/users", AC.IndexUser)
 	// ! authentication routes

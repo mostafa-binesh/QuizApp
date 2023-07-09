@@ -57,8 +57,9 @@ func CreateQuestion(c *fiber.Ctx) error {
 		SystemID:    payload.SystemID,
 		Description: payload.Description,
 		Images:      questionImages,
-		Type:        payload.QuestionType,
 	}
+	// convert frontend's sent string question type to backend uint question type
+	// if err = newQuestion.ConvertTypeStringToTypeInt(payload.QuestionType)
 	// insert new question to the database
 	result := D.DB().Create(&newQuestion)
 	if result.Error != nil {
@@ -98,6 +99,22 @@ func UploadImage(c *fiber.Ctx) error {
 		return c.SendString("file should be image! please fix it")
 	}
 	// Save file to disk
+	uuid := uuid.New().String()
+	newFileName := uuid + "-" + file.Filename
+	err = c.SaveFile(file, fmt.Sprintf(U.UploadLocation+"/%s", newFileName))
+	if err != nil {
+		return U.ResErr(c, "cannot save | "+err.Error())
+	}
+	return c.JSON(fiber.Map{"data": fiber.Map{"img": c.BaseURL() + "/public/uploads/" + newFileName}})
+}
+func UploadImage2(c *fiber.Ctx) error {
+	file, err := c.FormFile("file")
+	if file == nil {
+		return U.ResErr(c, "File is empty")
+	}
+	if err != nil {
+		return U.ResErr(c, err.Error())
+	}
 	uuid := uuid.New().String()
 	newFileName := uuid + "-" + file.Filename
 	err = c.SaveFile(file, fmt.Sprintf(U.UploadLocation+"/%s", newFileName))
