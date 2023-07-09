@@ -1,5 +1,13 @@
 package models
 
+import "fmt"
+
+const (
+	MultipleSelect uint = iota
+	SingleSelect
+	NextGeneration
+)
+
 type Question struct {
 	ID          uint    `json:"no" gorm:"primary_key"`
 	Title       string  `json:"question"`
@@ -36,4 +44,18 @@ type AdminCreateQuestionInput struct {
 	Description  string             `json:"description" validate:"required"`
 	SystemID     uint               `json:"systemID" validate:"required"`
 	QuestionType uint               `json:"questionType" validate:"required"`
+}
+
+func (question *Question) ConvertTypeStringToTypeInt(value string) error {
+	switch value {
+	case "multipleSelect":
+		question.Type = MultipleSelect
+	case "singleSelect":
+		question.Type = SingleSelect
+	case "nextGeneration":
+		question.Type = NextGeneration
+	default:
+		return fmt.Errorf("Question type should be 'multipleSelect' or 'singleSelect or 'nextGeneration'")
+	}
+	return nil
 }
