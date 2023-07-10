@@ -208,11 +208,20 @@ func CreateFakeQuiz(c *fiber.Ctx) error {
 	// create the empty user answer h selected systems
 	// TODO SECURITY ISSUE: checking the id of systems has not been checked
 	// all avaiable questions's id with desired system_id
-	var questionIDs []uint
-	if err := D.DB().Model(&M.Question{}).Distinct().Where("system_id IN (?)", payload.SystemIDs).Pluck("id", &questionIDs).Error; err != nil {
+	var multipleSelectQuestionIDs []uint
+	var singleSelectQuestionIDs []uint
+	// if err := D.DB().Model(&M.Question{}).Distinct().Where("system_id IN (?)", payload.SystemIDs).Pluck("id", &questionIDs).Error; err != nil {
+	// 	return U.DBError(c, err)
+	// }
+	// get 3 multiple question type
+	if err := D.DB().Where("type = ?", M.MultipleSelect).Limit(3).Pluck("id", &multipleSelectQuestionIDs).Error; err != nil {
 		return U.DBError(c, err)
 	}
-	questionsCount := len(questionIDs)
+	if err := D.DB().Where("type = ?", M.SingleSelect).Limit(3).Pluck("id", &singleSelectQuestionIDs).Error; err != nil {
+		return U.DBError(c, err)
+	}
+	multipleSelectQuestionIDs = append(multipleSelectQuestionIDs, singleSelectQuestionIDs...)
+	questionsCount := len(multipleSelectQuestionIDs)
 	var randomIndex uint
 	fmt.Printf("payload question: %d , available questions count: %d\n", payload.QuestionsCount, questionsCount)
 	if questionsCount <= payload.QuestionsCount {
@@ -224,13 +233,13 @@ func CreateFakeQuiz(c *fiber.Ctx) error {
 		rand.Seed(time.Now().UnixNano())
 		D.DB().Create(&M.UserAnswer{
 			QuizID:     quiz.ID,
-			QuestionID: questionIDs[randomIndex],
+			QuestionID: multipleSelectQuestionIDs[randomIndex],
 			IsMarked:   false,
 			UserID:     user.ID,
 			Status:     "unvisited",
 		})
-		U.RemoveElementByRef[uint](&questionIDs, int(randomIndex))
-		questionsCount = len(questionIDs)
+		U.RemoveElementByRef[uint](&multipleSelectQuestionIDs, int(randomIndex))
+		questionsCount = len(multipleSelectQuestionIDs)
 	}
 	fmt.Printf("printing the result\n")
 	return c.Status(200).JSON(fiber.Map{
