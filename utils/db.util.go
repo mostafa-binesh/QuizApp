@@ -8,7 +8,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// returns status 400 of { "error": DBError}
+// returns status 400 of { "error": DBError.PreDefinedText, "debug": DBError}
 func DBError(c *fiber.Ctx, err error) error {
 	var errorText string
 	if errors.Is(err, gorm.ErrRecordNotFound) {

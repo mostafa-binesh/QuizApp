@@ -6,8 +6,8 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
-	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/gofiber/fiber/v2/middleware/pprof"
+	"github.com/gofiber/fiber/v2/middleware/recover"
 )
 
 func RouterInit() {
@@ -21,11 +21,6 @@ func RouterInit() {
 		AllowOrigins:     U.Env("APP_ALLOW_ORIGINS"),
 		AllowCredentials: true,
 	}))
-	// setup utility base url
-	router.Use(func(c *fiber.Ctx) error {
-		U.BaseURL = c.BaseURL()
-		return c.Next()
-	})
 	// logger
 	router.Use(logger.New())
 	// recovery from panic
