@@ -169,8 +169,10 @@ func UpdateQuiz(c *fiber.Ctx) error {
 }
 func CreateFakeQuiz(c *fiber.Ctx) error {
 	payload := new(M.QuizInput)
-	payload.QuestionsCount = 3
+	payload.QuestionsCount = 6
 	payload.SystemIDs = []uint{1, 2, 3, 4, 5, 6, 7, 8, 9}
+	payload.QuizMode = []string{"tutor", "timed"}
+	payload.QuizType = []string{"nextGeneration"}
 	// parsing the payload
 	if err := c.BodyParser(payload); err != nil {
 		U.ResErr(c, err.Error())
@@ -184,9 +186,11 @@ func CreateFakeQuiz(c *fiber.Ctx) error {
 	if len(payload.SystemIDs) == 0 {
 		return U.ResErr(c, "You must at least select one system")
 	}
-	systemID := payload.SystemIDs[0]
+	// systemID := payload.SystemIDs[0]
 	system := M.System{}
-	D.DB().Preload("Subject.Course").Find(&system, systemID)
+	if err := D.DB().Preload("Subject.Course").First(&system).Error; err != nil {
+		return U.DBError(c, err)
+	}
 	// create the quiz
 	endTime := time.Now().Add(time.Hour * 1)
 	currentTime := time.Now()
@@ -214,17 +218,17 @@ func CreateFakeQuiz(c *fiber.Ctx) error {
 	// 	return U.DBError(c, err)
 	// }
 	// get 3 multiple question type
-	if err := D.DB().Where("type = ?", M.MultipleSelect).Limit(3).Pluck("id", &multipleSelectQuestionIDs).Error; err != nil {
+	if err := D.DB().Model(&M.Question{}).Where("type = ?", M.MultipleSelect).Limit(3).Pluck("id", &multipleSelectQuestionIDs).Error; err != nil {
 		return U.DBError(c, err)
 	}
-	if err := D.DB().Where("type = ?", M.SingleSelect).Limit(3).Pluck("id", &singleSelectQuestionIDs).Error; err != nil {
+	if err := D.DB().Model(&M.Question{}).Where("type = ?", M.SingleSelect).Limit(3).Pluck("id", &singleSelectQuestionIDs).Error; err != nil {
 		return U.DBError(c, err)
 	}
 	multipleSelectQuestionIDs = append(multipleSelectQuestionIDs, singleSelectQuestionIDs...)
 	questionsCount := len(multipleSelectQuestionIDs)
 	var randomIndex uint
 	fmt.Printf("payload question: %d , available questions count: %d\n", payload.QuestionsCount, questionsCount)
-	if questionsCount <= payload.QuestionsCount {
+	if questionsCount < payload.QuestionsCount {
 		D.DB().Delete(&quiz)
 		return U.ResErr(c, "not enough questions available")
 	}
