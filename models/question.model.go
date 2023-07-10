@@ -43,7 +43,7 @@ type AdminCreateQuestionInput struct {
 	Options      []AdminOptionInput `json:"options" validate:"required"`
 	Description  string             `json:"description" validate:"required"`
 	SystemID     uint               `json:"systemID" validate:"required"`
-	QuestionType uint               `json:"questionType" validate:"required"`
+	QuestionType string             `json:"questionType" validate:"required"`
 }
 
 func (question *Question) ConvertTypeStringToTypeInt(value string) error {

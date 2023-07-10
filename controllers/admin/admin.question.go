@@ -59,7 +59,7 @@ func CreateQuestion(c *fiber.Ctx) error {
 		Images:      questionImages,
 	}
 	// convert frontend's sent string question type to backend uint question type
-	// if err = newQuestion.ConvertTypeStringToTypeInt(payload.QuestionType)
+	newQuestion.ConvertTypeStringToTypeInt(payload.QuestionType)
 	// insert new question to the database
 	result := D.DB().Create(&newQuestion)
 	if result.Error != nil {
