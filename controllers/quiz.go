@@ -216,6 +216,7 @@ func CreateFakeQuiz(c *fiber.Ctx) error {
 	var randomIndex uint
 	fmt.Printf("payload question: %d , available questions count: %d\n", payload.QuestionsCount, questionsCount)
 	if questionsCount <= payload.QuestionsCount {
+		D.DB().Delete(&quiz)
 		return U.ResErr(c, "not enough questions available")
 	}
 	for i := 0; i < payload.QuestionsCount; i++ {
