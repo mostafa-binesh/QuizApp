@@ -12,10 +12,12 @@ import (
 
 func RouterInit() {
 	router := fiber.New(fiber.Config{
-		ServerHeader: "ubirockteam@gmail.com",
-		AppName:      "Medical Exam Quiz Application",
+		ServerHeader:                 "ubirockteam@gmail.com",
+		AppName:                      "Medical Exam Quiz Application",
+		DisablePreParseMultipartForm: true,
+		StreamRequestBody:            true,
 	})
-	// ! add middleware
+	// ! add middlewares
 	// cors
 	router.Use(cors.New(cors.Config{
 		AllowOrigins:     U.Env("APP_ALLOW_ORIGINS"),
@@ -27,7 +29,7 @@ func RouterInit() {
 	router.Use(recover.New(recover.Config{
 		EnableStackTrace: true,
 	}))
-	// #######################
+	// handling static files
 	router.Static("/public", "./public") // static files, local public folder to public url
 
 	// ! api routes
@@ -35,9 +37,4 @@ func RouterInit() {
 	router.Use(pprof.New(pprof.Config{Prefix: "/profiler"}))
 	// ! listen
 	router.Listen(":" + U.Env("APP_PORT"))
-	// if U.Env("environment") == "development" {
-	// 	router.Listen("localhost:" + U.Env("APP_PORT"))
-	// } else if U.Env("environment") == "production" {
-	// 	router.Listen(":" + U.Env("APP_PORT"))
-	// }
 }
