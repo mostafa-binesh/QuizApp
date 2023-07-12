@@ -63,6 +63,7 @@ func CreateQuiz(c *fiber.Ctx) error {
 	if len(payload.SystemIDs) == 0 {
 		return U.ResErr(c, "You must at least select one system")
 	}
+	// find the system from first index of systemIDs
 	systemID := payload.SystemIDs[0]
 	system := M.System{}
 	D.DB().Preload("Subject.Course").Find(&system, systemID)
@@ -71,6 +72,7 @@ func CreateQuiz(c *fiber.Ctx) error {
 	currentTime := time.Now()
 	duration := endTime.Sub(currentTime)
 	remainingSeconds := uint(duration.Seconds())
+	// # create quiz
 	quiz := M.Quiz{
 		UserID:       user.ID,
 		Status:       "pending",
@@ -85,17 +87,40 @@ func CreateQuiz(c *fiber.Ctx) error {
 	if result.Error != nil {
 		return U.ResErr(c, result.Error.Error())
 	}
+	// # find questions based on question mode
 	// create the empty user answer h selected systems
 	// TODO SECURITY ISSUE: checking the id of systems has not been checked
 	// all avaiable questions's id with desired system_id
 	var questionIDs []uint
-	if err := D.DB().Model(&M.Question{}).Distinct().Where("system_id IN (?)", payload.SystemIDs).Pluck("id", &questionIDs).Error; err != nil {
+	var err error
+	if payload.QuestionMode == M.AllQuestionMode {
+		err = D.DB().Model(&M.Question{}).Distinct().Where("system_id IN (?)", payload.SystemIDs).Pluck("id", &questionIDs).Error
+	} else if payload.QuestionMode == M.MarkedQuestionMode {
+		err = D.DB().Model(&user).Preload("UserAnswers", "is_marked = ?", true).Find(&user).Error
+		if err != nil {
+			D.DB().Delete(&quiz)
+			return U.DBError(c, err)
+		}
+		for _, answer := range user.UserAnswers {
+			// we don't want duplicate questions, check if the questionID is already exist or not
+			if !U.ExistsInArray[uint](questionIDs, answer.QuestionID) {
+				questionIDs = append(questionIDs, answer.QuestionID)
+			}
+		}
+	} else if payload.QuestionMode == M.SingleSelectQuestionMode {
+		err = D.DB().Model(&M.Question{}).Where("type = ?", M.SingleSelect).Pluck("id", &questionIDs).Error
+	} else if payload.QuestionMode == M.MultipleSelectQuestionMode {
+		err = D.DB().Model(&M.Question{}).Where("type = ?", M.MultipleSelect).Pluck("id", &questionIDs).Error
+	}
+	if err != nil {
+		D.DB().Delete(&quiz)
 		return U.DBError(c, err)
 	}
 	questionsCount := len(questionIDs)
 	var randomIndex uint
 	fmt.Printf("payload question: %d , available questions count: %d\n", payload.QuestionsCount, questionsCount)
 	if questionsCount <= payload.QuestionsCount {
+		D.DB().Delete(&quiz)
 		return U.ResErr(c, "not enough questions available")
 	}
 	for i := 0; i < payload.QuestionsCount; i++ {
@@ -170,10 +195,11 @@ func UpdateQuiz(c *fiber.Ctx) error {
 }
 func CreateFakeQuiz(c *fiber.Ctx) error {
 	payload := new(M.QuizInput)
-	payload.QuestionsCount = 6
+	payload.QuestionsCount = 3
 	payload.SystemIDs = []uint{1, 2, 3, 4, 5, 6, 7, 8, 9}
 	payload.QuizMode = []string{"tutor", "timed"}
 	payload.QuizType = []string{"nextGeneration"}
+	payload.QuestionMode = 1
 	// parsing the payload
 	if err := c.BodyParser(payload); err != nil {
 		U.ResErr(c, err.Error())
