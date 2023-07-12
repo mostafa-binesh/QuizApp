@@ -8,6 +8,8 @@ COPY go.sum ./
 
 # ENV HTTPS_PROXY="http://fodev.org:8118"
 
+ENV GOPROXY=https://goproxy.cn
+
 # RUN go get -d -v ./...
 # RUN go install -v ./...
 RUN go mod download
