@@ -1,13 +1,5 @@
 package utils
 
-import (
-	"github.com/google/uuid"
-)
-
-func AddUUIDToString(text string) string {
-	return uuid.New().String() + "-" + text
-}
-
 // removeElement removes the element at the given index from the input array.
 // The input array must be a slice and the index must be within the bounds of the slice.
 func RemoveElement[T any](arr []T, index int) []T {
@@ -39,4 +31,13 @@ func ExistsInArray[T comparable](elems []T, v T) bool {
 		}
 	}
 	return false
+}
+
+// eg. gets []string and returns []*string
+func ConvertSliceToPtrSlice[T any](s []T) []*T {
+	ptrSlice := make([]*T, len(s))
+	for i, str := range s {
+		ptrSlice[i] = &str
+	}
+	return ptrSlice
 }
