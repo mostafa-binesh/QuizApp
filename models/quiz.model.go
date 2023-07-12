@@ -7,6 +7,15 @@ import (
 	"time"
 )
 
+type QuizQuestionMode uint
+
+const (
+	AllQuestionMode QuizQuestionMode = 1 + iota
+	MarkedQuestionMode
+	SingleSelectQuestionMode
+	MultipleSelectQuestionMode
+)
+
 type Quiz struct {
 	ID     uint  `json:"id,omitempty" gorm:"primary_key"`
 	UserID uint  `json:"-"`
@@ -19,16 +28,21 @@ type Quiz struct {
 	Duration    uint         `json:"duration" gorm:"not null"`
 	CourseID    uint         `json:"-"`
 	Course      *Course      `json:"course,omitempty" gorm:"foreignKey:CourseID;constraint:OnUpdate:CASCADE;OnDelete:CASCADE"`
-	Mode        string       `json:"mode" gorm:"type:varchar(255)"`
-	Type        string       `json:"type" gorm:"type:varchar(255)"`
+	// mode = tutor, timed
+	Mode string `json:"mode" gorm:"type:varchar(255)"`
+	// type like nextGeneration
+	Type string `json:"type" gorm:"type:varchar(255)"`
+	// QuestionMode = All, Marked, singleSelect, multipleSelect
+	QuestionMode QuizQuestionMode `json:"questionType"`
 }
 
 // used for creating new quiz
 type QuizInput struct {
-	QuestionsCount int      `json:"questionsCount" validate:"required,min=1"`
-	SystemIDs      []uint   `json:"systemIDs" validate:"required"`
-	QuizMode       []string `json:"quizMode" validate:"required"`
-	QuizType       []string `json:"quizType" validate:"required"`
+	QuestionsCount int              `json:"questionsCount" validate:"required,min=1"`
+	SystemIDs      []uint           `json:"systemIDs" validate:"required"`
+	QuizMode       []string         `json:"quizMode" validate:"required"`
+	QuizType       []string         `json:"quizType" validate:"required"`
+	QuestionMode   QuizQuestionMode `json:"questionMode" validate:"required"`
 }
 
 // used for listing the user's quizzes
@@ -40,22 +54,23 @@ type QuizList struct {
 
 // used to convert backend quiz model to front mocked model
 type QuizToFront struct {
-	ID                uint        `json:"no" gorm:"primary_key"`
-	Questions         []*Question `json:"questions"` // question with options only
-	UserAnswers       []*string   `json:"userAnswers"`
-	UserNotes         []*string   `json:"userNotes"`
-	UserMarks         []bool      `json:"userMarks"`
-	SubmitedQuestions []bool      `json:"submitedQuestions"`
-	QuestionsStatus   []*string   `json:"questionsStatus"`
-	SpentTimes        []*uint     `json:"spentTimes"`
-	RemainingHours    int         `json:"remainingHours"`
-	RemainingMinutes  int         `json:"remainingMinutes"`
-	RemainingSeconds  int         `json:"remainingSeconds"`
-	QuizState         string      `json:"quizState"`
-	CreatedAt         string      `json:"date"`
-	Course            string      `json:"courseName"`
-	Mode              []string    `json:"mode"`
-	Type              []string    `json:"type"`
+	ID                uint             `json:"no" gorm:"primary_key"`
+	Questions         []*Question      `json:"questions"` // question with options only
+	UserAnswers       []*string        `json:"userAnswers"`
+	UserNotes         []*string        `json:"userNotes"`
+	UserMarks         []bool           `json:"userMarks"`
+	SubmitedQuestions []bool           `json:"submitedQuestions"`
+	QuestionsStatus   []*string        `json:"questionsStatus"`
+	SpentTimes        []*uint          `json:"spentTimes"`
+	RemainingHours    int              `json:"remainingHours"`
+	RemainingMinutes  int              `json:"remainingMinutes"`
+	RemainingSeconds  int              `json:"remainingSeconds"`
+	QuizState         string           `json:"quizState"`
+	CreatedAt         string           `json:"date"`
+	Course            string           `json:"courseName"`
+	Mode              []string         `json:"mode"`
+	Type              []string         `json:"type"`
+	QuestionMode      QuizQuestionMode `json:"questionMode"`
 	// TODO add quizID
 }
 
@@ -95,6 +110,7 @@ func (quiz *Quiz) ConvertQuizToQuizToFront() QuizToFront {
 	quizFront.CreatedAt = quiz.CreatedAt.Format("2006-01-02T15:04:05.000Z")
 	quizFront.Mode = strings.Split(quiz.Mode, ",")
 	quizFront.Type = strings.Split(quiz.Type, ",")
+	quizFront.QuestionMode = quiz.QuestionMode
 	return quizFront
 }
 

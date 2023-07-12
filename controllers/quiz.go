@@ -72,13 +72,14 @@ func CreateQuiz(c *fiber.Ctx) error {
 	duration := endTime.Sub(currentTime)
 	remainingSeconds := uint(duration.Seconds())
 	quiz := M.Quiz{
-		UserID:   user.ID,
-		Status:   "pending",
-		EndTime:  &endTime,
-		Duration: remainingSeconds,
-		CourseID: system.Subject.CourseID,
-		Mode:     strings.Join(payload.QuizMode, ","),
-		Type:     strings.Join(payload.QuizType, ","),
+		UserID:       user.ID,
+		Status:       "pending",
+		EndTime:      &endTime,
+		Duration:     remainingSeconds,
+		CourseID:     system.Subject.CourseID,
+		Mode:         strings.Join(payload.QuizMode, ","),
+		Type:         strings.Join(payload.QuizType, ","),
+		QuestionMode: payload.QuestionMode,
 	}
 	result := D.DB().Create(&quiz)
 	if result.Error != nil {
