@@ -56,7 +56,7 @@ type QuizList struct {
 type QuizToFront struct {
 	ID                uint             `json:"no" gorm:"primary_key"`
 	Questions         []*Question      `json:"questions"` // question with options only
-	UserAnswers       []*string        `json:"userAnswers"`
+	UserAnswers       [][]*string      `json:"userAnswers"`
 	UserNotes         []*string        `json:"userNotes"`
 	UserMarks         []bool           `json:"userMarks"`
 	SubmitedQuestions []bool           `json:"submitedQuestions"`
@@ -79,7 +79,7 @@ func (quiz *Quiz) ConvertQuizToQuizToFront() QuizToFront {
 	quizFront := QuizToFront{}
 	quizFront.ID = quiz.ID
 	var quizFrontQuestions []*Question
-	var userAnswers []*string
+	var userAnswers [][]*string
 	var userNotes []*string
 	var userMarks []bool
 	var submitedQuestions []bool
@@ -87,7 +87,14 @@ func (quiz *Quiz) ConvertQuizToQuizToFront() QuizToFront {
 	var spentTimes []*uint
 	for _, v := range quiz.UserAnswers {
 		quizFrontQuestions = append(quizFrontQuestions, v.Question)
-		userAnswers = append(userAnswers, v.Answer)
+		// # handling answers
+		// answers can be "A" or "A,B"
+		var answersPtr []*string
+		if v.Answer != nil {
+			answers := strings.Split(*v.Answer, ",")
+			answersPtr = U.ConvertSliceToPtrSlice[string](answers)
+		}
+		userAnswers = append(userAnswers, answersPtr)
 		userNotes = append(userNotes, v.Note)
 		userMarks = append(userMarks, v.IsMarked)
 		submitedQuestions = append(submitedQuestions, v.Submitted)
@@ -122,7 +129,16 @@ func (frontQuiz *QuizToFront) ConvertQuizFrontToQuiz(userAnswers []UserAnswer) [
 	for i := range userAnswers {
 		// fmt.Printf(*userAnswers[i].Answer + "\n")
 		if frontQuiz.UserAnswers[i] != nil {
-			userAnswers[i].Answer = frontQuiz.UserAnswers[i]
+			// need to convert the *answers of array to answer to be able to join them using ,
+			var answersString []string
+			for _, answer := range frontQuiz.UserAnswers[i] {
+				// because answer is a pointer, we need to check the nil pointer
+				if answer != nil {
+					answersString = append(answersString, *answer)
+				}
+			}
+			joinedString := strings.Join(answersString, ",")
+			userAnswers[i].Answer = &joinedString
 		}
 		if frontQuiz.UserNotes[i] != nil {
 			userAnswers[i].Note = frontQuiz.UserNotes[i]
