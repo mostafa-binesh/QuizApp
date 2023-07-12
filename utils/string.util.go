@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"github.com/google/uuid"
 	"path/filepath"
 	"strings"
 )
@@ -104,4 +105,7 @@ func GetNthAlphabeticUpperLetter(x int) string {
 
 	letter := 'A' + rune(x-1)
 	return string(letter)
+}
+func AddUUIDToString(text string) string {
+	return uuid.New().String() + "-" + text
 }
