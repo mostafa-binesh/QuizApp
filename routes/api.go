@@ -54,10 +54,11 @@ func APIInit(router *fiber.App) {
 	admin.Post("/users", AC.AddUser)
 	admin.Put("/users/:id<int>", AC.EditUser)
 	admin.Delete("/users/:id<int>", AC.DeleteUser)
-	admin.Post("/questions", AC.CreateQuestion)
+	admin.Post("/questions/singleSelect", AC.CreateSingleSelectQuestion)
+	admin.Post("/questions/multipleSelect", AC.CreateMultipleSelectQuestion)
 	admin.Get("/questions/:id<int>", AC.QuestionByID)
 	admin.Post("/uploadImages", AC.UploadImage)
-	admin.Post("/uploadImages2", AC.UploadImage2)
+	admin.Post("/advancedUploadImage", AC.AdvancedUploadImage)
 
 	admin.Get("/users", AC.IndexUser)
 	// ! authentication routes
