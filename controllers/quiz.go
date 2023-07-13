@@ -25,7 +25,6 @@ func AllQuizzes(c *fiber.Ctx) error {
 	}
 	var userQuizzes []M.QuizToFront
 	for _, quiz := range user.Quizzes {
-		fmt.Printf("course is %v\n", quiz.Course)
 		userQuizzes = append(userQuizzes, quiz.ConvertQuizToQuizToFront())
 	}
 	return c.JSON(fiber.Map{"data": userQuizzes})
