@@ -3,6 +3,7 @@ package seeders
 import (
 	D "docker/database"
 	M "docker/models"
+	U "docker/utils"
 	"fmt"
 	"math/rand"
 	"time"
@@ -82,7 +83,7 @@ func QuestionAndOptionsSeeder() {
 				Title:      optionText,
 				Index:      string('A' + j),
 				QuestionID: question.ID,
-				IsCorrect:  j == correctOption, // Set oneof the options as correct randomly
+				IsCorrect:  U.ConvertBoolToUint(j == correctOption), // Set oneof the options as correct randomly // TODO changed to 1 for test of isCorrect uint test
 			}
 			D.DB().Create(&option)
 		}
