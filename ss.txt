@@ -48,3 +48,46 @@ func GormG(c *fiber.Ctx) error {
 	// dbConfig := DBConfig{}
 	// dsn := fmt.Sprintf("postgres://%s:%s@%s:%s/%s", dbConfig.Username, dbConfig.Password, dbConfig.Server, dbConfig.Port, dbConfig.Name)
 	
+	func AdvancedUploadImage(c *fiber.Ctx) error {
+	// Create a new file to store the uploaded data
+	// dst, err := os.Create("uploaded_file.txt")
+	// if err != nil {
+	// 	return err
+	// }
+	// defer dst.Close()
+
+	// // Get the request body stream
+	// reader := c.Request().BodyStream()
+
+	// // Read 1MiB at a time
+	// buffer := make([]byte, 0, 1024*1024)
+	// for {
+	// 	length, err := io.ReadFull(reader, buffer[:cap(buffer)])
+	// 	// Cap the buffer based on the actual length read
+	// 	buffer = buffer[:length]
+	// 	if err != nil {
+	// 		// When the error is EOF, there are no longer any bytes to read
+	// 		// meaning the request is completed
+	// 		if err == io.EOF {
+	// 			break
+	// 		}
+
+	// 		// If the error is an unexpected EOF, the requested size to read
+	// 		// was larger than what was available. This is not an issue for
+	// 		// as long as the length returned above is used, or the buffer
+	// 		// is capped as it is above. Any error that is not an unexpected
+	// 		// EOF is an actual error, which we handle accordingly
+	// 		if err != io.ErrUnexpectedEOF {
+	// 			return err
+	// 		}
+	// 	}
+
+	// 	// Write the buffered data to the destination file
+	// 	_, err = dst.Write(buffer)
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// }
+	return c.SendString("DONE")
+	// return c.JSON(fiber.Map{"data": fiber.Map{"img": c.BaseURL() + "/public/uploads/" + newFileName}})
+}
