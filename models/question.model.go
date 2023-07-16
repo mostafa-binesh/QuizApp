@@ -12,6 +12,7 @@ const (
 	NextGenerationSingleSelect
 	NextGenerationTableSingleSelect
 	NextGenerationTableMultipleSelect
+	NextGenerationTableDropDown
 )
 
 type Question struct {
@@ -112,6 +113,23 @@ func (question *Question) ConvertTypeStringToTypeInt(value string) error {
 		question.Type = NextGeneration
 	default:
 		return fmt.Errorf("Question type should be 'multipleSelect' or 'singleSelect or 'nextGeneration'")
+	}
+	return nil
+}
+func (question *Question) ConvertNextGenerationTypeToTypeInt(value string) error {
+	switch value {
+	case "singleSelect":
+		question.Type = NextGenerationSingleSelect
+	case "multipleSelect":
+		question.Type = NextGenerationMultipleSelect
+	case "tableSingleSelect":
+		question.Type = NextGenerationTableSingleSelect
+	case "tableMultipleSelect":
+		question.Type = NextGenerationTableMultipleSelect
+	case "dropdown":
+		question.Type = NextGenerationTableDropDown
+	default:
+		return fmt.Errorf("Question type should be singleSelect or 'multipleSelect or TableSingleSelect or TableMultipleSelect or TableDropDown")
 	}
 	return nil
 }
