@@ -14,3 +14,10 @@ type SubjectWithSystems struct {
 	Systems  []*System `json:"systems"`
 	CourseID uint      `json:"courseID"`
 }
+type SubjectWithQuestionsCount struct {
+	ID             uint      `json:"id" gorm:"primary_key"`
+	Title          string    `json:"title"`
+	Systems        []*SystemWithQuestionsCount `json:"systems"`
+	CourseID       uint      `json:"courseID"`
+	QuestionsCount int      `json:"questionsCount"`
+}

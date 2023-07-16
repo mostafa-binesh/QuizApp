@@ -17,11 +17,13 @@ import (
 func AllCourses(c *fiber.Ctx) error {
 	user := c.Locals("user").(M.User)
 	// get all courses with subjects and systems
-	result := D.DB().Model(&user).Preload("Courses.Subjects.Systems").Find(&user)
+	result := D.DB().Model(&user).Preload("Courses.Subjects.Systems.Questions").Find(&user)
 	if result.Error != nil {
 		return U.DBError(c, result.Error)
 	}
-	return c.JSON(fiber.Map{"data": user.Courses})
+	// convert the courses to courses with questions
+	coursesWithQuestionsCount := M.ConvertCourseToCourseWithQuestionsCounts(user.Courses)
+	return c.JSON(fiber.Map{"data": coursesWithQuestionsCount})
 }
 // all subject of course with id of courseID
 func CourseSubjects(c *fiber.Ctx) error {
