@@ -63,6 +63,7 @@ func CreateQuiz(c *fiber.Ctx) error {
 		return U.ResErr(c, "You must at least select one system")
 	}
 	// find the system from first index of systemIDs
+	// cause we checked the length of payload.systemIDs > 0, we can use first index of it 
 	systemID := payload.SystemIDs[0]
 	system := M.System{}
 	D.DB().Preload("Subject.Course").Find(&system, systemID)
