@@ -10,6 +10,6 @@ type Option struct {
 	Question   *Question `json:"question,omitempty" gorm:"foreignKey:QuestionID;constraint:OnUpdate:CASCADE;OnDelete:CASCADE"`
 }
 type AdminOptionInput struct {
-	Title     string `json:"title" validate:"required"`
-	IsCorrect bool   `json:"isCorrect" validate:"required"`
+	Title     string `form:"title" validate:"required"`
+	IsCorrect bool   `form:"isCorrect" validate:"required"`
 }

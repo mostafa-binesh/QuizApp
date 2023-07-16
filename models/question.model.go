@@ -41,11 +41,11 @@ type QuestionSearch struct {
 	Course  string `json:"course"`
 }
 type AdminCreateMultipleSelectQuestionInput struct {
-	Question     string             `json:"question" validate:"required"`
-	Options      []AdminOptionInput `json:"options" validate:"required"`
-	Description  string             `json:"description" validate:"required"`
-	SystemID     uint               `json:"systemID" validate:"required"`
-	QuestionType string             `json:"questionType" validate:"required"`
+	Question     string             `form:"question" validate:"required"`
+	Options      []AdminOptionInput `form:"options" validate:"required"`
+	Description  string             `form:"description" validate:"required"`
+	SystemID     uint               `form:"systemID" validate:"required"`
+	QuestionType string             `form:"questionType" validate:"required"`
 }
 type AdminCreateSingleSelectQuestionInput struct {
 	Question      string `json:"email" validate:"required"`
