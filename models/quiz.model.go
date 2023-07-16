@@ -55,7 +55,7 @@ type QuizList struct {
 // used to convert backend quiz model to front mocked model
 type QuizToFront struct {
 	ID                uint             `json:"no" gorm:"primary_key"`
-	Questions         []*Question      `json:"questions"` // question with options only
+	Questions         []FrontQuestion  `json:"questions"` // question with options only
 	UserAnswers       [][]*string      `json:"userAnswers"`
 	UserNotes         []*string        `json:"userNotes"`
 	UserMarks         []bool           `json:"userMarks"`
@@ -78,7 +78,7 @@ type QuizToFront struct {
 func (quiz *Quiz) ConvertQuizToQuizToFront() QuizToFront {
 	quizFront := QuizToFront{}
 	quizFront.ID = quiz.ID
-	var quizFrontQuestions []*Question
+	var quizFrontQuestions []Question
 	var userAnswers [][]*string
 	var userNotes []*string
 	var userMarks []bool
@@ -86,7 +86,7 @@ func (quiz *Quiz) ConvertQuizToQuizToFront() QuizToFront {
 	var questionsStatus []*string
 	var spentTimes []*uint
 	for _, v := range quiz.UserAnswers {
-		quizFrontQuestions = append(quizFrontQuestions, v.Question)
+		quizFrontQuestions = append(quizFrontQuestions, *v.Question)
 		// # handling answers
 		// answers can be "A" or "A,B"
 		var answersPtr []*string
@@ -101,7 +101,7 @@ func (quiz *Quiz) ConvertQuizToQuizToFront() QuizToFront {
 		questionsStatus = append(questionsStatus, &v.Status)
 		spentTimes = append(spentTimes, &v.SpentTime)
 	}
-	quizFront.Questions = quizFrontQuestions
+	quizFront.Questions = *ConvertQuestionsToFrontQuestions(&quizFrontQuestions)
 	quizFront.UserAnswers = userAnswers
 	quizFront.UserNotes = userNotes
 	quizFront.UserMarks = userMarks
