@@ -62,7 +62,6 @@ func (question Question) ConvertQuestionToFrontQuestion() FrontQuestion {
 		Type:        question.Type,
 		Tabs:        question.Tabs,
 	}
-
 	return frontQuestion
 }
 func ConvertQuestionsToFrontQuestions(questions *[]Question) *[]FrontQuestion {
@@ -101,6 +100,26 @@ type AdminCreateSingleSelectQuestionInput struct {
 	CorrectOption uint   `json:"correct" validate:"required"`
 	Description   string `json:"description" validate:"required"`
 	SystemID      uint   `json:"systemID" validate:"required"`
+}
+type AdminCreateNextGenerationQuestionInput struct {
+	Title       string                                       `json:"question" validate:"required"`
+	Description string                                       `json:"metaDescription" validate:"required"`
+	Tabs        []AdminCreateNextGenerationQuestionTabsInput `json:"tabs" validate:"required"`
+	Type        string                                       `json:"type" validate:"required"`
+	// the options is for dropdown
+	DropDownOptions [][]AdminCreateNextGenerationQuestionOptionsInput `json:"dropDownOptions"`
+	SingleOptions   AdminCreateNextGenerationQuestionOptionsInput     `json:"singleOptions"`
+	MultipleOptions []AdminCreateNextGenerationQuestionOptionsInput   `json:"multipleOptions"`
+}
+
+// each tab has a name and tables
+type AdminCreateNextGenerationQuestionTabsInput struct {
+	TableTitle string     `json:"tableTitle" validate:"required"`
+	Rows       [][]string `json:"rows" validate:"required"`
+}
+type AdminCreateNextGenerationQuestionOptionsInput struct {
+	Title  string `json:"option"`
+	Status any    `json:"status"`
 }
 
 func (question *Question) ConvertTypeStringToTypeInt(value string) error {
