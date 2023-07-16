@@ -66,8 +66,8 @@ func (question Question) ConvertQuestionToFrontQuestion() FrontQuestion {
 }
 func ConvertQuestionsToFrontQuestions(questions *[]Question) *[]FrontQuestion {
 	frontQuestions := make([]FrontQuestion, len(*questions))
-	for _, question := range *questions {
-		frontQuestions = append(frontQuestions, question.ConvertQuestionToFrontQuestion())
+	for i, question := range *questions {
+		frontQuestions[i] = question.ConvertQuestionToFrontQuestion()
 	}
 	return &frontQuestions
 }

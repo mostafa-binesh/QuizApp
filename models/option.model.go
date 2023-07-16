@@ -20,12 +20,11 @@ type FrontOption struct {
 	IsCorrectUint *uint  `json:"status,omitempty"`
 	IsCorrectBool *bool  `json:"status,omitempty"`
 }
-
 func ConvertOptionToFrontOption(options *[]Option, questionType QuestionType) *[]FrontOption {
 	frontOptions := make([]FrontOption, len(*options))
 	var isCorrectUint *uint
 	var isCorrectBool *bool
-	for _, option := range *options {
+	for i, option := range *options {
 		isCorrectUint = nil
 		isCorrectBool = nil
 		// if question type was nextGeneration
@@ -33,17 +32,18 @@ func ConvertOptionToFrontOption(options *[]Option, questionType QuestionType) *[
 		// otherwise, we need to set isCorrectBool value
 		if questionType == NextGenerationTableSingleSelect ||
 			questionType == NextGenerationTableMultipleSelect {
-			*isCorrectUint = option.IsCorrect
+			isCorrectUint = &option.IsCorrect
 		} else {
-			*isCorrectBool = option.IsCorrect != 0
+			newBool := option.IsCorrect != 0
+			isCorrectBool = &newBool
 		}
-		frontOptions = append(frontOptions, FrontOption{
+		frontOptions[i] = FrontOption{
 			ID:            option.ID,
 			Title:         option.Title,
 			Index:         option.Index,
 			IsCorrectUint: isCorrectUint,
 			IsCorrectBool: isCorrectBool,
-		})
+		}
 	}
 	return &frontOptions
 }
