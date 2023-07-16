@@ -8,6 +8,10 @@ const (
 	MultipleSelect QuestionType = iota
 	SingleSelect
 	NextGeneration
+	NextGenerationMultipleSelect
+	NextGenerationSingleSelect
+	NextGenerationTableSingleSelect
+	NextGenerationTableMultipleSelect
 )
 
 type Question struct {
