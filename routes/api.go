@@ -56,6 +56,7 @@ func APIInit(router *fiber.App) {
 	admin.Delete("/users/:id<int>", AC.DeleteUser)
 	admin.Post("/questions/singleSelect", AC.CreateSingleSelectQuestion)
 	admin.Post("/questions/multipleSelect", AC.CreateMultipleSelectQuestion)
+	admin.Post("/questions/nextGeneration", AC.CreateNextGenerationQuestion)
 	admin.Get("/questions/:id<int>", AC.QuestionByID)
 	admin.Post("/uploadImages", AC.UploadImage)
 
