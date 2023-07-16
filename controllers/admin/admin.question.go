@@ -141,6 +141,20 @@ func CreateSingleSelectQuestion(c *fiber.Ctx) error {
 	}
 	return c.JSON(fiber.Map{"msg": "Question created successfully", "id": newQuestion.ID})
 }
+
+// WIP
+func CreateNextGenerationQuestion(c *fiber.Ctx) error {
+	payload := new(M.AdminCreateNextGenerationQuestionInput)
+	// parse body
+	if err := c.BodyParser(payload); err != nil {
+		return U.ResErr(c, err.Error())
+	}
+	// validate the payload
+	if errs := U.Validate(payload); errs != nil {
+		return c.Status(400).JSON(fiber.Map{"errors": errs})
+	}
+	return c.JSON(fiber.Map{"data": payload})
+}
 func QuestionByID(c *fiber.Ctx) error {
 	question := &M.Question{}
 	// find the question with id of param id and preload course, iamges, system.subject
