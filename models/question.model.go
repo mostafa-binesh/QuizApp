@@ -29,9 +29,49 @@ type Question struct {
 	CourseID *uint        `json:"-"`
 	Course   *Course      `json:"course,omitempty" gorm:"foreignKey:CourseID;constraint:OnUpdate:CASCADE;OnDelete:CASCADE"`
 	Type     QuestionType `json:"type"`
+	// NextGenerationType NextGenerationType `json:"-"`
+	Tabs []Tab `json:"tabs"`
+}
+type FrontQuestion struct {
+	ID          uint    `json:"no" gorm:"primary_key"`
+	Title       string  `json:"question"`
+	Description string  `json:"description"`
+	Images      []Image `gorm:"polymorphic:Owner;"`
+	// relationships
+	Options  []FrontOption `json:"options,omitempty"`
+	SystemID uint          `json:"-"`
+	System   *System       `json:"system,omitempty" gorm:"foreignKey:SystemID;constraint:OnUpdate:CASCADE;OnDelete:CASCADE"`
+	// although we could get the course id from question >subject > system, but that would
+	//  cost resource, i rather add a courseID to the Question table and get it directly
+	Course *Course      `json:"course,omitempty" gorm:"foreignKey:CourseID;constraint:OnUpdate:CASCADE;OnDelete:CASCADE"`
+	Type   QuestionType `json:"type"`
+	Tabs   []Tab        `json:"tabs"`
 }
 
-//
+func (question Question) ConvertQuestionToFrontQuestion() FrontQuestion {
+	frontQuestion := FrontQuestion{
+		ID:          question.ID,
+		Title:       question.Title,
+		Description: question.Description,
+		Images:      question.Images,
+		Options:     *ConvertOptionToFrontOption(&question.Options, question.Type),
+		SystemID:    question.SystemID,
+		System:      question.System,
+		Course:      question.Course,
+		Type:        question.Type,
+		Tabs:        question.Tabs,
+	}
+
+	return frontQuestion
+}
+func ConvertQuestionsToFrontQuestions(questions *[]Question) *[]FrontQuestion {
+	frontQuestions := make([]FrontQuestion, len(*questions))
+	for _, question := range *questions {
+		frontQuestions = append(frontQuestions, question.ConvertQuestionToFrontQuestion())
+	}
+	return &frontQuestions
+}
+
 type QuestionList struct {
 	ID     uint   `json:"id"`
 	Title  string `json:"title"`
