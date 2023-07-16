@@ -2,3 +2,41 @@ LIKE is case-sensitive
 to search LIKE incase-sensitive, you need to use ILIKE
 
 go tool pprof -http=localhost:8071 http://127.0.0.1:8070/profiler/debug/pprof/heap?debug=1
+
+--
+a very important point 
+you cannot dereference the nil !
+look at this code :
+frontOptions := make([]FrontOption, len(*options))
+	var isCorrectUint *uint
+	var isCorrectBool *bool
+	for i, option := range *options {
+		isCorrectUint = nil
+		isCorrectBool = nil
+		// if question type was nextGeneration
+		// and nextGeneration type was table(single or multiple)select, we need to set isCorrectUint
+		// otherwise, we need to set isCorrectBool value
+		if questionType == NextGenerationTableSingleSelect ||
+			questionType == NextGenerationTableMultipleSelect {
+			*isCorrectUint = option.IsCorrect
+		} else {
+			*isCorrectBool = option.IsCorrect != 0
+		}
+		frontOptions[i] = FrontOption{
+			ID:            option.ID,
+			Title:         option.Title,
+			Index:         option.Index,
+			IsCorrectUint: isCorrectUint,
+			IsCorrectBool: isCorrectBool,
+		}
+	}
+	return &frontOptions
+
+*isCorrectUint = option.IsCorrect cannot be done 
+because at this moment, isCorrectUint is nil and you cannot set a value to nil reference ! 
+you need to do it like this 
+isCorrectUint = &option.IsCorrect
+
+////
+and if you make an array, you need to do frontOption[i] = value 
+not appending to it 
