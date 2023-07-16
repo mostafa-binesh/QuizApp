@@ -1,0 +1,4 @@
+LIKE is case-sensitive 
+to search LIKE incase-sensitive, you need to use ILIKE
+
+go tool pprof -http=localhost:8071 http://127.0.0.1:8070/profiler/debug/pprof/heap?debug=1
