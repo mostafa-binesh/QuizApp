@@ -8,7 +8,7 @@ type Option struct {
 	Index     string `json:"index,omitempty"`
 	IsCorrect uint   `json:"status"`
 	// relationships
-	QuestionID uint      `json:"-"`
+	QuestionID *uint      `json:"-"`
 	Question   *Question `json:"question,omitempty" gorm:"foreignKey:QuestionID;constraint:OnUpdate:CASCADE;OnDelete:CASCADE"`
 	DropdownID *uint      `json:"-"`
 	Dropdown   *Dropdown `json:"dropdown,omitempty" gorm:"foreignKey:DropdownID;constraint:OnUpdate:CASCADE;OnDelete:CASCADE"`
