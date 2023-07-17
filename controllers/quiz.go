@@ -15,6 +15,8 @@ import (
 	"gorm.io/gorm"
 )
 
+// because frontend guys only request once for all of quizzes and
+// save the entire quizzes into the state, i need to send quiz with all of its info
 func AllQuizzes(c *fiber.Ctx) error {
 	user := c.Locals("user").(M.User)
 	if err := D.DB().Model(&user).Preload("Quizzes.Course").Preload("UserAnswers", func(db *gorm.DB) *gorm.DB { // could do this as well : Preload("Comments", "ORDER BY ? ASC > ?", "id")
@@ -63,7 +65,7 @@ func CreateQuiz(c *fiber.Ctx) error {
 		return U.ResErr(c, "You must at least select one system")
 	}
 	// find the system from first index of systemIDs
-	// cause we checked the length of payload.systemIDs > 0, we can use first index of it 
+	// cause we checked the length of payload.systemIDs > 0, we can use first index of it
 	systemID := payload.SystemIDs[0]
 	system := M.System{}
 	D.DB().Preload("Subject.Course").Find(&system, systemID)
