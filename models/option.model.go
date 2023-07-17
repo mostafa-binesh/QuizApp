@@ -11,7 +11,7 @@ type Option struct {
 	QuestionID uint      `json:"-"`
 	Question   *Question `json:"question,omitempty" gorm:"foreignKey:QuestionID;constraint:OnUpdate:CASCADE;OnDelete:CASCADE"`
 	DropdownID *uint      `json:"-"`
-	Dropdown   *Dropdown `json:"dropdown,omitempty" gorm:"foreignKey:DropDownID;constraint:OnUpdate:CASCADE;OnDelete:CASCADE"`
+	Dropdown   *Dropdown `json:"dropdown,omitempty" gorm:"foreignKey:DropdownID;constraint:OnUpdate:CASCADE;OnDelete:CASCADE"`
 }
 type AdminOptionInput struct {
 	Title     string `form:"title" validate:"required"`
