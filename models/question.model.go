@@ -31,7 +31,8 @@ type Question struct {
 	Course   *Course      `json:"course,omitempty" gorm:"foreignKey:CourseID;constraint:OnUpdate:CASCADE;OnDelete:CASCADE"`
 	Type     QuestionType `json:"type"`
 	// NextGenerationType NextGenerationType `json:"-"`
-	Tabs []Tab `json:"tabs"`
+	Tabs      []Tab      `json:"tabs"`
+	DropDowns []DropDown `json:"dropdowns,omitempty"`
 }
 type FrontQuestion struct {
 	ID          uint    `json:"no" gorm:"primary_key"`
@@ -44,9 +45,10 @@ type FrontQuestion struct {
 	System   *System       `json:"system,omitempty" gorm:"foreignKey:SystemID;constraint:OnUpdate:CASCADE;OnDelete:CASCADE"`
 	// although we could get the course id from question >subject > system, but that would
 	//  cost resource, i rather add a courseID to the Question table and get it directly
-	Course *Course      `json:"course,omitempty" gorm:"foreignKey:CourseID;constraint:OnUpdate:CASCADE;OnDelete:CASCADE"`
-	Type   QuestionType `json:"type"`
-	Tabs   []Tab        `json:"tabs"`
+	Course    *Course      `json:"course,omitempty" gorm:"foreignKey:CourseID;constraint:OnUpdate:CASCADE;OnDelete:CASCADE"`
+	Type      QuestionType `json:"type"`
+	Tabs      []Tab        `json:"tabs"`
+	DropDowns []DropDown   `json:"dropdowns,omitempty"`
 }
 
 func (question Question) ConvertQuestionToFrontQuestion() FrontQuestion {
@@ -61,6 +63,7 @@ func (question Question) ConvertQuestionToFrontQuestion() FrontQuestion {
 		Course:      question.Course,
 		Type:        question.Type,
 		Tabs:        question.Tabs,
+		DropDowns:   question.DropDowns,
 	}
 	return frontQuestion
 }

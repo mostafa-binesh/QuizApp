@@ -10,6 +10,8 @@ type Option struct {
 	// relationships
 	QuestionID uint      `json:"-"`
 	Question   *Question `json:"question,omitempty" gorm:"foreignKey:QuestionID;constraint:OnUpdate:CASCADE;OnDelete:CASCADE"`
+	DropDownID uint      `json:"-"`
+	DropDown   *DropDown `json:"dropdown,omitempty" gorm:"foreignKey:DropDownID;constraint:OnUpdate:CASCADE;OnDelete:CASCADE"`
 }
 type AdminOptionInput struct {
 	Title     string `form:"title" validate:"required"`
@@ -25,6 +27,7 @@ type FrontOption struct {
 	IsCorrectBool *bool
 }
 
+// convert to json
 func (fo FrontOption) MarshalJSON() ([]byte, error) {
 	// If IsCorrectUint is not nil, include IsCorrectBool in the JSON output
 	if fo.IsCorrectUint != nil {
