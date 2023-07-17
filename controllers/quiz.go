@@ -22,7 +22,10 @@ func AllQuizzes(c *fiber.Ctx) error {
 	if err := D.DB().Model(&user).Preload("Quizzes.Course").Preload("UserAnswers", func(db *gorm.DB) *gorm.DB { // could do this as well : Preload("Comments", "ORDER BY ? ASC > ?", "id")
 		db = db.Order("id ASC")
 		return db
-	}).Preload("Quizzes.UserAnswers.Question.Options").Preload("Quizzes.UserAnswers.Question.Dropdowns.Options").First(&user).Error; err != nil {
+	}).Preload("Quizzes.UserAnswers.Question.Options").
+		Preload("Quizzes.UserAnswers.Question.Dropdowns.Options").
+		Preload("Quizzes.UserAnswers.Question.Tabs").
+		First(&user).Error; err != nil {
 		return U.DBError(c, err)
 	}
 	var userQuizzes []M.QuizToFront
@@ -39,7 +42,10 @@ func QuizByID(c *fiber.Ctx) error {
 	if result := D.DB().Model(&user).Preload("Quizzes", c.Params("id")).Preload("Quizzes.Course").Preload("UserAnswers", func(db *gorm.DB) *gorm.DB { // could do this as well : Preload("Comments", "ORDER BY ? ASC > ?", "id")
 		db = db.Order("id ASC")
 		return db
-	}).Preload("Quizzes.UserAnswers.Question.Options").Preload("Quizzes.UserAnswers.Question.Dropdowns.Options").First(&user); result.Error != nil {
+	}).Preload("Quizzes.UserAnswers.Question.Options").
+		Preload("Quizzes.UserAnswers.Question.Dropdowns.Options").
+		Preload("Quizzes.UserAnswers.Question.Tabs").
+		First(&user); result.Error != nil {
 		return U.DBError(c, result.Error)
 	}
 	// if user quiz with desired id doesn't exist
@@ -197,7 +203,7 @@ func UpdateQuiz(c *fiber.Ctx) error {
 }
 func CreateFakeQuiz(c *fiber.Ctx) error {
 	payload := new(M.QuizInput)
-	payload.QuestionsCount = 3
+	payload.QuestionsCount = 5
 	payload.SystemIDs = []uint{1, 2, 3, 4, 5, 6, 7, 8, 9}
 	payload.QuizMode = []string{"tutor", "timed"}
 	payload.QuizType = []string{"nextGeneration"}
@@ -242,18 +248,19 @@ func CreateFakeQuiz(c *fiber.Ctx) error {
 	// TODO SECURITY ISSUE: checking the id of systems has not been checked
 	// all avaiable questions's id with desired system_id
 	var multipleSelectQuestionIDs []uint
-	var singleSelectQuestionIDs []uint
+	// var singleSelectQuestionIDs []uint
 	// if err := D.DB().Model(&M.Question{}).Distinct().Where("system_id IN (?)", payload.SystemIDs).Pluck("id", &questionIDs).Error; err != nil {
 	// 	return U.DBError(c, err)
 	// }
 	// get 3 multiple question type
-	if err := D.DB().Model(&M.Question{}).Where("type = ?", M.MultipleSelect).Limit(3).Pluck("id", &multipleSelectQuestionIDs).Error; err != nil {
+	if err := D.DB().Model(&M.Question{}).Where("type IN ?", []M.QuestionType{M.NextGenerationSingleSelect, M.NextGenerationMultipleSelect, M.NextGenerationTableSingleSelect,
+		M.NextGenerationTableMultipleSelect, M.NextGenerationTableDropDown}).Limit(payload.QuestionsCount).Pluck("id", &multipleSelectQuestionIDs).Error; err != nil {
 		return U.DBError(c, err)
 	}
-	if err := D.DB().Model(&M.Question{}).Where("type = ?", M.SingleSelect).Limit(3).Pluck("id", &singleSelectQuestionIDs).Error; err != nil {
-		return U.DBError(c, err)
-	}
-	multipleSelectQuestionIDs = append(multipleSelectQuestionIDs, singleSelectQuestionIDs...)
+	// if err := D.DB().Model(&M.Question{}).Where("type IN ?", M.SingleSelect).Limit(3).Pluck("id", &singleSelectQuestionIDs).Error; err != nil {
+	// 	return U.DBError(c, err)
+	// }
+	// multipleSelectQuestionIDs = append(multipleSelectQuestionIDs, singleSelectQuestionIDs...)
 	questionsCount := len(multipleSelectQuestionIDs)
 	var randomIndex uint
 	fmt.Printf("payload question: %d , available questions count: %d\n", payload.QuestionsCount, questionsCount)
@@ -401,4 +408,11 @@ func ReportQuiz(c *fiber.Ctx) error {
 		"subjects": subjects,
 		"systems":  systems,
 	}})
+}
+func Tabs(c *fiber.Ctx) error {
+	tabs := []M.Tab{}
+	if err := D.DB().Find(&tabs).Error; err != nil {
+		return U.DBError(c, err)
+	}
+	return c.JSON(fiber.Map{"data": tabs})
 }
