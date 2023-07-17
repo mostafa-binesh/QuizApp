@@ -71,7 +71,7 @@ func QuestionAndOptionsSeeder() {
 		question := M.Question{
 			// ! rand int may return 0 ! so i added 1 to solve this
 			Title:    questionText,
-			SystemID: systemID,
+			SystemID: systems[systemID].ID,
 			Status:   "unvisited", Description: "Random description for " + questionText,
 			CourseID: &systems[systemID].Subject.CourseID,
 		}
@@ -82,12 +82,62 @@ func QuestionAndOptionsSeeder() {
 			option := M.Option{
 				Title:      optionText,
 				Index:      string('A' + j),
-				QuestionID: question.ID,
+				QuestionID: &question.ID,
 				IsCorrect:  U.ConvertBoolToUint(j == correctOption), // Set oneof the options as correct randomly // TODO changed to 1 for test of isCorrect uint test
 			}
 			D.DB().Create(&option)
 		}
 	}
-
+	// next gen questions seeder
+	nextGenQuestionTypes := []M.QuestionType{M.NextGenerationSingleSelect, M.NextGenerationMultipleSelect, M.NextGenerationTableSingleSelect,
+		M.NextGenerationTableMultipleSelect, M.NextGenerationTableDropDown}
+	nextGenTexts := []string{"Next Gen Single", "Next Gen Multiple", "Next Gen Table Single", "Next Gen Table Multiple", "Next Gen Dropdown"}
+	stringCounter := []string{"First of ", "Second of ", "Third of ", "Fourth of ", "Fifth of "}
+	for i, gen := range nextGenQuestionTypes {
+		dropDowns := []M.Dropdown{}
+		systemID := uint(rand.Intn(int(systemsCount)))
+		tabs := []M.Tab{M.Tab{
+			Tables: []M.Table{M.Table{
+				Title: "A New Table",
+				Rows:  [][]string{{"row1 col1", "row1 col2", "row1 col3"}, {"row2 col1", "row2 col2", "row2 col1"}},
+			}},
+		}}
+		if gen == M.NextGenerationTableDropDown {
+			dropDowns = append(dropDowns, M.Dropdown{})
+			dropDowns = append(dropDowns, M.Dropdown{})
+		}
+		question := M.Question{
+			Title:       stringCounter[i] + nextGenTexts[i],
+			Description: "A Random Description",
+			// Images:      []M.Image{},
+			SystemID:  systems[systemID].ID,
+			CourseID:  &systems[systemID].Subject.CourseID,
+			Type:      gen,
+			Tabs:      tabs,
+			Dropdowns: dropDowns,
+		}
+		D.DB().Create(&question)
+		optionsLen := len(options[i])
+		correctOption := rand.Intn(optionsLen)
+		for j, optionText := range options[i] {
+			var dropDownID *uint
+			var questionID *uint
+			questionID = &question.ID
+			if len(dropDowns) > 0 {
+				dropDownsCount := len(dropDowns)
+				selectedDropdownID := rand.Intn(dropDownsCount)
+				dropDownID = &dropDowns[selectedDropdownID].ID
+				questionID = nil
+			}
+			option := M.Option{
+				Title:      optionText,
+				Index:      string('A' + j),
+				QuestionID: questionID,
+				IsCorrect:  U.ConvertBoolToUint(j == correctOption), // Set oneof the options as correct randomly // TODO changed to 1 for test of isCorrect uint test
+				DropdownID: dropDownID,
+			}
+			D.DB().Create(&option)
+		}
+	}
 	fmt.Println("Questions and options inserted successfully.")
 }
