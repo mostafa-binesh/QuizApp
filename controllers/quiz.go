@@ -22,7 +22,7 @@ func AllQuizzes(c *fiber.Ctx) error {
 	if err := D.DB().Model(&user).Preload("Quizzes.Course").Preload("UserAnswers", func(db *gorm.DB) *gorm.DB { // could do this as well : Preload("Comments", "ORDER BY ? ASC > ?", "id")
 		db = db.Order("id ASC")
 		return db
-	}).Preload("Quizzes.UserAnswers.Question.Options").First(&user).Error; err != nil {
+	}).Preload("Quizzes.UserAnswers.Question.Options").Preload("Quizzes.UserAnswers.Question.Dropdowns.Options").First(&user).Error; err != nil {
 		return U.DBError(c, err)
 	}
 	var userQuizzes []M.QuizToFront
@@ -39,7 +39,7 @@ func QuizByID(c *fiber.Ctx) error {
 	if result := D.DB().Model(&user).Preload("Quizzes", c.Params("id")).Preload("Quizzes.Course").Preload("UserAnswers", func(db *gorm.DB) *gorm.DB { // could do this as well : Preload("Comments", "ORDER BY ? ASC > ?", "id")
 		db = db.Order("id ASC")
 		return db
-	}).Preload("Quizzes.UserAnswers.Question.Options").First(&user); result.Error != nil {
+	}).Preload("Quizzes.UserAnswers.Question.Options").Preload("Quizzes.UserAnswers.Question.Dropdowns.Options").First(&user); result.Error != nil {
 		return U.DBError(c, result.Error)
 	}
 	// if user quiz with desired id doesn't exist
