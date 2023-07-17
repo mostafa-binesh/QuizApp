@@ -31,6 +31,7 @@ func AutoMigrate(c *fiber.Ctx) error {
 			&M.Quiz{},
 			&M.Image{},
 			&M.Tab{},
+			&M.Dropdown{},
 		)
 	}
 	if c.QueryInt("justDrop") == 1 {
@@ -49,6 +50,7 @@ func AutoMigrate(c *fiber.Ctx) error {
 		&M.Question{},
 		&M.Option{},
 		&M.Image{},
+		&M.Dropdown{},
 	)
 	if err != nil {
 		return c.Status(400).SendString(err.Error())
