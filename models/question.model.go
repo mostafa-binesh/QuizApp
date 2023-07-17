@@ -32,7 +32,7 @@ type Question struct {
 	Type     QuestionType `json:"type"`
 	// NextGenerationType NextGenerationType `json:"-"`
 	Tabs      []Tab      `json:"tabs"`
-	DropDowns []Dropdown `json:"dropdowns,omitempty"`
+	Dropdowns []Dropdown `json:"dropdowns,omitempty"`
 }
 type FrontQuestion struct {
 	ID          uint    `json:"no" gorm:"primary_key"`
@@ -48,7 +48,7 @@ type FrontQuestion struct {
 	Course    *Course      `json:"course,omitempty" gorm:"foreignKey:CourseID;constraint:OnUpdate:CASCADE;OnDelete:CASCADE"`
 	Type      QuestionType `json:"type"`
 	Tabs      []Tab        `json:"tabs"`
-	DropDowns []Dropdown   `json:"dropdowns,omitempty"`
+	Dropdowns []Dropdown   `json:"dropdowns,omitempty"`
 }
 
 func (question Question) ConvertQuestionToFrontQuestion() FrontQuestion {
@@ -63,7 +63,7 @@ func (question Question) ConvertQuestionToFrontQuestion() FrontQuestion {
 		Course:      question.Course,
 		Type:        question.Type,
 		Tabs:        question.Tabs,
-		DropDowns:   question.DropDowns,
+		Dropdowns:   question.Dropdowns,
 	}
 	return frontQuestion
 }
