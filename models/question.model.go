@@ -1,6 +1,9 @@
 package models
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 type QuestionType int8
 
@@ -154,4 +157,8 @@ func (question *Question) ConvertNextGenerationTypeToTypeInt(value string) error
 		return fmt.Errorf("Question type should be singleSelect or 'multipleSelect or TableSingleSelect or TableMultipleSelect or TableDropDown")
 	}
 	return nil
+}
+func (question *Question) ChangeImageURLsInDescription(previousSite string, newSite string) {
+	// replace previous webiste url with new website in description field
+    question.Description = strings.Replace(question.Description, previousSite, newSite, -1)
 }

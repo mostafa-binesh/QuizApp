@@ -195,3 +195,28 @@ func UploadImage(c *fiber.Ctx) error {
 	}
 	return c.JSON(fiber.Map{"data": fiber.Map{"img": c.BaseURL() + "/public/uploads/" + newFileName}})
 }
+func ChangeImageURLsInDescription(c *fiber.Ctx) error {
+	type ChangeImageURL struct {
+		PreviousWebsite string `json:"previousWebsite"`
+		NewWebsite      string `json:"newWebsite"`
+	}
+	payload := new(ChangeImageURL)
+	// parse body
+	if err := c.BodyParser(payload); err != nil {
+		return U.ResErr(c, err.Error())
+	}
+	// get all questions
+	var questions []M.Question
+	if err := D.DB().Find(&questions).Error; err != nil {
+		return U.DBError(c, err)
+	}
+	// replace the previous website url with the new one
+	for i, _ := range questions {
+		questions[i].ChangeImageURLsInDescription(payload.PreviousWebsite, payload.NewWebsite)
+	}
+	// save modified questions
+	if err := D.DB().Save(&questions).Error; err != nil {
+		return U.DBError(c, err)
+	}
+	return U.ResMessage(c, "Success")
+}
