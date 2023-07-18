@@ -212,7 +212,7 @@ func ChangeImageURLsInDescription(c *fiber.Ctx) error {
 	}
 	// replace the previous website url with the new one
 	for i, _ := range questions {
-		questions[i].ChangeImageURLsInDescription(payload.PreviousWebsite, payload.NewWebsite)
+		questions[i].ReplacePreWebsiteWithNewWebsiteImageURLDescription(payload.PreviousWebsite, payload.NewWebsite)
 	}
 	// save modified questions
 	if err := D.DB().Save(&questions).Error; err != nil {

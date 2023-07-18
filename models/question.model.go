@@ -158,7 +158,8 @@ func (question *Question) ConvertNextGenerationTypeToTypeInt(value string) error
 	}
 	return nil
 }
-func (question *Question) ChangeImageURLsInDescription(previousSite string, newSite string) {
-	// replace previous webiste url with new website in description field
-    question.Description = strings.Replace(question.Description, previousSite, newSite, -1)
+
+// replace previous webiste url with new website in description field
+func (question *Question) ReplacePreWebsiteWithNewWebsiteImageURLDescription(previousSite string, newSite string) {
+	question.Description = strings.Replace(question.Description, previousSite, newSite, -1)
 }
