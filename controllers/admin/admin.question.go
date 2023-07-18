@@ -197,13 +197,16 @@ func UploadImage(c *fiber.Ctx) error {
 }
 func ChangeImageURLsInDescription(c *fiber.Ctx) error {
 	type ChangeImageURL struct {
-		PreviousWebsite string `json:"previousWebsite"`
-		NewWebsite      string `json:"newWebsite"`
+		PreviousWebsite string `json:"previousWebsite" validate:"required"`
+		NewWebsite      string `json:"newWebsite" validate:"required"`
 	}
 	payload := new(ChangeImageURL)
 	// parse body
 	if err := c.BodyParser(payload); err != nil {
 		return U.ResErr(c, err.Error())
+	}
+	if errs := U.Validate(payload); errs != nil {
+		return c.Status(400).JSON(fiber.Map{"errors": errs})
 	}
 	// get all questions
 	var questions []M.Question
