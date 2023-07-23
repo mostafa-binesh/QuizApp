@@ -3,6 +3,7 @@ package controllers
 import (
 	D "docker/database"
 	M "docker/models"
+	S "docker/services"
 	U "docker/utils"
 	"fmt"
 
@@ -188,4 +189,11 @@ func StructInfo(c *fiber.Ctx) error {
 func ResetMemory(c *fiber.Ctx) error {
 	U.Memory.Reset()
 	return c.SendString("done")
+}
+func WCProducts(c *fiber.Ctx) error {
+	wcProducts, err := S.GetAllProducts()
+	if err != nil {
+		return U.ResErr(c, err.Error())
+	}
+	return c.JSON(fiber.Map{"data": wcProducts})
 }

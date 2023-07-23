@@ -89,6 +89,7 @@ func APIInit(router *fiber.App) {
 	dev.Post("/fileExistenaceCheck", C.ExistenceCheck)
 	dev.Post("/gormUnique", C.GormG)
 	dev.Get("/resetMemory", C.ResetMemory)
+	dev.Get("/wcProducts", C.WCProducts)
 	devPanel := dev.Group("/admin")
 	devPanel.Get("/structInfo", C.StructInfo)
 }
