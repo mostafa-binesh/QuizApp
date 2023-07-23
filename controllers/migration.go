@@ -18,7 +18,7 @@ func AutoMigrate(c *fiber.Ctx) error {
 	fmt.Println("dropAllTables")
 	if c.Query("dropAllTables") == "1" {
 		fmt.Println("dropping all tables")
-		D.DB().Exec("DELETE FROM user_courses")
+		D.DB().Exec("DELETE FROM course_user")
 		D.DB().Exec("DELETE FROM user_answers")
 		D.DB().Migrator().DropTable(
 			&M.User{},
@@ -32,6 +32,7 @@ func AutoMigrate(c *fiber.Ctx) error {
 			&M.Image{},
 			&M.Tab{},
 			&M.Dropdown{},
+			&M.CourseUser{},
 		)
 	}
 	if c.QueryInt("justDrop") == 1 {
@@ -51,6 +52,7 @@ func AutoMigrate(c *fiber.Ctx) error {
 		&M.Option{},
 		&M.Image{},
 		&M.Dropdown{},
+		&M.CourseUser{},
 	)
 	if err != nil {
 		return c.Status(400).SendString(err.Error())
