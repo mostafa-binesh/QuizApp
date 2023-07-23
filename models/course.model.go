@@ -4,7 +4,7 @@ type Course struct {
 	ID            uint       `json:"id" gorm:"primary_key"`
 	WoocommerceID uint       `json:"woocommerce_id" gorm:"unique"`
 	Title         string     `json:"title"`
-	Users         []*User    `json:"-" gorm:"many2many:user_courses;"`
+	Users         []*User    `json:"-" gorm:"many2many:course_user;"`
 	Subjects      []*Subject `json:"subjects" gorm:"foreignKey:CourseID"`
 	Duration      uint64     `json:"-"` // todo don't show it for now, fix it later
 	ParentID      uint

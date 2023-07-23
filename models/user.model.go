@@ -20,7 +20,7 @@ type User struct {
 	Verified    bool          `gorm:"not null;default:false"`
 	CreatedAt   *time.Time    `gorm:"not null;default:now()"`
 	UpdatedAt   *time.Time    `gorm:"not null;default:now()"`
-	Courses     []*Course     `gorm:"many2many:user_courses;"`
+	Courses     []*Course     `gorm:"many2many:course_user;"`
 	Quizzes     []Quiz        `json:"quizzes" gorm:"foreignKey:UserID"`
 	UserAnswers []*UserAnswer `json:"userAnswer" gorm:"foreignKey:UserID"`
 }
