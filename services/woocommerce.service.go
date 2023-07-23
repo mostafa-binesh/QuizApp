@@ -11,9 +11,15 @@ import (
 // 	U "docker/utils"
 // 	"github.com/chenyangguang/woocommerce"
 // )
+
 type WCProduct struct {
-	ID   int    `json:"id"`
-	Name string `json:"name"`
+	ID         int                   `json:"id"`
+	Name       string                `json:"name"`
+	Attributes []WCProductAttributes `json:"attributes"`
+}
+type WCProductAttributes struct {
+	Name    string   `json:"name"`
+	Options []string `json:"options"`
 }
 
 func GetAllProducts() ([]WCProduct, error) {
