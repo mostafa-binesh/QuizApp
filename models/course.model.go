@@ -7,8 +7,8 @@ type Course struct {
 	Users         []*User    `json:"-" gorm:"many2many:course_user;"`
 	Subjects      []*Subject `json:"subjects" gorm:"foreignKey:CourseID"`
 	Duration      uint64     `json:"-"` // todo don't show it for now, fix it later
-	ParentID      uint
-	ParentCourse  *Course `gorm:"references:ParentID"` // use Company.CompanyID as references
+	ParentID      *uint
+	ParentCourse  *Course `gorm:"foreignKey:ParentID"` // use Company.CompanyID as references
 }
 
 // model used for creating new course
