@@ -19,11 +19,11 @@ type CourseWithTitleOnly struct {
 	Title string `json:"title"`
 }
 type CourseWithQuestionsCount struct {
-	ID             uint       `json:"id" gorm:"primary_key"`
-	Title          string     `json:"title"`
-	Subjects       []*Subject `json:"subjects" gorm:"foreignKey:CourseID"`
-	Duration       uint64     `json:"-"` // todo don't show it for now, fix it later
-	QuestionsCount int        `json:"questionsCount"`
+	ID             uint                         `json:"id" gorm:"primary_key"`
+	Title          string                       `json:"title"`
+	Subjects       []*SubjectWithQuestionsCount `json:"subjects" gorm:"foreignKey:CourseID"`
+	Duration       uint64                       `json:"-"` // todo don't show it for now, fix it later
+	QuestionsCount int                          `json:"questionsCount"`
 }
 
 // its used for user.Courses so i needed to make the argument refrence
@@ -70,7 +70,7 @@ func ConvertCourseToCourseWithQuestionsCounts(courses []*Course) (coursesWithQue
 		coursesWithQuestionsCount = append(coursesWithQuestionsCount, CourseWithQuestionsCount{
 			ID:             course.ID,
 			Title:          course.Title,
-			Subjects:       course.Subjects,
+			Subjects:       tempSubjects,
 			Duration:       0, // todo: hardcoded
 			QuestionsCount: subjectsQuestionsCount,
 		})
