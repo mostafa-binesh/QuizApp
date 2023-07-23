@@ -2,6 +2,8 @@ package controllers
 
 import (
 	D "docker/database"
+	"time"
+	// "time"
 	// "math/rand"
 	// "time"
 
@@ -14,17 +16,36 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+// todo: with counts ro az comment dar biar
 func AllCourses(c *fiber.Ctx) error {
 	user := c.Locals("user").(M.User)
 	// get all courses with subjects and systems
-	result := D.DB().Model(&user).Preload("Courses.Subjects.Systems.Questions").Find(&user)
-	if result.Error != nil {
-		return U.DBError(c, result.Error)
+	// result := D.DB().Model(&user).Preload("Courses.Subjects.Systems.Questions").Find(&user)
+	err := D.DB().Model(&user).
+		// Session(&gorm.Session{NewDB: true}). // Create a new session to apply the scope
+		// Joins("JOIN course_user ON course_user.course_id = courses.id AND course_user.user_id = ?", user.ID).
+		Preload("Courses.Subjects.Systems").
+		Find(&user).Error
+	if err != nil {
+		return U.DBError(c, err)
 	}
+	currentTime := time.Now()
+	var nonExpiredCourses []*M.Course
+	for _, course := range user.Courses {
+		dbResult := D.DB().Joins("JOIN course_user ON course_user.course_id = courses.id").
+			Where("course_user.user_id = ? AND course_user.expiration_date > ?", user.ID, currentTime).
+			Find(&course)
+		if dbResult.RowsAffected > 0 {
+			nonExpiredCourses = append(nonExpiredCourses, course)
+		}
+	}
+	user.Courses = nonExpiredCourses
+	return c.JSON(fiber.Map{"data": user.Courses})
 	// convert the courses to courses with questions
-	coursesWithQuestionsCount := M.ConvertCourseToCourseWithQuestionsCounts(user.Courses)
-	return c.JSON(fiber.Map{"data": coursesWithQuestionsCount})
+	// coursesWithQuestionsCount := M.ConvertCourseToCourseWithQuestionsCounts(user.Courses)
+	// return c.JSON(fiber.Map{"data": coursesWithQuestionsCount})
 }
+
 // all subject of course with id of courseID
 func CourseSubjects(c *fiber.Ctx) error {
 	// get authenticated user
