@@ -22,6 +22,10 @@ type WCProductAttributes struct {
 	Options []string `json:"options"`
 }
 
+// in wc. products model, we have serveral attributes:
+// 1. parent courses (products) have only duration attr.
+// 2. non-parent courses have ValidityPeriod and ParentCourse (parentCourseID)
+
 func GetAllProducts() ([]WCProduct, error) {
 	client := &http.Client{}
 
