@@ -57,6 +57,7 @@ func QuizByID(c *fiber.Ctx) error {
 }
 func CreateQuiz(c *fiber.Ctx) error {
 	payload := new(M.QuizInput)
+	var err error
 	// parsing the payload
 	if err := c.BodyParser(payload); err != nil {
 		U.ResErr(c, err.Error())
@@ -66,24 +67,41 @@ func CreateQuiz(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"errors": errs})
 	}
 	user := c.Locals("user").(M.User)
-	// get course id using first system id
+	// # get course id using first system id
+	// check if sent systemIDs is not empty (at least one system should be selected by the user)
 	if len(payload.SystemIDs) == 0 {
 		return U.ResErr(c, "You must at least select one system")
 	}
+	// # check every system course and match them with user's bought courses
+	systems := []M.System{}
+	D.DB().Preload("Subject.Course.ParentCourse").Find(&systems, payload.SystemIDs)
+	var userBoughtCoursesIDs []uint
+	if userBoughtCoursesIDs, err = M.RetrieveUserBoughtCoursesIDs(user.ID); err != nil {
+		return U.ResErr(c, "Something went wrong when retreiving user's bought courses")
+	}
+	for _, system := range systems {
+		// fmt.Printf("system.Subject.Course: %v\n", system.Subject.Course.ParentID)
+		if U.ExistsInArray[uint](userBoughtCoursesIDs, system.Subject.Course.ID) {
+			continue
+		}
+		// else
+		return U.ResErr(c, "You haven't bought desired course")
+	}
+	// # get the course duration from payload.systemIDs[0]
 	// find the system from first index of systemIDs
-	// cause we checked the length of payload.systemIDs > 0, we can use first index of it
+	// cause we checked the length of payload.systemIDs > 0, we can safely use first index of it
 	systemID := payload.SystemIDs[0]
 	system := M.System{}
 	D.DB().Preload("Subject.Course").Find(&system, systemID)
 	// create the quiz
-	endTime := time.Now().Add(time.Hour * 1) // todo: hardcoded, should get it from woocommerce.course.duration
+	endTime := time.Now().Add(time.Duration(system.Subject.Course.Duration) * time.Minute)
 	currentTime := time.Now()
 	duration := endTime.Sub(currentTime)
 	remainingSeconds := uint(duration.Seconds())
 	// # create quiz
 	quiz := M.Quiz{
 		UserID:       user.ID,
-		Status:       "pending",
+		Status:       "started", // todo: change started status if it's not good
 		EndTime:      &endTime,
 		Duration:     remainingSeconds,
 		CourseID:     system.Subject.CourseID,
@@ -97,13 +115,14 @@ func CreateQuiz(c *fiber.Ctx) error {
 	}
 	// # find questions based on question mode
 	// create the empty user answer h selected systems
-	// TODO SECURITY ISSUE: checking the id of systems has not been checked
+
 	// all avaiable questions's id with desired system_id
 	var questionIDs []uint
-	var err error
+	// if payload.QuestionMode is all
 	if payload.QuestionMode == M.AllQuestionMode {
+		// get all question that belongs to payload.systemIDs
 		err = D.DB().Model(&M.Question{}).Distinct().Where("system_id IN (?)", payload.SystemIDs).Pluck("id", &questionIDs).Error
-	} else if payload.QuestionMode == M.MarkedQuestionMode {
+	} else if payload.QuestionMode == M.MarkedQuestionMode { // if marked questions only
 		err = D.DB().Model(&user).Preload("UserAnswers", "is_marked = ?", true).Find(&user).Error
 		if err != nil {
 			D.DB().Delete(&quiz)
@@ -115,15 +134,17 @@ func CreateQuiz(c *fiber.Ctx) error {
 				questionIDs = append(questionIDs, answer.QuestionID)
 			}
 		}
-	} else if payload.QuestionMode == M.SingleSelectQuestionMode {
+	} else if payload.QuestionMode == M.SingleSelectQuestionMode { // if single select questions only
 		err = D.DB().Model(&M.Question{}).Where("type = ?", M.SingleSelect).Pluck("id", &questionIDs).Error
-	} else if payload.QuestionMode == M.MultipleSelectQuestionMode {
+	} else if payload.QuestionMode == M.MultipleSelectQuestionMode { // if multiple select questions only
 		err = D.DB().Model(&M.Question{}).Where("type = ?", M.MultipleSelect).Pluck("id", &questionIDs).Error
 	}
+	// if something went wrong, delete the created quiz
 	if err != nil {
 		D.DB().Delete(&quiz)
 		return U.DBError(c, err)
 	}
+	// # check if sufficient questions are in the db
 	questionsCount := len(questionIDs)
 	var randomIndex uint
 	fmt.Printf("payload question: %d , available questions count: %d\n", payload.QuestionsCount, questionsCount)
@@ -197,7 +218,6 @@ func UpdateQuiz(c *fiber.Ctx) error {
 	if err := D.DB().Save(&quiz).Error; err != nil {
 		return U.DBError(c, err)
 	}
-	// todo not tested yet
 	// return c.JSON(fiber.Map{"asd": convertedUserAnswer})
 	return U.ResMessage(c, "Quiz been updated")
 }
@@ -245,7 +265,6 @@ func CreateFakeQuiz(c *fiber.Ctx) error {
 		return U.ResErr(c, result.Error.Error())
 	}
 	// create the empty user answer h selected systems
-	// TODO SECURITY ISSUE: checking the id of systems has not been checked
 	// all avaiable questions's id with desired system_id
 	var multipleSelectQuestionIDs []uint
 	// var singleSelectQuestionIDs []uint
