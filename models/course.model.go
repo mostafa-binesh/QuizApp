@@ -1,5 +1,11 @@
 package models
 
+import (
+	D "docker/database"
+	U "docker/utils"
+	"time"
+)
+
 type Course struct {
 	ID                 uint       `json:"id" gorm:"primary_key"`
 	WoocommerceID      uint       `json:"woocommerce_id" gorm:"uniqueIndex"`
@@ -11,6 +17,14 @@ type Course struct {
 	ParentCourse       *Course `json:"-" gorm:"foreignKey:ParentID"` // use Company.CompanyID as references
 	ValidityDaysPeriod uint    `json:"-"`
 }
+
+// used in user.courses route
+type CourseWithExpirationDate struct {
+	ID             uint       `json:"id"`
+	Title          string     `json:"title"`
+	Subjects       []*Subject `json:"subjects"`
+	ExpirationDate time.Time  `json:"expirationDate"`
+	Duration       uint64     `json:"duration"`
 }
 
 // model used for creating new course
@@ -81,6 +95,7 @@ func ConvertCourseToCourseWithQuestionsCounts(courses []*Course) (coursesWithQue
 	}
 	return
 }
+
 // get all user's bought courses id from course_user table which are not expired
 func RetrieveUserBoughtCoursesIDs(userID uint) ([]uint, error) {
 	var courseIDs []uint
@@ -89,4 +104,50 @@ func RetrieveUserBoughtCoursesIDs(userID uint) ([]uint, error) {
 		return nil, err
 	}
 	return courseIDs, nil
+}
+
+// first gets user's bought courses from course_user table using RetrieveUserBoughtCoursesIDs function
+// then get the bought courses from courses table
+func RetrieveUserBoughtCourses(userID uint) ([]Course, error) {
+	courseIDs, err := RetrieveUserBoughtCoursesIDs(userID)
+	if err != nil {
+		return nil, err
+	}
+	// find all courses where their id is in courseIDs
+	var userBoughtCourses []Course
+	if err := D.DB().Model(&Course{}).
+		Find(&userBoughtCourses, "id IN ?", courseIDs).Error; err != nil {
+		return nil, err
+	}
+	return userBoughtCourses, nil
+}
+func UserHasCourse(userID uint, courseID uint) (bool, error) {
+	courseIDs, err := RetrieveUserBoughtCoursesIDs(userID)
+	if err != nil {
+		return false, err
+	}
+	return U.ExistsInArray[uint](courseIDs, courseID), nil
+}
+func UserBoughtCoursesWithExpirationDate(userID uint) (*[]CourseWithExpirationDate, error) {
+	var userBoughtCourses []CourseUser
+	// get the CourseUser and preload it it course
+	if err := D.DB().
+		Model(&CourseUser{}).
+		Where("user_id = ? AND expiration_date > ?", userID, time.Now()).
+		Preload("Course.ParentCourse.Subjects.Systems").
+		Find(&userBoughtCourses).
+		Error; err != nil {
+		return nil, err
+	}
+	var userCourses []CourseWithExpirationDate
+	for i := 0; i < len(userBoughtCourses); i++ {
+		userCourses = append(userCourses, CourseWithExpirationDate{
+			ID:             userBoughtCourses[i].ID,
+			Title:          userBoughtCourses[i].Course.Title,
+			ExpirationDate: userBoughtCourses[i].ExpirationDate,
+			Subjects:       userBoughtCourses[i].Course.ParentCourse.Subjects,
+			Duration:       userBoughtCourses[i].Course.ParentCourse.Duration,
+		})
+	}
+	return &userCourses, nil
 }
