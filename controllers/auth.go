@@ -26,6 +26,10 @@ func SignUpUser(c *fiber.Ctx) error {
 	if errs := U.Validate(payload); errs != nil {
 		return c.Status(400).JSON(fiber.Map{"errors": errs})
 	}
+	// check email uniqueness
+	if emailUniqueness := D.DB().Find(&M.User{}, "email = ?", payload.Email); emailUniqueness.RowsAffected != 0 {
+		return U.ResErr(c, "Email already exists")
+	}
 	// ! here we need to check that if the order exists and then if exists
 	// ! > add the courses for the user
 	// get user orders
