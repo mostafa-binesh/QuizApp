@@ -5,6 +5,7 @@ import (
 	M "docker/models"
 	S "docker/services"
 	U "docker/utils"
+
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -18,7 +19,7 @@ func AddCoursesFromWooCommerce(c *fiber.Ctx) error {
 func AllCourses(c *fiber.Ctx) error {
 	// get all courses
 	courses := []M.Course{}
-	result := D.DB().Preload("Subjects.Systems").Find(&courses)
+	result := D.DB().Where("parent_id IS NULL").Preload("Subjects.Systems").Find(&courses)
 	if result.Error != nil {
 		return U.DBError(c, result.Error)
 	}
@@ -86,10 +87,10 @@ func UpdateCourse(c *fiber.Ctx) error {
 	return U.ResMessage(c, "دوره بروز شد")
 }
 
-// returns all courses.subjects.systems
+// returns all courses.subjects.systems that are parent
 func AllSubjects(c *fiber.Ctx) error {
 	courses := []M.Course{}
-	result := D.DB().Preload("Subjects.Systems").Find(&courses)
+	result := D.DB().Where("parent_id IS NULL").Preload("Subjects.Systems").Find(&courses)
 	if result.Error != nil {
 		return U.DBError(c, result.Error)
 	}
