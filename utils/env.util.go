@@ -6,8 +6,9 @@ import (
 
 	env "github.com/joho/godotenv"
 )
+
 // returns envoirment variable if exist in the .env file
-// otherwise, try to get the env. variable from host 
+// otherwise, try to get the env. variable from host
 // if there was no env. variable, panics
 func Env(key string) string {
 	// load .env file
@@ -20,4 +21,12 @@ func Env(key string) string {
 		return value
 	}
 	return os.Getenv(key)
+}
+
+// returns true if key variable in .env file is "true"
+func EnvBool(key string) bool {
+	if Env(key) == "true" {
+		return true
+	}
+	return false
 }
