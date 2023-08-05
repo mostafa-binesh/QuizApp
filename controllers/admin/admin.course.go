@@ -9,19 +9,11 @@ import (
 )
 
 func AddCoursesFromWooCommerce(c *fiber.Ctx) error {
-	// get all woocommerce products from its service
-	courses, err := S.GetAllProducts()
+	convertedCourses, err := S.ImportCoursesFromWoocommerce()
 	if err != nil {
 		return U.ResErr(c, err.Error())
 	}
-	// create every course in the database
-	for _, course := range courses {
-		D.DB().Create(&M.Course{
-			WoocommerceID: uint(course.ID),
-			Title:         course.Name,
-		})
-	}
-	return c.JSON(fiber.Map{"data": courses})
+	return c.JSON(fiber.Map{"data": convertedCourses})
 }
 func AllCourses(c *fiber.Ctx) error {
 	// get all courses
