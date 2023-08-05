@@ -81,3 +81,12 @@ func ConvertCourseToCourseWithQuestionsCounts(courses []*Course) (coursesWithQue
 	}
 	return
 }
+// get all user's bought courses id from course_user table which are not expired
+func RetrieveUserBoughtCoursesIDs(userID uint) ([]uint, error) {
+	var courseIDs []uint
+	if err := D.DB().Model(&CourseUser{}).Where("user_id = ? AND expiration_date > ?", userID, time.Now()).
+		Pluck("course_id", &courseIDs).Error; err != nil {
+		return nil, err
+	}
+	return courseIDs, nil
+}
