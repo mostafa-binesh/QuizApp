@@ -309,7 +309,10 @@ func CreateFakeQuiz(c *fiber.Ctx) error {
 func OverallReport(c *fiber.Ctx) error {
 	user := c.Locals("user").(M.User)
 	// options is needed in user preload in correct and incorrect answer coount
-	if err := D.DB().Preload("Quizzes.UserAnswers.Question.Options").Preload("Courses.Subjects.Systems.Questions").Find(&user).Error; err != nil {
+	if err := D.DB().
+		Preload("Quizzes.UserAnswers.Question.Options").
+		Preload("Courses.Subjects.Systems.Questions").
+		Find(&user).Error; err != nil {
 		return U.DBError(c, err)
 	}
 	var totalQuestionsCount int
