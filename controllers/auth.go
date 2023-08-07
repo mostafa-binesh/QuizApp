@@ -3,11 +3,14 @@ package controllers
 import (
 	D "docker/database"
 	M "docker/models"
+	S "docker/services"
 	U "docker/utils"
 	"fmt"
+	"strings"
+	"time"
+
 	"github.com/gofiber/fiber/v2"
 	"golang.org/x/crypto/bcrypt"
-	"strings"
 )
 
 type Person struct {
@@ -21,13 +24,12 @@ func SignUpUser(c *fiber.Ctx) error {
 	if err := c.BodyParser(payload); err != nil {
 		U.ResErr(c, err.Error())
 	}
-	fmt.Printf("payload: %v\n", payload)
 	// validate the payload
 	if errs := U.Validate(payload); errs != nil {
 		return c.Status(400).JSON(fiber.Map{"errors": errs})
 	}
 	// check email uniqueness
-	if emailUniqueness := D.DB().Find(&M.User{}, "email = ?", payload.Email); emailUniqueness.RowsAffected != 0 {
+	if emailUniqueness := D.DB().Find(&M.User{}, "email = ?", payload.Email); emailUniqueness.RowsAffected != 0 || emailUniqueness.Error != nil {
 		return U.ResErr(c, "Email already exists")
 	}
 	// ! here we need to check that if the order exists and then if exists
@@ -37,14 +39,25 @@ func SignUpUser(c *fiber.Ctx) error {
 	if err != nil {
 		return U.ResErr(c, fmt.Sprint("Woocommerce Error: , ", err.Error()))
 	}
+	// todo: move this add user's bought courses to its service
 	// add bought courses to user's courses
-	var courses []*M.Course
-	var purchasedOrderIDs []int64
+	var purchasedCoursesIDs []int64
+	purchasedCourseIDPayDateMap := make(map[int64]time.Time)
 	for _, item := range order.LineItems {
-		purchasedOrderIDs = append(purchasedOrderIDs, item.ProductID)
-		courses = append(courses, &M.Course{
-			WoocommerceID: uint(item.ProductID),
-		})
+		// todo: uncomment order.Status line in production
+		// if order.Status != "completed" {
+		// 	continue
+		// }
+		purchasedCoursesIDs = append(purchasedCoursesIDs, item.ProductID)
+		var payTime time.Time
+		// todo: dev only, delete order.DatePaidGMT=="" on production
+		// if DatePaidGMT is empty, the order hasn't been paid
+		if order.DatePaidGmt == "" {
+			payTime = time.Now()
+		} else {
+			payTime = S.ConvertWCTimeToStandard(order.DatePaidGmt)
+		}
+		purchasedCourseIDPayDateMap[item.ProductID] = payTime
 	}
 	// hash the password
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(payload.Password), bcrypt.DefaultCost)
@@ -52,22 +65,48 @@ func SignUpUser(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
 	// get the courses
-	if result := D.DB().Find(&courses, "woocommerce_id IN ?", purchasedOrderIDs); result.Error != nil {
+	var childrenCourses []M.Course
+	if result := D.DB().Find(&childrenCourses, "woocommerce_id IN ?", purchasedCoursesIDs); result.Error != nil {
 		return U.DBError(c, result.Error)
 	}
-	fmt.Printf("found courses: %v\n", courses)
+	// get the parent course IDs using child courses
+	var parentCourseIDs []uint
+	for _, childrenCourse := range childrenCourses {
+		if childrenCourse.ParentID != nil {
+			parentCourseIDs = append(parentCourseIDs, *childrenCourse.ParentID)
+		}
+	}
+	if len(childrenCourses) == 0 || len(parentCourseIDs) == 0 {
+		return U.ResErr(c, "Your order doesn't contain any valid course")
+	}
+	// we need to set the child courses into the course_user table
 	newUser := M.User{
 		Email:    payload.Email,
 		Password: string(hashedPassword),
-		Courses:  courses,
 	}
 	//  add created user to the database
 	result := D.DB().Create(&newUser)
-	//  if any error exist in the create process, write the error
 	if result.Error != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "couldn't create the user"})
+		return U.ResErr(c, "couldn't create the user")
 	}
-	return c.Status(fiber.StatusCreated).JSON(fiber.Map{"msg": "user has been created successfully"})
+	// create course_user records
+	var userNewBoughtCourses []M.CourseUser
+	for _, childCourse := range childrenCourses {
+		// if the childCoruse doesn't have parent, don't insert it
+		if childCourse.ParentID == nil {
+			continue
+		}
+		userNewBoughtCourses = append(userNewBoughtCourses, M.CourseUser{
+			UserID:         int(newUser.ID),
+			CourseID:       int(*&childCourse.ID),
+			ExpirationDate: purchasedCourseIDPayDateMap[int64(childCourse.WoocommerceID)].Add(time.Duration(childCourse.ValidityDaysPeriod) * time.Hour * 24),
+		})
+	}
+	// we SAVE records to the database because some user may bought other courses already
+	if err := D.DB().Save(&userNewBoughtCourses).Error; err != nil {
+		return U.DBError(c, err)
+	}
+	return c.Status(fiber.StatusCreated).JSON(fiber.Map{"msg": "User has been created successfully"})
 
 }
 func DevsSignUpUser(c *fiber.Ctx) error {
