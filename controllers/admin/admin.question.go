@@ -3,6 +3,7 @@ package admin
 import (
 	D "docker/database"
 	"fmt"
+
 	// "io"
 	// "os"
 
@@ -105,11 +106,8 @@ func CreateSingleSelectQuestion(c *fiber.Ctx) error {
 		return U.ResErr(c, err.Error())
 	}
 	fmt.Printf("here 2.5")
+	// images is optional
 	images := form.File["images"]
-	if images == nil {
-		return U.ResErr(c, err.Error())
-	}
-	fmt.Printf("here 3")
 	fmt.Printf("images variable %v\n", images)
 	// create appropriate unique name for images and save them int disc
 	var questionImages []M.Image
