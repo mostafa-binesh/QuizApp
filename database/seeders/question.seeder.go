@@ -12,28 +12,7 @@ import (
 // course seeder needed first
 func QuestionAndOptionsSeeder() {
 	// Define an array of questions
-	questions := [20]string{
-		"What is the capital of Spain?",
-		"What is the largest planet in our solar system?",
-		"What is the smallest country in the world?",
-		"What is the largest ocean in the world?",
-		"What is the highest mountain in the world?",
-		"What is the smallest planet in our solar system?",
-		"What is the largest country in the world by area?",
-		"What is the fastest land animal?",
-		"What is the tallest animal in the world?",
-		"What is the longest river in the world?",
-		"What is the largest desert in the world?",
-		"What is the most populous country in the world?",
-		"What is the hottest continent on Earth?",
-		"What is the deepest ocean in the world?",
-		"What is the largest bird in the world?",
-		"What is the largest continent in the world?",
-		"What is the largest mammal in the world?",
-		"What is the largest fish in the world?",
-		"What is the fastest sea animal?",
-		"What is the largest reptile in the world?",
-	}
+	questions := []string{}
 
 	// Define an array of options for each question
 	options := [20][4]string{
