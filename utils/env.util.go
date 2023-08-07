@@ -25,8 +25,5 @@ func Env(key string) string {
 
 // returns true if key variable in .env file is "true"
 func EnvBool(key string) bool {
-	if Env(key) == "true" {
-		return true
-	}
-	return false
+	return Env(key) == "true"
 }
