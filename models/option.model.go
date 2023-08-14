@@ -8,10 +8,10 @@ type Option struct {
 	Index     string `json:"index,omitempty"`
 	IsCorrect uint   `json:"status"`
 	// relationships
-	QuestionID *uint      `json:"-"`
-	Question   *Question `json:"question,omitempty" gorm:"foreignKey:QuestionID;constraint:OnUpdate:CASCADE;OnDelete:CASCADE"`
-	DropdownID *uint      `json:"-"`
-	Dropdown   *Dropdown `json:"dropdown,omitempty" gorm:"foreignKey:DropdownID;constraint:OnUpdate:CASCADE;OnDelete:CASCADE"`
+	QuestionID *uint     `json:"-"`
+	Question   *Question `json:"question,omitempty" gorm:"foreignKey:QuestionID;constraint:OnDelete:CASCADE,OnUpdate:CASCADE;"`
+	DropdownID *uint     `json:"-"`
+	Dropdown   *Dropdown `json:"dropdown,omitempty" gorm:"foreignKey:DropdownID;constraint:OnDelete:CASCADE,OnUpdate:CASCADE;"`
 }
 type AdminOptionInput struct {
 	Title     string `form:"title" validate:"required"`

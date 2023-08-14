@@ -3,6 +3,7 @@ package models
 import (
 	U "docker/utils"
 	"strings"
+
 	// "fmt"
 	"time"
 )
@@ -19,7 +20,7 @@ const (
 type Quiz struct {
 	ID     uint  `json:"id,omitempty" gorm:"primary_key"`
 	UserID uint  `json:"-"`
-	User   *User `json:"user,omitempty" gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE;OnDelete:CASCADE"`
+	User   *User `json:"user,omitempty" gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE,OnUpdate:CASCADE;"`
 	// TODO add lesson : lesson >> ? lesson == course ?
 	Status      string       `json:"status,omitempty"`
 	UserAnswers []UserAnswer `json:"userAnswers,omitempty"`
@@ -27,7 +28,7 @@ type Quiz struct {
 	EndTime     *time.Time   `json:"-" gorm:"not null;default:now()"`
 	Duration    uint         `json:"duration" gorm:"not null"`
 	CourseID    uint         `json:"-"`
-	Course      *Course      `json:"course,omitempty" gorm:"foreignKey:CourseID;constraint:OnUpdate:CASCADE;OnDelete:CASCADE"`
+	Course      *Course      `json:"course,omitempty" gorm:"foreignKey:CourseID;constraint:OnDelete:CASCADE,OnUpdate:CASCADE;"`
 	// mode = tutor, timed
 	Mode string `json:"mode" gorm:"type:varchar(255)"`
 	// type like nextGeneration

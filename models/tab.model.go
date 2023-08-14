@@ -3,6 +3,7 @@ package models
 import (
 	"database/sql/driver"
 	"encoding/json"
+
 	// "errors"
 	"fmt"
 )
@@ -12,7 +13,7 @@ type Tab struct {
 	ID         uint       `json:"no" gorm:"primary_key"`
 	Tables     TableArray `json:"tables" gorm:"type:text"`
 	QuestionID uint       `json:"-"`
-	Question   *Question  `json:"question,omitempty" gorm:"foreignKey:QuestionID;constraint:OnUpdate:CASCADE;OnDelete:CASCADE"`
+	Question   *Question  `json:"question,omitempty" gorm:"foreignKey:QuestionID;constraint:OnDelete:CASCADE,OnUpdate:CASCADE;"`
 }
 
 func (sla TableArray) Value() (driver.Value, error) {
