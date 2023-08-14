@@ -89,3 +89,6 @@ type UserResponse struct {
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
 }
+type AddCourseUsingOrderID struct {
+	OrderID uint `json:"orderID" validate:"required"`
+}
