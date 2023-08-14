@@ -6,6 +6,7 @@ import (
 	M "docker/models"
 	U "docker/utils"
 	"fmt"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"golang.org/x/crypto/bcrypt"
@@ -69,8 +70,19 @@ func EditUser(c *fiber.Ctx) error {
 	// Get the courses by IDs
 	var courses []M.Course
 	D.DB().Where("id IN (?)", payload.CoursesIDs).Find(&courses)
-	// Update the user's courses
-	D.DB().Model(&user).Association("Courses").Replace(&courses)
+	// # Update the user's courses
+	// delete all user courses in course_user table
+	if err := D.DB().Where("user_id = ?", user.ID).Delete(&M.CourseUser{}).Error; err != nil {
+		return U.DBError(c, err)
+	}
+	// add courses for the user
+	for _, course := range courses {
+		D.DB().Create(&M.CourseUser{
+			UserID:         int(user.ID),
+			CourseID:       int(course.ID),
+			ExpirationDate: time.Now().AddDate(10, 0, 0), // set expiration to 10 years
+		})
+	}
 	// save the user
 	result := D.DB().Save(&user)
 	if result.Error != nil {
