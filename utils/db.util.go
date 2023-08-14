@@ -21,7 +21,7 @@ func DBError(c *fiber.Ctx, err error) error {
 		errorText = "Unpredicted Database Error"
 	}
 	fmt.Printf("Database error: %v\n", err)
-	if Env("APP_DEBUG") == "true" {
+	if EnvBool("APP_DEBUG") {
 		return c.Status(400).JSON(fiber.Map{
 			"error": errorText,
 			"debug": err,
