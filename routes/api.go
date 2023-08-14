@@ -12,8 +12,7 @@ import (
 func APIInit(router *fiber.App) {
 	router.Get("/", func(c *fiber.Ctx) error {
 		return c.JSON(fiber.Map{
-			"msg":        "freeman was here :)",
-			"lastChange": "add static files",
+			"msg": "freeman was here <3",
 		})
 	})
 	// ! quiz routes
@@ -24,13 +23,13 @@ func APIInit(router *fiber.App) {
 	userCourse := user.Group("/courses")
 	userCourse.Get("/", C.AllCourses)
 	userCourse.Post("/", C.CreateQuiz)
-	userCourse.Get("/update", C.UpdateUserCourses)
+	userCourse.Put("/update", C.UpdateUserCourses)
 	userCourse.Get("/:courseID<int>/subjects", C.CourseSubjects)
 
 	userQuiz := user.Group("/quizzes")
 	userQuiz.Get("/", C.AllQuizzes)
 	userQuiz.Get("/:id<int>", C.QuizByID)
-	userQuiz.Put("/:id<int>", C.UpdateQuiz) // TODO not tested yet
+	userQuiz.Put("/:id<int>", C.UpdateQuiz)
 	userQuiz.Post("/", C.CreateQuiz)
 	userQuiz.Post("/createFakeQuiz", C.CreateFakeQuiz)
 	userQuiz.Get("/overall", C.OverallReport)
@@ -44,11 +43,12 @@ func APIInit(router *fiber.App) {
 	// ! admin routes
 	admin := router.Group("/admin")
 	admin.Get("/courses", AC.AllCourses)
+	admin.Get("/nonParentCourses", AC.NonParentCourses)
 	admin.Get("/courses/:id<int>", AC.CourseByID)
 	admin.Post("/courses", AC.CreateCourse)
 	admin.Get("/courses/subjects", AC.AllSubjects)
 	admin.Get("/courses/:courseID<int>/subjects", AC.CourseSubjects)
-	admin.Get("/courses/addFromWoocommerce", AC.AddCoursesFromWooCommerce)
+	admin.Get("/courses/addFromWoocommerce", AC.ImportCoursesFromWooCommerce)
 
 	admin.Get("/users", AC.IndexUser)
 	admin.Get("/users/:email<string>", AC.UserByEmail)
@@ -61,6 +61,9 @@ func APIInit(router *fiber.App) {
 	admin.Post("/questions/nextGeneration", AC.CreateNextGenerationQuestion)
 	admin.Get("/questions/:id<int>", AC.QuestionByID)
 	admin.Post("/uploadImages", AC.UploadImage)
+
+	admin.Get("/systems/:systemID<int>/questions", AC.SystemQuestions)
+	admin.Delete("/systems/:systemID<int>/questions", AC.DeleteSystemQuestions)
 
 	admin.Get("/changeImageURLsInDescription", AC.ChangeImageURLsInDescription)
 	// ! authentication routes
