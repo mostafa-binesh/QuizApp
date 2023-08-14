@@ -2,15 +2,15 @@ package controllers
 
 import (
 	D "docker/database"
+	S "docker/services"
+
 	// "math/rand"
 	// "time"
 
 	// F "docker/database/filters"
 	M "docker/models"
 	U "docker/utils"
-	"fmt"
 
-	WC "github.com/chenyangguang/woocommerce"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -53,26 +53,27 @@ func CourseSubjects(c *fiber.Ctx) error {
 }
 
 func UpdateUserCourses(c *fiber.Ctx) error {
-	app := WC.App{
-		CustomerKey:    U.Env("WC_CONSUMER_KEY"),
-		CustomerSecret: U.Env("WC_CONSUMER_SECRET"),
+	payload := new(M.AddCourseUsingOrderID)
+	// parsing the payload
+	if err := c.BodyParser(payload); err != nil {
+		U.ResErr(c, err.Error())
 	}
-
-	wc := WC.NewClient(app, U.Env("WC_SHOP_NAME"))
-
-	// Retrieve the order details
-	order, err := wc.Order.Get(int64(c.QueryInt("id")), nil)
+	// validation the payload
+	if errs := U.Validate(payload); errs != nil {
+		return c.Status(400).JSON(fiber.Map{"errors": errs})
+	}
+	// get authenticated user
+	user := c.Locals("user").(M.User)
+	// get courses using payload.OrderID
+	childCourses, purchasedCourseIDPayDateMap, err := S.ImportUserCoursesUsingOrderID(payload.OrderID)
 	if err != nil {
-		// log.Fatal(err)
-		fmt.Printf("error: %v", err)
+		return U.DBError(c, err)
 	}
-
-	// Print the names of the products
-	fmt.Println("Products purchased:")
-	var productNames []string
-	for _, item := range order.LineItems {
-		fmt.Println(item.Name)
-		productNames = append(productNames, item.Name)
+	// convert childCourses to course_user model
+	CourseUser := S.AddCourseUserUsingCourses(childCourses, purchasedCourseIDPayDateMap, user.ID)
+	// we SAVE records to the database because some user may bought other courses already
+	if err := D.DB().Save(&CourseUser).Error; err != nil {
+		return U.DBError(c, err)
 	}
-	return c.JSON(fiber.Map{"productNames": productNames})
+	return c.Status(fiber.StatusCreated).JSON(fiber.Map{"msg": "Courses have been added"})
 }
