@@ -59,11 +59,6 @@ func SignUpUser(c *fiber.Ctx) error {
 		}
 		purchasedCourseIDPayDateMap[item.ProductID] = payTime
 	}
-	// hash the password
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(payload.Password), bcrypt.DefaultCost)
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
-	}
 	// get the courses
 	var childrenCourses []M.Course
 	if result := D.DB().Find(&childrenCourses, "woocommerce_id IN ?", purchasedCoursesIDs); result.Error != nil {
@@ -78,6 +73,11 @@ func SignUpUser(c *fiber.Ctx) error {
 	}
 	if len(childrenCourses) == 0 || len(parentCourseIDs) == 0 {
 		return U.ResErr(c, "Your order doesn't contain any valid course")
+	}
+	// hash the password
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(payload.Password), bcrypt.DefaultCost)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
 	// we need to set the child courses into the course_user table
 	newUser := M.User{
