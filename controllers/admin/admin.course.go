@@ -9,7 +9,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func AddCoursesFromWooCommerce(c *fiber.Ctx) error {
+func ImportCoursesFromWooCommerce(c *fiber.Ctx) error {
 	convertedCourses, err := S.ImportCoursesFromWoocommerce()
 	if err != nil {
 		return U.ResErr(c, err.Error())
@@ -19,7 +19,27 @@ func AddCoursesFromWooCommerce(c *fiber.Ctx) error {
 func AllCourses(c *fiber.Ctx) error {
 	// get all courses
 	courses := []M.Course{}
+	// get all parent courses
 	result := D.DB().Where("parent_id IS NULL").Preload("Subjects.Systems").Find(&courses)
+	if result.Error != nil {
+		return U.DBError(c, result.Error)
+	}
+	// convert course to courseWithTitleOnly
+	var CoursesWithTitleOnly []M.CourseWithTitleOnly
+	for _, course := range courses {
+		CoursesWithTitleOnly = append(CoursesWithTitleOnly, M.CourseWithTitleOnly{
+			ID:    course.ID,
+			Title: course.Title,
+		})
+	}
+	// return courses
+	return c.JSON(fiber.Map{"data": CoursesWithTitleOnly})
+}
+func NonParentCourses(c *fiber.Ctx) error {
+	// get all courses
+	courses := []M.Course{}
+	// get all non-parent courses
+	result := D.DB().Where("parent_id IS NOT NULL").Preload("Subjects.Systems").Find(&courses)
 	if result.Error != nil {
 		return U.DBError(c, result.Error)
 	}
