@@ -11,11 +11,6 @@ import (
 	"time"
 )
 
-// import (
-// 	U "docker/utils"
-// 	"github.com/chenyangguang/woocommerce"
-// )
-
 type WCProduct struct {
 	ID         int                   `json:"id"`
 	Name       string                `json:"name"`
