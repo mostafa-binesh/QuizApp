@@ -71,6 +71,7 @@ func SignUpUser(c *fiber.Ctx) error {
 			parentCourseIDs = append(parentCourseIDs, *childrenCourse.ParentID)
 		}
 	}
+	// if no the order doesn't contain any valid child course, show error
 	if len(childrenCourses) == 0 || len(parentCourseIDs) == 0 {
 		return U.ResErr(c, "Your order doesn't contain any valid course")
 	}
