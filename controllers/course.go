@@ -64,15 +64,16 @@ func UpdateUserCourses(c *fiber.Ctx) error {
 	}
 	// get authenticated user
 	user := c.Locals("user").(M.User)
-	// get courses using payload.OrderID
+	// get wc courses using payload.OrderID
 	childCourses, purchasedCourseIDPayDateMap, err := S.ImportUserCoursesUsingOrderID(payload.OrderID)
 	if err != nil {
 		return U.DBError(c, err)
 	}
 	// convert childCourses to course_user model
-	CourseUser := S.AddCourseUserUsingCourses(childCourses, purchasedCourseIDPayDateMap, user.ID)
+	courseUser := S.AddCourseUserUsingCourses(childCourses, purchasedCourseIDPayDateMap, user.ID)
+	// todo: we need to check if the course_user exist, then update the expiration date
 	// we SAVE records to the database because some user may bought other courses already
-	if err := D.DB().Save(&CourseUser).Error; err != nil {
+	if err := D.DB().Save(&courseUser).Error; err != nil {
 		return U.DBError(c, err)
 	}
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{"msg": "Courses have been added"})
