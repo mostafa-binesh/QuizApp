@@ -7,11 +7,11 @@ import (
 
 // return status 400 of { "error" : errMessage }
 func ResErr(c *fiber.Ctx, err string, statusCode ...int) error {
-	x := fiber.StatusBadRequest
+	status := fiber.StatusBadRequest
 	if len(statusCode) > 0 {
-		x = statusCode[0]
+		status = statusCode[0]
 	}
-	return c.Status(x).JSON(fiber.Map{"error": err})
+	return c.Status(status).JSON(fiber.Map{"error": err})
 }
 func ResValidationErr(c *fiber.Ctx, err map[string]string) error {
 	return c.Status(400).JSON(fiber.Map{
