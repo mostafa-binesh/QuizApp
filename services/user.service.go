@@ -55,6 +55,7 @@ func ImportUserCoursesUsingOrderID(orderID uint) ([]M.Course, map[int64]time.Tim
 	return childrenCourses, purchasedCourseIDPayDateMap, nil
 }
 
+// DEPREACTED - NOT USED ANYWHERE
 // converts courses to course_user
 func AddCourseUserUsingCourses(childrenCourses []M.Course, purchasedCourseIDPayDateMap map[int64]time.Time, userID uint) []M.CourseUser {
 	// create course_user records
@@ -71,4 +72,46 @@ func AddCourseUserUsingCourses(childrenCourses []M.Course, purchasedCourseIDPayD
 		})
 	}
 	return userNewBoughtCourses
+}
+
+// returns courses which should be inserted and what courses needs update in course_update table based on orderID
+func ExtractCourseToInsertAndToUpdate(childCourses []M.Course, purchasedCourseIDPayDateMap map[int64]time.Time, userID uint) (courseUsersToUpdate []M.CourseUser, newCourseUsers []M.CourseUser, err error) {
+	// Create a map to store the courseUser data indexed by course ID
+	courseUserMap := make(map[uint]*M.CourseUser)
+
+	// Iterate over childCourses and update the courseUserMap with expiration dates
+	for _, course := range childCourses {
+		if cu, ok := purchasedCourseIDPayDateMap[int64(course.WoocommerceID)]; ok {
+			courseUserMap[course.ID] = &M.CourseUser{
+				UserID:         int(userID),
+				CourseID:       int(course.ID),
+				ExpirationDate: cu,
+			}
+		}
+	}
+
+	// Create a list of courseUser records to update
+	courseUsersToUpdate = make([]M.CourseUser, 0, len(courseUserMap))
+
+	// Retrieve existing courseUser records from the database
+	existingCourseUsers := make([]M.CourseUser, 0)
+	if err := D.DB().Where("user_id = ?", userID).Find(&existingCourseUsers).Error; err != nil {
+		return nil, nil, err
+	}
+
+	// Iterate over existing courseUser records and update expiration dates if needed
+	for _, existing := range existingCourseUsers {
+		if cu, ok := courseUserMap[uint(existing.CourseID)]; ok && existing.ExpirationDate != cu.ExpirationDate {
+			existing.ExpirationDate = cu.ExpirationDate
+			courseUsersToUpdate = append(courseUsersToUpdate, existing)
+		}
+		delete(courseUserMap, uint(existing.CourseID))
+	}
+
+	// Create a list of new courseUser records to insert
+	newCourseUsers = make([]M.CourseUser, 0, len(courseUserMap))
+	for _, cu := range courseUserMap {
+		newCourseUsers = append(newCourseUsers, *cu)
+	}
+	return courseUsersToUpdate, newCourseUsers, nil
 }
