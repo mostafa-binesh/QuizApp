@@ -191,22 +191,26 @@ func Dashboard(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"dashboard": "heres the dashboard", "user": user})
 }
 func AuthMiddleware(c *fiber.Ctx) error {
+	// get the session using session utility
 	sess := U.Session(c)
+	// retreive userID from session
 	userID := sess.Get(U.USER_ID)
+	// if userID doesn't exist, show err
 	if userID == nil {
 		return ReturnError(c, "not authenticated", fiber.StatusUnauthorized) // ! notAuthorized is notAuthenticated
-	} else {
-		c.SendString(fmt.Sprintf("user id is: %s", sess.Get(U.USER_ID)))
 	}
+	// get user with userID from database
 	var user M.User
 	result := D.DB().Find(&user, userID)
-	if result.Error != nil {
+	if result.Error != nil || result.RowsAffected == 0 {
+		// if user doesn't exist or any error happend, remove the session and show error
 		err := sess.Destroy()
 		if err != nil {
 			panic(err)
 		}
-		return U.ResErr(c, "cannot authenticate. session removed", 500)
+		return U.ResErr(c, "cannot authenticate. Please login again", fiber.StatusInternalServerError)
 	}
+	// if everything was ok, save the db user to locals variable "user"
 	c.Locals("user", user)
 	return c.Next()
 
@@ -218,15 +222,18 @@ func RoleCheck(roles []string) fiber.Handler {
 		user, ok := c.Locals("user").(M.User)
 		// check if authentication is done already
 		if !ok {
-			return U.ResErr(c, "Please login first", 401)
+			return U.ResErr(c, "Please login first", fiber.StatusUnauthorized)
 		}
+		// get string of user's role
 		userRoleString := user.RoleString()
 		// check roles
 		for _, role := range roles {
 			if role == userRoleString {
+				// proceed to next handler
 				return c.Next()
 			}
 		}
-		return U.ResErr(c, "Access Forbidden", 403)
+		// if roles don't match, show err
+		return U.ResErr(c, "Access Forbidden", fiber.StatusForbidden)
 	}
 }
