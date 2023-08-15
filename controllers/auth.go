@@ -205,9 +205,28 @@ func AuthMiddleware(c *fiber.Ctx) error {
 		if err != nil {
 			panic(err)
 		}
-		return ReturnError(c, "cannot authenticate. session removed", 500)
+		return U.ResErr(c, "cannot authenticate. session removed", 500)
 	}
 	c.Locals("user", user)
 	return c.Next()
 
+}
+
+// authentication must be done already
+func RoleCheck(roles []string) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		user, ok := c.Locals("user").(M.User)
+		// check if authentication is done already
+		if !ok {
+			return U.ResErr(c, "Please login first", 401)
+		}
+		userRoleString := user.RoleString()
+		// check roles
+		for _, role := range roles {
+			if role == userRoleString {
+				return c.Next()
+			}
+		}
+		return U.ResErr(c, "Access Forbidden", 403)
+	}
 }
