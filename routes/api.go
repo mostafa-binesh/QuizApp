@@ -42,6 +42,7 @@ func APIInit(router *fiber.App) {
 
 	// ! admin routes
 	admin := router.Group("/admin")
+	// admin := router.Group("/admin", C.AuthMiddleware, C.RoleCheck([]string{"admin"}))
 	admin.Get("/courses", AC.AllCourses)
 	admin.Get("/nonParentCourses", AC.NonParentCourses)
 	admin.Get("/courses/:id<int>", AC.CourseByID)
