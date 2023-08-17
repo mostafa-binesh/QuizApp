@@ -10,6 +10,13 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+func AllStudyPlans(c *fiber.Ctx) error {
+	studyPlans := []M.StudyPlan{}
+	if err := D.DB().Find(&studyPlans).Error; err != nil {
+		return U.DBError(c, err)
+	}
+	return c.JSON(fiber.Map{"data": studyPlans})
+}
 func CreateStudyPlanner(c *fiber.Ctx) error {
 	payload := new(M.CreateNewStudyPlanInput)
 	// parsing the payload
