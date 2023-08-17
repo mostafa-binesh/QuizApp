@@ -36,12 +36,12 @@ func CreateStudyPlanner(c *fiber.Ctx) error {
 			Date:       date,
 			Hours:      hours,
 			IsFinished: false,
-			UserID:     user.ID, // Set the user ID based on your authentication system
+			UserID:     user.ID,
 		}
 		if err := D.DB().Create(&plan).Error; err != nil {
-			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to create study plan"})
+			return U.DBError(c, err)
 		}
 	}
 
-	return c.JSON(fiber.Map{"message": "Study plans created successfully"})
+	return c.JSON(fiber.Map{"msg": "Study plans created successfully"})
 }
