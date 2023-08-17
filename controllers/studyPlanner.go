@@ -53,7 +53,7 @@ func CreateStudyPlanner(c *fiber.Ctx) error {
 
 	return c.JSON(fiber.Map{"msg": "Study plans created successfully"})
 }
-func VerifyDate(c *fiber.Ctx) error {
+func FinishDate(c *fiber.Ctx) error {
 	payload := new(M.VerifyStudyPlanDateInput)
 	// Parse the payload
 	if err := c.BodyParser(payload); err != nil {
