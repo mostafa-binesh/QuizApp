@@ -37,9 +37,10 @@ func SignUpUser(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
+	// get all courses that user have bought using orderID
 	childCourses, purchasedCourseIDPayDateMap, err := S.ImportUserCoursesUsingOrderID(payload.OrderID)
 	if err != nil {
-		return U.DBError(c, err)
+		return U.ResDebug(c, err, "Failed to retreieve bought courses from woocommerce")
 	}
 	// create new user
 	newUser := M.User{
@@ -62,7 +63,6 @@ func SignUpUser(c *fiber.Ctx) error {
 		return U.DBError(c, err)
 	}
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{"msg": "User has been created successfully"})
-
 }
 func DevsSignUpUser(c *fiber.Ctx) error {
 	payload := new(M.SignUpInput)
