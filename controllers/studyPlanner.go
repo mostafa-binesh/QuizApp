@@ -58,22 +58,18 @@ func VerifyDate(c *fiber.Ctx) error {
 	}
 	// Get authenticated user
 	user := c.Locals("user").(M.User)
-	// Find the desired plan which belongs to this user
-	studyPlan := M.StudyPlan{}
+	date := payload.Date
+	// Update study plan
 	result := D.DB().
-		Where("user_id = ? AND date = ?", user.ID, payload.Date).
-		First(&studyPlan)
+		Model(&M.StudyPlan{}).
+		Where("user_id = ? AND date = ?", user.ID, date).
+		Update("is_finished", true)
+	// Handle errors
 	if result.Error != nil {
 		return U.DBError(c, result.Error)
 	}
-	// Finish the study plan
-	studyPlan.Finish()
-	if err := D.DB().Save(&studyPlan).Error; err != nil {
-		return U.DBError(c, err)
-	}
-	// Show error if no plan found with desired date
 	if result.RowsAffected == 0 {
-		return U.ResErr(c, fmt.Sprintf("Plan with date %s not found", payload.Date))
+		return U.ResErr(c, fmt.Sprintf("Plan with date %s not found", date), 404)
 	}
-	return U.ResMessage(c, fmt.Sprintf("Plan with date %s has been verified", payload.Date))
+	return U.ResMessage(c, fmt.Sprintf("Plan with date %s has been verified", date))
 }
