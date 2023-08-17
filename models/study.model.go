@@ -17,3 +17,12 @@ type CreateNewStudyPlanInput struct {
 	EndDate      time.Time `json:"endDate" validate:"required"`
 	WorkingHours []uint    `json:"workingHours" validate:"required"`
 }
+
+type VerifyStudyPlanDateInput struct {
+	Date time.Time `json:"date" validate:"required"`
+}
+
+// functions
+func (sp *StudyPlan) Finish() {
+	sp.IsFinished = true
+}
