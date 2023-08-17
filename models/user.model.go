@@ -25,6 +25,8 @@ type User struct {
 	UserAnswers []*UserAnswer `json:"userAnswer" gorm:"foreignKey:UserID"`
 }
 
+// as the Role field is uint, we need to convert it to string sometimes
+// eg. 1 returns "user"
 func (c *User) RoleString() string {
 	switch c.Role {
 	case uint(AdminRole):
