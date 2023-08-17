@@ -25,7 +25,13 @@ func DB() *gorm.DB {
 // func ConnectToDB() {
 func ConnectToDB(DB_HOST string, DB_USERNAME string, DB_PASSWORD string, DB_NAME string, DB_PORT string) {
 	var err error
+	// Open the log file in append mode
+	// file, err := os.OpenFile("public/gorm_errors.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	// if err != nil {
+	// 	log.Fatalf("Failed to open log file: %v", err)
+	// }
 	newLogger := logger.New(
+		// log.New(file, "\r\n", log.LstdFlags), // io writer
 		log.New(os.Stdout, "\r\n", log.LstdFlags), // io writer
 		logger.Config{
 			SlowThreshold:             time.Second, // Slow SQL threshold
