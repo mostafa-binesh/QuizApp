@@ -27,7 +27,7 @@ func ResWithPagination(c *fiber.Ctx, data interface{}, pagination Pagination) er
 
 // returns status 200 of { "msg" : sendMessage }
 func ResMessage(c *fiber.Ctx, msg string, statusCode ...int) error {
-	status := fiber.StatusBadRequest
+	status := fiber.StatusOK
 	if len(statusCode) > 0 {
 		status = statusCode[0]
 	}
