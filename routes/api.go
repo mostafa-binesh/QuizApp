@@ -41,6 +41,7 @@ func APIInit(router *fiber.App) {
 	userQuestions.Get("/search", C.AllQuestionsWithSearch)
 
 	userStudyPlanner := user.Group("/studyPlanner")
+	userStudyPlanner.Get("/", C.AllStudyPlan)
 	userStudyPlanner.Post("/", C.CreateStudyPlanner)
 	userStudyPlanner.Get("/verify", C.VerifyDate)
 
