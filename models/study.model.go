@@ -11,3 +11,9 @@ type StudyPlan struct {
 	UserID uint `json:"-"`
 	User   User `json:"user" gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE,OnUpdate:CASCADE;"`
 }
+
+type CreateNewStudyPlanInput struct {
+	StartDate    time.Time `json:"startDate" validate:"required"`
+	EndDate      time.Time `json:"endDate" validate:"required"`
+	WorkingHours []uint    `json:"workingHours" validate:"required"`
+}
