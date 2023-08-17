@@ -13,10 +13,10 @@ func ResErr(c *fiber.Ctx, err string, statusCode ...int) error {
 	}
 	return c.Status(status).JSON(fiber.Map{"error": err})
 }
-func ResDebug(c *fiber.Ctx, err string, options ...string) error {
+func ResDebug(c *fiber.Ctx, err error, errorOptionalText ...string) error {
 	errorText := "Internal Error"
-	if len(options) > 0 {
-		errorText = options[0]
+	if len(errorOptionalText) > 0 {
+		errorText = errorOptionalText[0]
 	}
 	return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": errorText, "debug": err})
 }
