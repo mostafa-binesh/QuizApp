@@ -9,7 +9,7 @@ type StudyPlan struct {
 	IsFinished bool      `json:"isFinished"`
 	// # REFERENCES
 	UserID uint `json:"-"`
-	User   User `json:"user" gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE,OnUpdate:CASCADE;"`
+	User   User `json:"-" gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE,OnUpdate:CASCADE;"`
 }
 
 type CreateNewStudyPlanInput struct {
@@ -23,6 +23,8 @@ type VerifyStudyPlanDateInput struct {
 }
 
 // functions
+
+// set IsFinished field to true
 func (sp *StudyPlan) Finish() {
 	sp.IsFinished = true
 }
