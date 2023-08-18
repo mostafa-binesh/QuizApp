@@ -87,7 +87,7 @@ func EditUser(c *fiber.Ctx) error {
 	if result.Error != nil {
 		return U.DBError(c, result.Error)
 	}
-	return U.ResMessage(c, "User updated successfully")
+	return U.ResMsg(c, "User updated successfully")
 }
 
 // ! user by id with admin/users/{email}
@@ -137,7 +137,7 @@ func DeleteUser(c *fiber.Ctx) error {
 	if err = D.DB().Delete(&M.User{}, c.Params("id")).Error; err != nil {
 		return U.DBError(c, err)
 	}
-	return U.ResMessage(c, "User has been deleted")
+	return U.ResMsg(c, "User has been deleted")
 }
 
 // not used yet
@@ -146,7 +146,7 @@ func UserVerification(c *fiber.Ctx) error {
 	if result.Error != nil {
 		U.DBError(c, result.Error)
 	}
-	return U.ResMessage(c, "User has been verified")
+	return U.ResMsg(c, "User has been verified")
 }
 
 // not used yet
@@ -155,7 +155,7 @@ func UserUnVerification(c *fiber.Ctx) error {
 	if result.Error != nil {
 		U.DBError(c, result.Error)
 	}
-	return U.ResMessage(c, "کاربر رد شد")
+	return U.ResMsg(c, "کاربر رد شد")
 }
 func AddUser(c *fiber.Ctx) error {
 	payload := new(M.AdminCreateUserInput)
@@ -197,5 +197,5 @@ func AddUser(c *fiber.Ctx) error {
 			ExpirationDate: time.Now().AddDate(10, 0, 0), // set expiration to 10 years
 		})
 	}
-	return U.ResMessage(c, "User has been created")
+	return U.ResMsg(c, "User has been created")
 }

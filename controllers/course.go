@@ -30,9 +30,10 @@ func CourseSubjects(c *fiber.Ctx) error {
 	// get authenticated user
 	user := M.AuthedUser(c)
 	// get user's course with id of param with subject with system of the user
-	result := D.DB().Preload("Courses", "id = ?", c.Params("courseID")).Preload("Courses.Subjects.Systems").Find(&user)
-	if result.Error != nil {
-		return U.DBError(c, result.Error)
+	if err := D.DB().
+		Preload("Courses", "id = ?", c.Params("courseID")).
+		Preload("Courses.Subjects.Systems").Find(&user).Error; err != nil {
+		return U.DBError(c, err)
 	}
 	if len(user.Courses) != 1 {
 		return U.ResErr(c, "Course not found")

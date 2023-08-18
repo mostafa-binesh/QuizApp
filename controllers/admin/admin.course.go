@@ -81,7 +81,7 @@ func CreateCourse(c *fiber.Ctx) error {
 		return U.DBError(c, result.Error)
 	}
 	// return success message
-	return U.ResMessage(c, "دوره اضافه شد")
+	return U.ResMsg(c, "دوره اضافه شد")
 }
 func UpdateCourse(c *fiber.Ctx) error {
 	course := M.Course{}
@@ -104,7 +104,7 @@ func UpdateCourse(c *fiber.Ctx) error {
 	if result.Error != nil {
 		return U.ResErr(c, "مشکلی در به روز رسانی به وجود آمده")
 	}
-	return U.ResMessage(c, "دوره بروز شد")
+	return U.ResMsg(c, "دوره بروز شد")
 }
 
 // returns all courses.subjects.systems that are parent

@@ -78,5 +78,5 @@ func FinishDate(c *fiber.Ctx) error {
 	if result.RowsAffected == 0 {
 		return U.ResErr(c, fmt.Sprintf("Plan with date %s not found", date), 404)
 	}
-	return U.ResMessage(c, fmt.Sprintf("Plan with date %s has been verified", date))
+	return U.ResMsg(c, fmt.Sprintf("Plan with date %s has been verified", date))
 }

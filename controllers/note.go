@@ -74,5 +74,5 @@ func EditNote(c *fiber.Ctx) error {
 	if err := D.DB().Save(&userAnswer).Error; err != nil {
 		return U.DBError(c, err)
 	}
-	return U.ResMessage(c, "Note has been updated")
+	return U.ResMsg(c, "Note has been updated")
 }

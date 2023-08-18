@@ -219,7 +219,7 @@ func UpdateQuiz(c *fiber.Ctx) error {
 		return U.DBError(c, err)
 	}
 	// return c.JSON(fiber.Map{"asd": convertedUserAnswer})
-	return U.ResMessage(c, "Quiz been updated")
+	return U.ResMsg(c, "Quiz been updated")
 }
 func CreateFakeQuiz(c *fiber.Ctx) error {
 	payload := new(M.QuizInput)

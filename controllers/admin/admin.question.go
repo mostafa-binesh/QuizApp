@@ -219,5 +219,5 @@ func ChangeImageURLsInDescription(c *fiber.Ctx) error {
 	if err := D.DB().Save(&questions).Error; err != nil {
 		return U.DBError(c, err)
 	}
-	return U.ResMessage(c, "Success")
+	return U.ResMsg(c, "Success")
 }
