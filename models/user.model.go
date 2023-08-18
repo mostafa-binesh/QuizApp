@@ -2,6 +2,8 @@ package models
 
 import (
 	"time"
+
+	"github.com/gofiber/fiber/v2"
 )
 
 type Role uint
@@ -93,4 +95,11 @@ type UserResponse struct {
 }
 type AddCourseUsingOrderID struct {
 	OrderID uint `json:"orderID" validate:"required"`
+}
+
+// get the authenticated user interface from fiber context locals variabels and convert to user model
+// auth middleware should be done already
+// didn't add it in auth utility becase of cycle import error
+func AuthedUser(c *fiber.Ctx) User {
+	return c.Locals("user").(User)
 }
