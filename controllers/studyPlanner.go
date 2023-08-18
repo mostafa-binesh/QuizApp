@@ -69,7 +69,7 @@ func FinishDate(c *fiber.Ctx) error {
 	// Update study plan
 	result := D.DB().
 		Model(&M.StudyPlan{}).
-		Where("user_id = ? AND date = ?", user.ID, date).
+		Where("user_id = ? AND date IN ?", user.ID, date).
 		Update("is_finished", true)
 	// Handle errors
 	if result.Error != nil {
