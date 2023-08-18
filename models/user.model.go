@@ -69,7 +69,7 @@ type AdminEditUserInput struct {
 // ! this model has been used in Edit user handler
 type EditInput struct {
 	Name         string `json:"name" validate:"required"`
-	PhoneNumber  string `json:"phoneNumber" validate:"required,regex=^09\d{9}$,dunique=users"`
+	PhoneNumber  string `json:"phoneNumber" validate:"required,dunique=users"`
 	PersonalCode string `json:"personalCode" validate:"required,max=10,numeric,dunique=users"`
 	NationalCode string `json:"nationalCode" validate:"required,len=10,numeric,dunique=users"`
 	Password     string `json:"password"`
