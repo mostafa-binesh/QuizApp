@@ -187,7 +187,7 @@ func Logout(c *fiber.Ctx) error {
 func Dashboard(c *fiber.Ctx) error {
 	// ! has a AuthMiddleware before here
 	// ! if session and user exists, client can access here
-	user := c.Locals("user").(M.User)
+	user := M.AuthedUser(c)
 	return c.JSON(fiber.Map{"dashboard": "heres the dashboard", "user": user})
 }
 func AuthMiddleware(c *fiber.Ctx) error {

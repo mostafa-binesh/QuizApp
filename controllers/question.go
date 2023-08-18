@@ -14,7 +14,7 @@ import (
 // all logic are continuous and need to be done in a single function
 func AllQuestionsWithSearch(c *fiber.Ctx) error {
 	// select all userAnswers of the authenticated user
-	user := c.Locals("user").(M.User)
+	user := M.AuthedUser(c)
 	if err := D.DB().Model(&user).
 		Preload("Quizzes.UserAnswers.Question", func(db *gorm.DB) *gorm.DB { // could do this as well : Preload("Comments", "ORDER BY ? ASC > ?", "id")
 			// if filterType is body and search query exists, search in question's title

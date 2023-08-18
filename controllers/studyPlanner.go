@@ -28,7 +28,7 @@ func CreateStudyPlanner(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"errors": errs})
 	}
 	// get authenticated user
-	user := c.Locals("user").(M.User)
+	user := M.AuthedUser(c)
 	// Calculate the number of days between start and end dates
 	numDays := int(payload.EndDate.Sub(payload.StartDate).Hours()/24) + 1
 
@@ -64,7 +64,7 @@ func FinishDate(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"errors": errs})
 	}
 	// Get authenticated user
-	user := c.Locals("user").(M.User)
+	user := M.AuthedUser(c)
 	date := payload.Date
 	// Update study plan
 	result := D.DB().

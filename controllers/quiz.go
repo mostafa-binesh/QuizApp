@@ -18,7 +18,7 @@ import (
 // because frontend guys only request once for all of quizzes and
 // save the entire quizzes into the state, i need to send quiz with all of its info
 func AllQuizzes(c *fiber.Ctx) error {
-	user := c.Locals("user").(M.User)
+	user := M.AuthedUser(c)
 	if err := D.DB().Model(&user).Preload("Quizzes.Course").Preload("UserAnswers", func(db *gorm.DB) *gorm.DB { // could do this as well : Preload("Comments", "ORDER BY ? ASC > ?", "id")
 		db = db.Order("id ASC")
 		return db
@@ -37,7 +37,7 @@ func AllQuizzes(c *fiber.Ctx) error {
 
 func QuizByID(c *fiber.Ctx) error {
 	// get authenticated user
-	user := c.Locals("user").(M.User)
+	user := M.AuthedUser(c)
 	// find quiz with id of paramID of the user with dependencies
 	if result := D.DB().Model(&user).Preload("Quizzes", c.Params("id")).Preload("Quizzes.Course").Preload("UserAnswers", func(db *gorm.DB) *gorm.DB { // could do this as well : Preload("Comments", "ORDER BY ? ASC > ?", "id")
 		db = db.Order("id ASC")
@@ -66,7 +66,7 @@ func CreateQuiz(c *fiber.Ctx) error {
 	if errs := U.Validate(payload); errs != nil {
 		return c.Status(400).JSON(fiber.Map{"errors": errs})
 	}
-	user := c.Locals("user").(M.User)
+	user := M.AuthedUser(c)
 	// # get course id using first system id
 	// check if sent systemIDs is not empty (at least one system should be selected by the user)
 	if len(payload.SystemIDs) == 0 {
@@ -181,7 +181,7 @@ func UpdateQuiz(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"errors": errs})
 	}
 	// get authenticated user info
-	user := c.Locals("user").(M.User)
+	user := M.AuthedUser(c)
 	// ! todo maybe can optimize it
 	// get quiz and its dependencies with paramID of the user in order
 	// didn't get the error of ParamsInt, because i checked it in the router
@@ -236,7 +236,7 @@ func CreateFakeQuiz(c *fiber.Ctx) error {
 	if errs := U.Validate(payload); errs != nil {
 		return c.Status(400).JSON(fiber.Map{"errors": errs})
 	}
-	user := c.Locals("user").(M.User)
+	user := M.AuthedUser(c)
 
 	if len(payload.SystemIDs) == 0 {
 		return U.ResErr(c, "You must at least select one system")
@@ -307,7 +307,7 @@ func CreateFakeQuiz(c *fiber.Ctx) error {
 	})
 }
 func OverallReport(c *fiber.Ctx) error {
-	user := c.Locals("user").(M.User)
+	user := M.AuthedUser(c)
 	// options is needed in user preload in correct and incorrect answer coount
 	if err := D.DB().
 		Preload("Quizzes.UserAnswers.Question.Options").
@@ -381,7 +381,7 @@ func OverallReport(c *fiber.Ctx) error {
 // TODO optimize this code
 func ReportQuiz(c *fiber.Ctx) error {
 	// 1. get all user's quizzes
-	user := c.Locals("user").(M.User)
+	user := M.AuthedUser(c)
 	// options is needed in user preload in correct and incorrect answer coount
 	if err := D.DB().Preload("Quizzes.UserAnswers.Question.Options").
 		Preload("Quizzes.UserAnswers.Question.System.Subject").

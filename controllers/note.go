@@ -12,7 +12,7 @@ import (
 
 func AllNotes(c *fiber.Ctx) error {
 	// select all userAnswers of the authenticated user
-	user := c.Locals("user").(M.User)
+	user := M.AuthedUser(c)
 	if err := D.DB().Model(&user).Preload("Quizzes", func(db *gorm.DB) *gorm.DB { // could do this as well : Preload("Comments", "ORDER BY ? ASC > ?", "id")
 		// if "quizID" query exists, search it in the database
 		if c.Query("quizID") != "" {

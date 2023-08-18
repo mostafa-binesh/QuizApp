@@ -16,7 +16,7 @@ import (
 
 // todo: with counts ro az comment dar biar
 func AllCourses(c *fiber.Ctx) error {
-	user := c.Locals("user").(M.User)
+	user := M.AuthedUser(c)
 	// find all bought courses ids
 	userBoughtCourses, err := M.UserBoughtCoursesWithExpirationDate(user.ID)
 	if err != nil {
@@ -28,7 +28,7 @@ func AllCourses(c *fiber.Ctx) error {
 // all subject of course with id of courseID
 func CourseSubjects(c *fiber.Ctx) error {
 	// get authenticated user
-	user := c.Locals("user").(M.User)
+	user := M.AuthedUser(c)
 	// get user's course with id of param with subject with system of the user
 	result := D.DB().Preload("Courses", "id = ?", c.Params("courseID")).Preload("Courses.Subjects.Systems").Find(&user)
 	if result.Error != nil {
@@ -63,7 +63,7 @@ func UpdateUserCourses(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"errors": errs})
 	}
 	// get authenticated user
-	user := c.Locals("user").(M.User)
+	user := M.AuthedUser(c)
 	// get wc courses using payload.OrderID
 	childCourses, purchasedCourseIDPayDateMap, err := S.ImportUserCoursesUsingOrderID(payload.OrderID)
 	if err != nil {
