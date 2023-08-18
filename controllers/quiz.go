@@ -147,7 +147,6 @@ func CreateQuiz(c *fiber.Ctx) error {
 	// # check if sufficient questions are in the db
 	questionsCount := len(questionIDs)
 	var randomIndex uint
-	fmt.Printf("payload question: %d , available questions count: %d\n", payload.QuestionsCount, questionsCount)
 	if questionsCount <= payload.QuestionsCount {
 		D.DB().Delete(&quiz)
 		return U.ResErr(c, "There are not enough available questions")
@@ -165,7 +164,7 @@ func CreateQuiz(c *fiber.Ctx) error {
 		U.RemoveElementByRef[uint](&questionIDs, int(randomIndex))
 		questionsCount = len(questionIDs)
 	}
-	return c.Status(200).JSON(fiber.Map{
+	return c.Status(201).JSON(fiber.Map{
 		"msg":    "Quiz been created",
 		"quizID": quiz.ID,
 	})
@@ -186,17 +185,16 @@ func UpdateQuiz(c *fiber.Ctx) error {
 	// get quiz and its dependencies with paramID of the user in order
 	// didn't get the error of ParamsInt, because i checked it in the router
 	quizID, _ := c.ParamsInt("id")
-	if err := D.DB().Model(&user).Preload("Quizzes", quizID).Preload("UserAnswers", func(db *gorm.DB) *gorm.DB { // could do this as well : Preload("Comments", "ORDER BY ? ASC > ?", "id")
-		db = db.Order("id ASC")
-		return db
-	}).Preload("Quizzes.UserAnswers.Question.Options").First(&user).Error; err != nil {
+	if err := D.DB().Model(&user).
+		Preload("Quizzes", quizID).
+		Preload("UserAnswers", func(db *gorm.DB) *gorm.DB { // could do this as well : Preload("Comments", "ORDER BY ? ASC > ?", "id")
+			db = db.Order("id ASC")
+			return db
+		}).Preload("Quizzes.UserAnswers.Question.Options").First(&user).Error; err != nil {
 		return U.DBError(c, err)
 	}
-	fmt.Printf("user's quizzes count: %d\n", len(user.Quizzes))
-	fmt.Printf("user's quizzes: %v\n", user.Quizzes)
 	quiz := M.Quiz{}
 	for _, q := range user.Quizzes {
-		// return c.JSON(fiber.Map{"data": q})
 		quiz = q
 		break
 	}
@@ -206,7 +204,6 @@ func UpdateQuiz(c *fiber.Ctx) error {
 	if user.Quizzes[0].Status == "" {
 		return U.ResErr(c, "This quiz doesn't exist")
 	}
-	// quiz = user.Quizzes[0]
 	convertedUserAnswer := payload.ConvertQuizFrontToQuiz(quiz.UserAnswers)
 	// update the user answers into database
 	fmt.Printf("convertedUserAnswer = %v\n", convertedUserAnswer)
@@ -218,7 +215,6 @@ func UpdateQuiz(c *fiber.Ctx) error {
 	if err := D.DB().Save(&quiz).Error; err != nil {
 		return U.DBError(c, err)
 	}
-	// return c.JSON(fiber.Map{"asd": convertedUserAnswer})
 	return U.ResMsg(c, "Quiz been updated")
 }
 func CreateFakeQuiz(c *fiber.Ctx) error {
@@ -267,18 +263,11 @@ func CreateFakeQuiz(c *fiber.Ctx) error {
 	// create the empty user answer h selected systems
 	// all avaiable questions's id with desired system_id
 	var multipleSelectQuestionIDs []uint
-	// var singleSelectQuestionIDs []uint
-	// if err := D.DB().Model(&M.Question{}).Distinct().Where("system_id IN (?)", payload.SystemIDs).Pluck("id", &questionIDs).Error; err != nil {
-	// 	return U.DBError(c, err)
-	// }
 	// get 3 multiple question type
 	if err := D.DB().Model(&M.Question{}).Where("type IN ?", []M.QuestionType{M.NextGenerationSingleSelect, M.NextGenerationMultipleSelect, M.NextGenerationTableSingleSelect,
 		M.NextGenerationTableMultipleSelect, M.NextGenerationTableDropDown}).Limit(payload.QuestionsCount).Pluck("id", &multipleSelectQuestionIDs).Error; err != nil {
 		return U.DBError(c, err)
 	}
-	// if err := D.DB().Model(&M.Question{}).Where("type IN ?", M.SingleSelect).Limit(3).Pluck("id", &singleSelectQuestionIDs).Error; err != nil {
-	// 	return U.DBError(c, err)
-	// }
 	// multipleSelectQuestionIDs = append(multipleSelectQuestionIDs, singleSelectQuestionIDs...)
 	questionsCount := len(multipleSelectQuestionIDs)
 	var randomIndex uint
@@ -329,9 +318,6 @@ func OverallReport(c *fiber.Ctx) error {
 	for _, quiz := range user.Quizzes {
 		for _, answer := range quiz.UserAnswers {
 			if answer.Question != nil {
-				// answer.Question.System != nil &&
-				// answer.Question.System.Subject != nil &&
-				// answer.Question.System.Subject.Course != nil {
 				if !U.ExistsInArray[uint](usedQuestions, answer.Question.ID) {
 					usedQuestions = append(usedQuestions, answer.Question.ID)
 				}

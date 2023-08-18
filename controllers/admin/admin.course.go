@@ -94,25 +94,22 @@ func UpdateCourse(c *fiber.Ctx) error {
 	if errs := U.Validate(payload); errs != nil {
 		return c.Status(400).JSON(fiber.Map{"errors": errs})
 	}
-	result := D.DB().Where("id = ?", c.Params("id")).Find(&course)
-	if result.Error != nil {
-		return U.DBError(c, result.Error)
+	if err := D.DB().Where("id = ?", c.Params("id")).Find(&course).Error; err != nil {
+		return U.DBError(c, err)
 	}
 	course.Title = payload.Title
 	course.WoocommerceID = payload.WoocommerceID
-	result = D.DB().Save(&course)
-	if result.Error != nil {
-		return U.ResErr(c, "مشکلی در به روز رسانی به وجود آمده")
+	if err := D.DB().Save(&course).Error; err != nil {
+		return U.ResErr(c, "Error on course update")
 	}
-	return U.ResMsg(c, "دوره بروز شد")
+	return U.ResMsg(c, "Course has been updated")
 }
 
 // returns all courses.subjects.systems that are parent
 func AllSubjects(c *fiber.Ctx) error {
 	courses := []M.Course{}
-	result := D.DB().Where("parent_id IS NULL").Preload("Subjects.Systems").Find(&courses)
-	if result.Error != nil {
-		return U.DBError(c, result.Error)
+	if err := D.DB().Where("parent_id IS NULL").Preload("Subjects.Systems").Find(&courses).Error; err != nil {
+		return U.DBError(c, err)
 	}
 	return c.JSON(fiber.Map{"data": courses})
 }
