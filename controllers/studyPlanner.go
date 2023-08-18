@@ -12,7 +12,7 @@ import (
 
 func AllStudyPlans(c *fiber.Ctx) error {
 	studyPlans := []M.StudyPlan{}
-	if err := D.DB().Find(&studyPlans).Error; err != nil {
+	if err := D.DB().Order("date asc").Find(&studyPlans).Error; err != nil {
 		return U.DBError(c, err)
 	}
 	return c.JSON(fiber.Map{"data": studyPlans})
@@ -79,4 +79,30 @@ func FinishDate(c *fiber.Ctx) error {
 		return U.ResErr(c, fmt.Sprintf("Plan with date %s not found", date), 404)
 	}
 	return U.ResMsg(c, fmt.Sprintf("Plan with date %s has been verified", date))
+}
+func DeleteStudyPlan(c *fiber.Ctx) error {
+	payload := new(M.VerifyStudyPlanDateInput)
+	// Parse the payload
+	if err := c.BodyParser(payload); err != nil {
+		U.ResErr(c, err.Error())
+	}
+	// Validsate the payload
+	if errs := U.Validate(payload); errs != nil {
+		return c.Status(400).JSON(fiber.Map{"errors": errs})
+	}
+	// Get authenticated user
+	user := M.AuthedUser(c)
+	date := payload.Date
+	// Update study plan
+	result := D.DB().
+		Where("user_id = ? AND date IN ?", user.ID, date).
+		Delete(&M.StudyPlan{})
+	// Handle errors
+	if result.Error != nil {
+		return U.DBError(c, result.Error)
+	}
+	if result.RowsAffected == 0 {
+		return U.ResErr(c, fmt.Sprintf("Plan with date %s not found", date), 404)
+	}
+	return U.ResMsg(c, fmt.Sprintf("Plan with date %s has been deleted", date))
 }

@@ -45,6 +45,7 @@ func APIInit(router *fiber.App) {
 	userStudyPlanner := user.Group("/studyPlanner")
 	userStudyPlanner.Get("/", C.AllStudyPlans)
 	userStudyPlanner.Post("/", C.CreateStudyPlanner)
+	userStudyPlanner.Delete("/", C.DeleteStudyPlan)
 	userStudyPlanner.Put("/finish", C.FinishDate)
 
 	// ! admin routes
