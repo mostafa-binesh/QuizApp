@@ -13,6 +13,9 @@ func ResErr(c *fiber.Ctx, err string, statusCode ...int) error {
 	}
 	return c.Status(status).JSON(fiber.Map{"error": err})
 }
+
+// returns the complete error not just a string
+// and can also get a optional error text
 func ResDebug(c *fiber.Ctx, err error, errorOptionalText ...string) error {
 	errorText := "Internal Error"
 	if len(errorOptionalText) > 0 {

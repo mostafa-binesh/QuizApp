@@ -32,7 +32,8 @@ func CourseSubjects(c *fiber.Ctx) error {
 	// get user's course with id of param with subject with system of the user
 	if err := D.DB().
 		Preload("Courses", "id = ?", c.Params("courseID")).
-		Preload("Courses.Subjects.Systems").Find(&user).Error; err != nil {
+		Preload("Courses.Subjects.Systems").
+		Find(&user).Error; err != nil {
 		return U.DBError(c, err)
 	}
 	if len(user.Courses) != 1 {
