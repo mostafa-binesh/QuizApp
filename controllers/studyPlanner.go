@@ -54,31 +54,32 @@ func CreateStudyPlanner(c *fiber.Ctx) error {
 	return U.ResMsg(c, "Study plans created successfully", fiber.StatusCreated)
 }
 func FinishDate(c *fiber.Ctx) error {
-	payload := new(M.VerifyStudyPlanDateInput)
+	var payload []M.StudyPlanUpdateInput
 	// Parse the payload
-	if err := c.BodyParser(payload); err != nil {
+	if err := c.BodyParser(&payload); err != nil {
 		U.ResErr(c, err.Error())
 	}
-	// Validsate the payload
-	if errs := U.Validate(payload); errs != nil {
-		return c.Status(400).JSON(fiber.Map{"errors": errs})
+	// Validate each element in the payload
+	for _, plan := range payload {
+		if errs := U.Validate(plan); errs != nil {
+			return c.Status(400).JSON(fiber.Map{"errors": errs})
+		}
 	}
 	// Get authenticated user
 	user := M.AuthedUser(c)
-	date := payload.Date
 	// Update study plan
 	result := D.DB().
-		Model(&M.StudyPlan{}).
-		Where("user_id = ? AND date IN ?", user.ID, date).
-		Update("is_finished", true)
+		Table("study_plans").
+		Where("user_id = ?", user.ID).
+		Save(payload)
 	// Handle errors
 	if result.Error != nil {
 		return U.DBError(c, result.Error)
 	}
 	if result.RowsAffected == 0 {
-		return U.ResErr(c, fmt.Sprintf("Plan with date %s not found", date), 404)
+		return U.ResErr(c, fmt.Sprintf("Plan with given dates not found"), 404)
 	}
-	return U.ResMsg(c, fmt.Sprintf("Plan with date %s has been verified", date))
+	return U.ResMsg(c, fmt.Sprintf("Plan given dates has been updated"))
 }
 func DeleteStudyPlan(c *fiber.Ctx) error {
 	payload := new(M.VerifyStudyPlanDateInput)
@@ -86,14 +87,14 @@ func DeleteStudyPlan(c *fiber.Ctx) error {
 	if err := c.BodyParser(payload); err != nil {
 		U.ResErr(c, err.Error())
 	}
-	// Validsate the payload
+	// Validate the payload
 	if errs := U.Validate(payload); errs != nil {
 		return c.Status(400).JSON(fiber.Map{"errors": errs})
 	}
 	// Get authenticated user
 	user := M.AuthedUser(c)
 	date := payload.Date
-	// Update study plan
+	// Delete study plan
 	result := D.DB().
 		Where("user_id = ? AND date IN ?", user.ID, date).
 		Delete(&M.StudyPlan{})
