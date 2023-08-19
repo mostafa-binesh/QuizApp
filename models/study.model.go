@@ -21,6 +21,11 @@ type CreateNewStudyPlanInput struct {
 type VerifyStudyPlanDateInput struct {
 	Date []time.Time `json:"date" validate:"required"`
 }
+type StudyPlanUpdateInput struct {
+	ID uint `json:"id" gorm:"primaryKey" validate:"required"`
+	// Date       time.Time `json:"date" validate:"required"`
+	IsFinished *bool `json:"isFinished" validate:"required"`
+}
 
 // functions
 
