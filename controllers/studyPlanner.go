@@ -51,7 +51,7 @@ func CreateStudyPlanner(c *fiber.Ctx) error {
 		}
 	}
 
-	return c.JSON(fiber.Map{"msg": "Study plans created successfully"})
+	return U.ResMsg(c, "Study plans created successfully", fiber.StatusCreated)
 }
 func FinishDate(c *fiber.Ctx) error {
 	payload := new(M.VerifyStudyPlanDateInput)
