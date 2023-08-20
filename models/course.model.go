@@ -106,6 +106,21 @@ func RetrieveUserBoughtCoursesIDs(userID uint) ([]uint, error) {
 	return courseIDs, nil
 }
 
+// get all user's bought parent courses id from course_user table which are not expired
+func RetrieveUserBoughtParentCoursesIDs(userID uint) ([]uint, error) {
+	var courseIDs []uint
+	if err := D.DB().Model(&CourseUser{}).Where("user_id = ? AND expiration_date > ?", userID, time.Now()).
+		Pluck("course_id", &courseIDs).Error; err != nil {
+		return nil, err
+	}
+	// find all non-parent courses
+	if err := D.DB().Model(&Course{}).Where("id IN ? AND parent_id IS NOT NULL", courseIDs).
+		Pluck("parent_id", &courseIDs).Error; err != nil {
+		return nil, err
+	}
+	return courseIDs, nil
+}
+
 // first gets user's bought courses from course_user table using RetrieveUserBoughtCoursesIDs function
 // then get the bought courses from courses table
 func RetrieveUserBoughtCourses(userID uint) ([]Course, error) {
