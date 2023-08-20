@@ -76,9 +76,10 @@ func CreateQuiz(c *fiber.Ctx) error {
 	systems := []M.System{}
 	D.DB().Preload("Subject.Course.ParentCourse").Find(&systems, payload.SystemIDs)
 	var userBoughtCoursesIDs []uint
-	if userBoughtCoursesIDs, err = M.RetrieveUserBoughtCoursesIDs(user.ID); err != nil {
+	if userBoughtCoursesIDs, err = M.RetrieveUserBoughtParentCoursesIDs(user.ID); err != nil {
 		return U.ResErr(c, "Something went wrong when retreiving user's bought courses")
 	}
+	// todo: a UserHasCourse function has been written
 	for _, system := range systems {
 		// fmt.Printf("system.Subject.Course: %v\n", system.Subject.Course.ParentID)
 		if U.ExistsInArray[uint](userBoughtCoursesIDs, system.Subject.Course.ID) {
