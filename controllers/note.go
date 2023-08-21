@@ -32,7 +32,7 @@ func AllNotes(c *fiber.Ctx) error {
 				case "older":
 					db = db.Order("id asc")
 				case "questionID":
-					db = db.Order("QuestionID asc")
+					db = db.Order("question_id asc")
 				}
 			}
 			// required: select rows that Note field is not null
