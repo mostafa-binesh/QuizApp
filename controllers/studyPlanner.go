@@ -12,7 +12,8 @@ import (
 
 func AllStudyPlans(c *fiber.Ctx) error {
 	studyPlans := []M.StudyPlan{}
-	if err := D.DB().Order("date asc").Find(&studyPlans).Error; err != nil {
+	user := M.AuthedUser(c)
+	if err := D.DB().Order("date asc").Where("user_id = ?", user.ID).Find(&studyPlans).Error; err != nil {
 		return U.DBError(c, err)
 	}
 	return c.JSON(fiber.Map{"data": studyPlans})
