@@ -12,6 +12,7 @@ import (
 
 // sorry that this function is long
 // all logic are continuous and need to be done in a single function
+// this handler is for all questions but with certain filters
 func AllQuestionsWithSearch(c *fiber.Ctx) error {
 	// select all userAnswers of the authenticated user
 	user := M.AuthedUser(c)
@@ -41,7 +42,8 @@ func AllQuestionsWithSearch(c *fiber.Ctx) error {
 			db = db.Where("title ILIKE ?", fmt.Sprintf("%%%s%%", c.Query("search")))
 		}
 		return db
-	}).Find(&user).Error; err != nil {
+	}).
+		Find(&user).Error; err != nil {
 		return U.DBError(c, err)
 	}
 	var questions []M.QuestionSearch

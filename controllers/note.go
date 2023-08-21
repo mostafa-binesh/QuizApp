@@ -13,14 +13,14 @@ import (
 func AllNotes(c *fiber.Ctx) error {
 	// select all userAnswers of the authenticated user
 	user := M.AuthedUser(c)
-	if err := D.DB().Model(&user).Preload("Quizzes", func(db *gorm.DB) *gorm.DB { // could do this as well : Preload("Comments", "ORDER BY ? ASC > ?", "id")
+	if err := D.DB().Model(&user).Preload("Quizzes", func(db *gorm.DB) *gorm.DB {
 		// if "quizID" query exists, search it in the database
 		if c.Query("quizID") != "" {
 			db = db.Where(c.QueryInt("quizID"))
 		}
 		return db
 	}).Preload("Quizzes.UserAnswers",
-		func(db *gorm.DB) *gorm.DB { // could do this as well : Preload("Comments", "ORDER BY ? ASC > ?", "id")
+		func(db *gorm.DB) *gorm.DB {
 			// if "title" query exists, search it in the database
 			if c.Query("body") != "" {
 				db = db.Where("Note ILIKE ?", fmt.Sprintf("%%%s%%", c.Query("body")))
@@ -38,10 +38,11 @@ func AllNotes(c *fiber.Ctx) error {
 			// required: select rows that Note field is not null
 			db = db.Where("Note IS NOT NULL")
 			return db
-		}).Preload("Quizzes.UserAnswers.Question").Find(&user).Error; err != nil {
+		}).Preload("Quizzes.UserAnswers.Question").
+		Find(&user).Error; err != nil {
 		return U.DBError(c, err)
 	}
-	// get notes only
+	// extract notes from all userAnswers
 	var notes []M.AnswerNote
 	for _, quiz := range user.Quizzes {
 		for _, answer := range quiz.UserAnswers {
@@ -72,11 +73,13 @@ func EditNote(c *fiber.Ctx) error {
 	result := D.DB().Model(&userAnswer).
 		Where("id = ?", c.Params("id")).
 		Updates(&userAnswer)
+	// handling errors
 	if result.Error != nil {
 		return U.DBError(c, result.Error)
 	}
 	if result.RowsAffected == 0 {
 		return U.ResErr(c, "Note not found")
 	}
+	// show response
 	return U.ResMsg(c, "Note has been updated")
 }
