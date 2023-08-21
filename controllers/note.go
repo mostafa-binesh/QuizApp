@@ -65,14 +65,18 @@ func EditNote(c *fiber.Ctx) error {
 	if errs := U.Validate(payload); errs != nil {
 		return c.Status(400).JSON(fiber.Map{"errors": errs})
 	}
-	// get userAnswer with url id param
-	userAnswer := M.UserAnswer{}
-	if err := D.DB().First(&userAnswer, c.Params("id")).Error; err != nil {
-		return U.DBError(c, err)
+	// edit note of the answer with id of param "id" directly
+	userAnswer := M.UserAnswer{
+		Note: payload.Note,
 	}
-	userAnswer.Note = payload.Note
-	if err := D.DB().Save(&userAnswer).Error; err != nil {
-		return U.DBError(c, err)
+	result := D.DB().Model(&userAnswer).
+		Where("id = ?", c.Params("id")).
+		Updates(&userAnswer)
+	if result.Error != nil {
+		return U.DBError(c, result.Error)
+	}
+	if result.RowsAffected == 0 {
+		return U.ResErr(c, "Note not found")
 	}
 	return U.ResMsg(c, "Note has been updated")
 }
