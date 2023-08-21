@@ -152,6 +152,7 @@ func CreateQuiz(c *fiber.Ctx) error {
 		D.DB().Delete(&quiz)
 		return U.ResErr(c, "There are not enough available questions")
 	}
+	// create UserAnswer(s)
 	for i := 0; i < payload.QuestionsCount; i++ {
 		randomIndex = uint(rand.Intn(int(questionsCount)))
 		rand.Seed(time.Now().UnixNano())
@@ -165,6 +166,7 @@ func CreateQuiz(c *fiber.Ctx) error {
 		U.RemoveElementByRef[uint](&questionIDs, int(randomIndex))
 		questionsCount = len(questionIDs)
 	}
+	// show response
 	return c.Status(201).JSON(fiber.Map{
 		"msg":    "Quiz been created",
 		"quizID": quiz.ID,
@@ -305,10 +307,12 @@ func OverallReport(c *fiber.Ctx) error {
 		Find(&user).Error; err != nil {
 		return U.DBError(c, err)
 	}
+	// all questions that belongs to bought courses
 	var totalQuestionsCount int
 	// todo: if we add course id to question model, here would be better solution
+	// user.Courses are childCourses
 	for _, course := range user.Courses {
-		for _, subject := range course.Subjects {
+		for _, subject := range course.ParentCourse.Subjects {
 			for _, system := range subject.Systems {
 				totalQuestionsCount += len(system.Questions)
 			}
