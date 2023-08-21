@@ -344,7 +344,7 @@ func OverallReport(c *fiber.Ctx) error {
 		}
 	}
 	correctAnswerCount, incorrectAnswerCount, omittedAnswerCount := M.CalculateAnswersStats(userAnswers)
-	unusedQuestions := totalQuestionsCount - usedQuestionsCount
+	unusedQuestions := uint(totalQuestionsCount - usedQuestionsCount)
 	// in some cases (no course but user has quizzes), the unused questions may be negative
 	if unusedQuestions < 0 {
 		unusedQuestions = 0
