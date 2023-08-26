@@ -85,7 +85,7 @@ func ExtractCourseToInsertAndToUpdate(childCourses []M.Course, purchasedCourseID
 			courseUserMap[course.ID] = &M.CourseUser{
 				UserID:         int(userID),
 				CourseID:       int(course.ID),
-				ExpirationDate: cu,
+				ExpirationDate: cu.AddDate(0, 0, int(course.ValidityDaysPeriod)),
 			}
 		}
 	}
