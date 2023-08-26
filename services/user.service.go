@@ -10,6 +10,7 @@ import (
 
 // returns bought courses using orderID
 // returned courses are childCourses !
+// second returned value is a map of [wcID]payTime
 func ImportUserCoursesUsingOrderID(orderID uint) ([]M.Course, map[int64]time.Time, error) {
 	// get user orders
 	order, err := U.WCClient().Order.Get(int64(orderID), nil)
@@ -22,9 +23,10 @@ func ImportUserCoursesUsingOrderID(orderID uint) ([]M.Course, map[int64]time.Tim
 	purchasedCourseIDPayDateMap := make(map[int64]time.Time)
 	for _, item := range order.LineItems {
 		// todo: uncomment order.Status line in production
-		// if order.Status != "completed" {
-		// 	continue
-		// }
+		// if order is not completed, don't process the order
+		if order.Status != "completed" {
+			continue
+		}
 		purchasedCoursesIDs = append(purchasedCoursesIDs, item.ProductID)
 		var payTime time.Time
 		// todo: dev only, delete order.DatePaidGMT=="" on production
