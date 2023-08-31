@@ -55,7 +55,6 @@ func CreateStudyPlanner(c *fiber.Ctx) error {
 	return U.ResMsg(c, "Study plans created successfully", fiber.StatusCreated)
 }
 func FinishDate(c *fiber.Ctx) error {
-	// user may can change other people's study plan
 	var payload []M.StudyPlanUpdateInput
 	// Parse the payload
 	if err := c.BodyParser(&payload); err != nil {
