@@ -103,6 +103,7 @@ func APIInit(router *fiber.App) {
 	dev.Post("/gormUnique", C.GormG)
 	dev.Get("/resetMemory", C.ResetMemory)
 	dev.Get("/wcProducts", C.WCProducts)
+	dev.Get("/allQuestions", C.AllQuestions)
 	devPanel := dev.Group("/admin")
 	devPanel.Get("/structInfo", C.StructInfo)
 }

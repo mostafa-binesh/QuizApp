@@ -197,3 +197,10 @@ func WCProducts(c *fiber.Ctx) error {
 	}
 	return c.JSON(fiber.Map{"data": wcProducts})
 }
+func AllQuestions(c *fiber.Ctx) error {
+	var questions []M.Question
+	if err := D.DB().Find(&questions).Error; err != nil {
+		return err
+	}
+	return c.JSON(fiber.Map{"data": questions})
+}
