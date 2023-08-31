@@ -201,7 +201,7 @@ func AuthMiddleware(c *fiber.Ctx) error {
 	}
 	// get user with userID from database
 	var user M.User
-	result := D.DB().Find(&user, userID)
+	result := D.DB().First(&user, userID)
 	if result.Error != nil || result.RowsAffected == 0 {
 		// if user doesn't exist or any error happend, remove the session and show error
 		err := sess.Destroy()
