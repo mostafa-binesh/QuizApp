@@ -204,10 +204,8 @@ func AuthMiddleware(c *fiber.Ctx) error {
 	result := D.DB().First(&user, userID)
 	if result.Error != nil || result.RowsAffected == 0 {
 		// if user doesn't exist or any error happend, remove the session and show error
-		err := sess.Destroy()
-		if err != nil {
-			panic(err)
-		}
+		// sess.Destroy() returns an error, but we don't need it here i guess
+		sess.Destroy()
 		return U.ResErr(c, "cannot authenticate. Please login again", fiber.StatusInternalServerError)
 	}
 	// if everything was ok, save the db user to locals variable "user"
@@ -220,7 +218,7 @@ func AuthMiddleware(c *fiber.Ctx) error {
 func RoleCheck(roles []string) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		user, ok := c.Locals("user").(M.User)
-		// check if authentication is done already
+		// check if authentication is done already, just in case
 		if !ok {
 			return U.ResErr(c, "Please login first", fiber.StatusUnauthorized)
 		}
