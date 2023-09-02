@@ -77,6 +77,7 @@ func ConvertCourseToCourseWithQuestionsCounts(course Course) (coursesWithQuestio
 	var subjectsWithQuestionsCount []*SubjectWithQuestionsCount
 	for _, subject := range course.Subjects {
 		systemWithQuestionsCount = nil
+		systemsQuestionsCount = 0
 		for _, system := range subject.Systems {
 			systemsQuestionsCount += len(system.Questions)
 			systemWithQuestionsCount = append(systemWithQuestionsCount, &SystemWithQuestionsCount{
