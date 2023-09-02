@@ -1,6 +1,7 @@
 package models
 
 import (
+	D "docker/database"
 	"fmt"
 	"strings"
 )
@@ -192,6 +193,7 @@ func (question *Question) ConvertNextGenerationTypeToTypeInt(value string) error
 func (question *Question) ReplacePreWebsiteWithNewWebsiteImageURLDescription(previousSite string, newSite string) {
 	question.Description = strings.Replace(question.Description, previousSite, newSite, -1)
 }
+
 // question.options must be preloaded
 func (question Question) CorrectOptionsCount() (howManyCorrectAnswers uint) {
 	for _, option := range question.Options {
