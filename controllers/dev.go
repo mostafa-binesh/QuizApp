@@ -208,12 +208,18 @@ func AllQuestions(c *fiber.Ctx) error {
 // get all answers, checks if the answer is correct or not
 func AnswerCorrection(c *fiber.Ctx) error {
 	var answers []M.UserAnswer
-	if err := D.DB().Find(&answers).Error; err != nil {
+	if err := D.DB().
+		Preload("Question.Options").
+		Find(&answers).Error; err != nil {
 		return err
 	}
-	for _, answer := range answers {
-		answer.IsCorrect = answer.IsChosenOptionsCorrect()
+	for i := range answers {
+		answers[i].IsCorrect = answers[i].IsChosenOptionsCorrect()
+		// set the question to null because we're saving the options later in the handler
+		// and don't want to save the questions and options again
+		answers[i].Question = nil
 	}
+
 	if err := D.DB().Save(&answers).Error; err != nil {
 		return err
 	}
