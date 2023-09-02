@@ -152,6 +152,11 @@ func (frontQuiz *QuizToFront) ConvertQuizFrontToQuiz(userAnswers []UserAnswer) [
 			userAnswers[i].SpentTime = *frontQuiz.SpentTimes[i]
 		}
 		userAnswers[i].Submitted = frontQuiz.SubmitedQuestions[i]
+		// calculate the "IsCorrect" field and save them again
+		userAnswers[i].IsCorrect = userAnswers[i].IsChosenOptionsCorrect()
+		// set the question to null because we're saving the options later in the handler
+		// and don't want to save the questions and options again
+		userAnswers[i].Question = nil
 	}
 	return userAnswers
 }
