@@ -13,6 +13,8 @@ func RemoveElement[T any](arr []T, index int) []T {
 	return result
 }
 
+// DEPREACTED
+// USE "DELETE" GOLANG BUILT-IN FUNCTION
 // removeElementByRef removes the element at the given index from the input slice.
 // The index must be within the bounds of the input slice.
 func RemoveElementByRef[T any](arr *[]T, index int) {

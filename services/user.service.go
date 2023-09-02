@@ -22,7 +22,6 @@ func ImportUserCoursesUsingOrderID(orderID uint) ([]M.Course, map[int64]time.Tim
 	var purchasedCoursesIDs []int64
 	purchasedCourseIDPayDateMap := make(map[int64]time.Time)
 	for _, item := range order.LineItems {
-		// todo: uncomment order.Status line in production
 		// if order is not completed, don't process the order
 		if order.Status != "completed" {
 			continue

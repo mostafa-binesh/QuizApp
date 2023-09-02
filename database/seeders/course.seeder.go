@@ -6,8 +6,5 @@ import (
 
 func CourseSeeder() error {
 	_, err := S.ImportCoursesFromWoocommerce()
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
