@@ -49,8 +49,8 @@ func APIInit(router *fiber.App) {
 	userStudyPlanner.Put("/finish", C.FinishDate)
 
 	// ! admin routes
-	admin := router.Group("/admin")
-	// admin := router.Group("/admin", C.AuthMiddleware, C.RoleCheck([]string{"admin"})) // todo: replace main admin router with this
+	// admin := router.Group("/admin")
+	admin := router.Group("/admin", C.AuthMiddleware, C.RoleCheck([]string{"admin"})) // todo: replace main admin router with this
 	admin.Get("/courses", AC.AllCourses)
 	admin.Get("/nonParentCourses", AC.NonParentCourses)
 	admin.Get("/courses/:id<int>", AC.CourseByID)
