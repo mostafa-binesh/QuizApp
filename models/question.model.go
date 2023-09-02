@@ -48,10 +48,11 @@ type FrontQuestion struct {
 	System   *System       `json:"system,omitempty" gorm:"foreignKey:SystemID;constraint:OnDelete:CASCADE,OnUpdate:CASCADE;"`
 	// although we could get the course id from question >subject > system, but that would
 	//  cost resource, i rather add a courseID to the Question table and get it directly
-	Course    *Course      `json:"course,omitempty" gorm:"foreignKey:CourseID;constraint:OnDelete:CASCADE,OnUpdate:CASCADE;"`
-	Type      QuestionType `json:"type"`
-	Tabs      []Tab        `json:"tabs"`
-	Dropdowns []Dropdown   `json:"dropdowns,omitempty"`
+	Course                   *Course      `json:"course,omitempty" gorm:"foreignKey:CourseID;constraint:OnDelete:CASCADE,OnUpdate:CASCADE;"`
+	Type                     QuestionType `json:"type"`
+	Tabs                     []Tab        `json:"tabs"`
+	Dropdowns                []Dropdown   `json:"dropdowns,omitempty"`
+	AnswerAccuracyPercentage uint         `json:"answerAccuracyPercentage"`
 }
 
 func (question Question) ConvertQuestionToFrontQuestion() FrontQuestion {
