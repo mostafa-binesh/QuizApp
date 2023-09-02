@@ -14,11 +14,12 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+// todo: now, all questions' courseID is empty, fill it and get all courseIDs from it
 // todo: with counts ro az comment dar biar
 func AllCourses(c *fiber.Ctx) error {
 	user := M.AuthedUser(c)
 	// find all bought courses ids
-	userBoughtCourses, err := M.UserBoughtCoursesWithExpirationDate(user.ID)
+	userBoughtCourses, err := M.UserBoughtCoursesWithExpirationDateAndQuestionsCount(user.ID)
 	if err != nil {
 		return U.DBError(c, err)
 	}
@@ -31,6 +32,7 @@ func CourseSubjects(c *fiber.Ctx) error {
 	user := M.AuthedUser(c)
 	// get user's course with id of param with subject with system of the user
 	if err := D.DB().
+		// todo: add limit to courses preload
 		Preload("Courses", "id = ?", c.Params("courseID")).
 		Preload("Courses.Subjects.Systems").
 		Find(&user).Error; err != nil {
@@ -88,5 +90,5 @@ func UpdateUserCourses(c *fiber.Ctx) error {
 			return U.DBError(c, err)
 		}
 	}
-	return c.Status(fiber.StatusCreated).JSON(fiber.Map{"msg": "Courses have been added"})
+	return U.ResMsg(c, "Courses have been added", fiber.StatusCreated)
 }

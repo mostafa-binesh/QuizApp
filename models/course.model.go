@@ -26,6 +26,14 @@ type CourseWithExpirationDate struct {
 	ExpirationDate time.Time  `json:"expirationDate"`
 	Duration       uint64     `json:"duration"`
 }
+type CourseWithExpirationDateAndQuestionsCount struct {
+	ID             uint                         `json:"id"`
+	Title          string                       `json:"title"`
+	Subjects       []*SubjectWithQuestionsCount `json:"subjects"`
+	ExpirationDate time.Time                    `json:"expirationDate"`
+	Duration       uint64                       `json:"duration"`
+	QuestionsCount int                          `json:"questionsCount"`
+}
 
 // model used for creating new course
 type CourseInput struct {
@@ -37,9 +45,9 @@ type CourseWithTitleOnly struct {
 	Title string `json:"title"`
 }
 type CourseWithQuestionsCount struct {
-	ID             uint                         `json:"id" gorm:"primary_key"`
+	ID             uint                         `json:"id"`
 	Title          string                       `json:"title"`
-	Subjects       []*SubjectWithQuestionsCount `json:"subjects" gorm:"foreignKey:CourseID"`
+	Subjects       []*SubjectWithQuestionsCount `json:"subjects"`
 	Duration       uint64                       `json:"-"` // todo don't show it for now, fix it later
 	QuestionsCount int                          `json:"questionsCount"`
 }
@@ -57,43 +65,42 @@ func ConvertCourseToCourseWithTitleOnly(courses []*Course) []CourseWithTitleOnly
 	}
 	return coursesWithTitleOnly
 }
-func ConvertCourseToCourseWithQuestionsCounts(courses []*Course) (coursesWithQuestionsCount []CourseWithQuestionsCount) {
+
+// input course must be parentCourse
+// ! subjects, systems and systems.questions must be preloaded
+func ConvertCourseToCourseWithQuestionsCounts(course Course) (coursesWithQuestionsCount CourseWithQuestionsCount) {
 	// because we're getting the *courses in making the array, we need to check the null pointer
-	coursesWithQuestionsCount = make([]CourseWithQuestionsCount, len(courses))
 	// var courseQuestionsCount int
-	for _, course := range courses {
-		var subjectsQuestionsCount int
-		var systemsQuestionsCount int
-		var tempSystems []*SystemWithQuestionsCount
-		var tempSubjects []*SubjectWithQuestionsCount
-		for _, subject := range course.Subjects {
-			for _, system := range subject.Systems {
-				systemsQuestionsCount += len(system.Questions)
-				tempSystems = append(tempSystems, &SystemWithQuestionsCount{
-					ID:             system.ID,
-					Title:          system.Title,
-					SubjectID:      system.SubjectID,
-					QuestionsCount: len(system.Questions),
-				})
-			}
-			subjectsQuestionsCount += systemsQuestionsCount
-			tempSubjects = append(tempSubjects, &SubjectWithQuestionsCount{
-				ID:             subject.ID,
-				Title:          subject.Title,
-				Systems:        tempSystems,
-				CourseID:       subject.CourseID,
-				QuestionsCount: systemsQuestionsCount,
+	var subjectsQuestionsCount int
+	var systemsQuestionsCount int
+	var systemWithQuestionsCount []*SystemWithQuestionsCount
+	var subjectsWithQuestionsCount []*SubjectWithQuestionsCount
+	for _, subject := range course.Subjects {
+		for _, system := range subject.Systems {
+			systemsQuestionsCount += len(system.Questions)
+			systemWithQuestionsCount = append(systemWithQuestionsCount, &SystemWithQuestionsCount{
+				ID:             system.ID,
+				Title:          system.Title,
+				SubjectID:      system.SubjectID,
+				QuestionsCount: len(system.Questions),
 			})
 		}
-		coursesWithQuestionsCount = append(coursesWithQuestionsCount, CourseWithQuestionsCount{
-			ID:             course.ID,
-			Title:          course.Title,
-			Subjects:       tempSubjects,
-			Duration:       0, // todo: hardcoded
-			QuestionsCount: subjectsQuestionsCount,
+		subjectsQuestionsCount += systemsQuestionsCount
+		subjectsWithQuestionsCount = append(subjectsWithQuestionsCount, &SubjectWithQuestionsCount{
+			ID:             subject.ID,
+			Title:          subject.Title,
+			Systems:        systemWithQuestionsCount,
+			CourseID:       subject.CourseID,
+			QuestionsCount: systemsQuestionsCount,
 		})
 	}
-	return
+	return CourseWithQuestionsCount{
+		ID:             course.ID,
+		Title:          course.Title,
+		Subjects:       subjectsWithQuestionsCount,
+		Duration:       course.Duration,
+		QuestionsCount: systemsQuestionsCount,
+	}
 }
 
 // get all user's bought courses id from course_user table which are not expired
@@ -143,25 +150,28 @@ func UserHasCourse(userID uint, courseID uint) (bool, error) {
 	}
 	return U.ExistsInArray[uint](courseIDs, courseID), nil
 }
-func UserBoughtCoursesWithExpirationDate(userID uint) (*[]CourseWithExpirationDate, error) {
+func UserBoughtCoursesWithExpirationDateAndQuestionsCount(userID uint) (*[]CourseWithExpirationDateAndQuestionsCount, error) {
 	var userBoughtCourses []CourseUser
-	// get the CourseUser and preload it it course
+	// get the CourseUser and preload its course
 	if err := D.DB().
 		Model(&CourseUser{}).
 		Where("user_id = ? AND expiration_date > ?", userID, time.Now()).
-		Preload("Course.ParentCourse.Subjects.Systems").
+		Preload("Course.ParentCourse.Subjects.Systems.Questions").
 		Find(&userBoughtCourses).
 		Error; err != nil {
 		return nil, err
 	}
-	var userCourses []CourseWithExpirationDate
+	var userCourses []CourseWithExpirationDateAndQuestionsCount
+	// loop through each CourseUser model
 	for i := 0; i < len(userBoughtCourses); i++ {
-		userCourses = append(userCourses, CourseWithExpirationDate{
+		courseWithQuestionsCount := ConvertCourseToCourseWithQuestionsCounts(*userBoughtCourses[i].Course.ParentCourse)
+		userCourses = append(userCourses, CourseWithExpirationDateAndQuestionsCount{
 			ID:             userBoughtCourses[i].ID,
 			Title:          userBoughtCourses[i].Course.Title,
-			ExpirationDate: userBoughtCourses[i].ExpirationDate,
-			Subjects:       userBoughtCourses[i].Course.ParentCourse.Subjects,
+			ExpirationDate: userBoughtCourses[i].ExpirationDate, // most important part
+			Subjects:       courseWithQuestionsCount.Subjects,   // subject is not from Subject model
 			Duration:       userBoughtCourses[i].Course.ParentCourse.Duration,
+			QuestionsCount: courseWithQuestionsCount.QuestionsCount,
 		})
 	}
 	return &userCourses, nil
