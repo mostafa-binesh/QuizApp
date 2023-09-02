@@ -204,3 +204,18 @@ func AllQuestions(c *fiber.Ctx) error {
 	}
 	return c.JSON(fiber.Map{"data": questions})
 }
+
+// get all answers, checks if the answer is correct or not
+func AnswerCorrection(c *fiber.Ctx) error {
+	var answers []M.UserAnswer
+	if err := D.DB().Find(&answers).Error; err != nil {
+		return err
+	}
+	for _, answer := range answers {
+		answer.IsCorrect = answer.IsChosenOptionsCorrect()
+	}
+	if err := D.DB().Save(&answers).Error; err != nil {
+		return err
+	}
+	return c.JSON(fiber.Map{"data": answers})
+}

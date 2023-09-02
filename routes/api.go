@@ -94,7 +94,6 @@ func APIInit(router *fiber.App) {
 	dashboard.Get("/", C.Dashboard)
 	// ! devs route
 	dev := router.Group("/devs")
-	dev.Get("/autoMigrate", C.AutoMigrate)
 	dev.Get("/translation", C.TranslationTest)
 	dev.Get("/allUsers", C.DevAllUsers) // ?: send limit and page in the query
 	dev.Get("/panic", func(c *fiber.Ctx) error { panic("PANIC!") })
@@ -104,6 +103,9 @@ func APIInit(router *fiber.App) {
 	dev.Get("/resetMemory", C.ResetMemory)
 	dev.Get("/wcProducts", C.WCProducts)
 	dev.Get("/allQuestions", C.AllQuestions)
+	// practical dev routes
+	dev.Get("/autoMigrate", C.AutoMigrate)
+	dev.Get("/answerCorrection", C.AnswerCorrection)
 	devPanel := dev.Group("/admin")
 	devPanel.Get("/structInfo", C.StructInfo)
 }
