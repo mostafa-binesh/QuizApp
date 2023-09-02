@@ -16,7 +16,8 @@ type UserAnswer struct {
 	// ! multiple-choice option
 	// Answers    []*Answer `json:"answers,omitempty"`
 	// ! single-choice option
-	Answer *string `json:"answer,omitempty"`
+	Answer    *string `json:"answer,omitempty"`
+	IsCorrect *bool   `json:"isCorrect"`
 }
 type AnswerNote struct {
 	ID       uint      `json:"id"` // is parent UserAnswer's ID
