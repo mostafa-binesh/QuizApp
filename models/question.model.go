@@ -57,17 +57,18 @@ type FrontQuestion struct {
 
 func (question Question) ConvertQuestionToFrontQuestion() FrontQuestion {
 	frontQuestion := FrontQuestion{
-		ID:          question.ID,
-		Title:       question.Title,
-		Description: question.Description,
-		Images:      question.Images,
-		Options:     *ConvertOptionToFrontOption(&question.Options, question.Type),
-		SystemID:    question.SystemID,
-		System:      question.System,
-		Course:      question.Course,
-		Type:        question.Type,
-		Tabs:        question.Tabs,
-		Dropdowns:   question.Dropdowns,
+		ID:                       question.ID,
+		Title:                    question.Title,
+		Description:              question.Description,
+		Images:                   question.Images,
+		Options:                  *ConvertOptionToFrontOption(&question.Options, question.Type),
+		SystemID:                 question.SystemID,
+		System:                   question.System,
+		Course:                   question.Course,
+		Type:                     question.Type,
+		Tabs:                     question.Tabs,
+		Dropdowns:                question.Dropdowns,
+		AnswerAccuracyPercentage: uint(question.AnswerAccuracyPercentage()),
 	}
 	return frontQuestion
 }
@@ -77,6 +78,33 @@ func ConvertQuestionsToFrontQuestions(questions *[]Question) *[]FrontQuestion {
 		frontQuestions[i] = question.ConvertQuestionToFrontQuestion()
 	}
 	return &frontQuestions
+}
+func (question Question) AnswerAccuracyPercentage() int64 {
+	var correctAnswersCount int64
+	// Count the number of correct answers directly in the database query
+	if err := D.DB().
+		Model(&UserAnswer{}).
+		Where("question_id = ? AND is_correct = ?", question.ID, true).
+		Count(&correctAnswersCount).
+		Error; err != nil {
+		panic("There was an error in the database query of AnswerAccuracyPercentage function")
+	}
+	var userAnswersCount int64
+	// Count the total number of user answers for the question
+	if err := D.DB().
+		Model(&UserAnswer{}).
+		Where("question_id = ?", question.ID).
+		Count(&userAnswersCount).
+		Error; err != nil {
+		panic("There was an error in the database query of AnswerAccuracyPercentage function")
+	}
+	if userAnswersCount == 0 {
+		// Handle the case where there are no user answers to avoid division by zero
+		return 0
+	}
+	// Calculate the accuracy percentage
+	accuracyPercentage := (correctAnswersCount * 100) / userAnswersCount
+	return accuracyPercentage
 }
 
 type QuestionList struct {
