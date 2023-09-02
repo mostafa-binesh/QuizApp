@@ -193,10 +193,12 @@ func UpdateQuiz(c *fiber.Ctx) error {
 		Preload("UserAnswers", func(db *gorm.DB) *gorm.DB { // could do this as well : Preload("Comments", "ORDER BY ? ASC > ?", "id")
 			db = db.Order("id ASC")
 			return db
-		}).Preload("Quizzes.UserAnswers.Question.Options").First(&user).Error; err != nil {
+		}).Preload("Quizzes.UserAnswers.Question.Options").
+		First(&user).Error; err != nil {
 		return U.DBError(c, err)
 	}
 	quiz := M.Quiz{}
+	// i know i fu.ked up here, but there was a bug here and i only could handle it in this way
 	for _, q := range user.Quizzes {
 		quiz = q
 		break
@@ -209,10 +211,11 @@ func UpdateQuiz(c *fiber.Ctx) error {
 	}
 	convertedUserAnswer := payload.ConvertQuizFrontToQuiz(quiz.UserAnswers)
 	// update the user answers into database
-	fmt.Printf("convertedUserAnswer = %v\n", convertedUserAnswer)
-	if err := D.DB().Save(convertedUserAnswer).Error; err != nil {
-		return U.DBError(c, err)
+
+	if err := D.DB().Save(&convertedUserAnswer).Error; err != nil {
+		return err
 	}
+	// handle the status and remaining time
 	quiz.Status = payload.QuizState
 	quiz.CalculateRemainingSeconds(payload.RemainingHours, payload.RemainingMinutes, payload.RemainingSeconds)
 	if err := D.DB().Save(&quiz).Error; err != nil {
