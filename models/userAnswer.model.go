@@ -30,6 +30,15 @@ type AnswerNote struct {
 type EditNoteInput struct {
 	Note *string `json:"note" validator:"required"`
 }
+type ReportAnswer struct {
+	ID        uint   `json:"id"`
+	Status    string `json:"status"`
+	Subject   string `json:"subject"`
+	System    string `json:"system"`
+	Course    string `json:"course"`
+	Accuracy  uint   `json:"accuracy"`
+	SpentTime uint   `json:"spentTime"`
+}
 
 // checks answer is true, false or empty
 // CalculateAnswerStats calculates answer statistics for a given answer

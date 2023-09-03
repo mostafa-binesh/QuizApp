@@ -177,3 +177,24 @@ func ConvertQuizToQuizList(quizzes []*Quiz) []QuizList {
 	}
 	return quizList
 }
+func (quiz Quiz) CalculateQuizResult() (quizResult QuizResult) {
+	quizResult.ID = quiz.ID
+	quizResult.Mode = quiz.Mode
+	correct, incorrect, omitted := quiz.QuizAnswersStats()
+	quizResult.Score = correct / (incorrect + omitted + correct)
+	var reportAnswers []ReportAnswer
+	// quizResult.ReportAnswers =
+	for _, answer := range quiz.UserAnswers {
+		reportAnswers = append(reportAnswers, ReportAnswer{
+			ID:        answer.ID,
+			Status:    answer.Status,
+			Subject:   answer.Question.System.Subject.Title,
+			System:    answer.Question.System.Title,
+			Course:    answer.Question.Course.Title,
+			Accuracy:  answer.Question.ConvertQuestionToFrontQuestion().AnswerAccuracyPercentage,
+			SpentTime: answer.SpentTime,
+		})
+	}
+	quizResult.ReportAnswers = reportAnswers
+	return
+}
