@@ -56,7 +56,10 @@ func AllNotes(c *fiber.Ctx) error {
 	}
 	return c.JSON(fiber.Map{"data": notes})
 }
+
+// with query param of id
 func EditNote(c *fiber.Ctx) error {
+	user := M.AuthedUser(c)
 	payload := new(M.EditNoteInput)
 	// parsing the payload
 	if err := c.BodyParser(payload); err != nil {
@@ -71,7 +74,7 @@ func EditNote(c *fiber.Ctx) error {
 		Note: payload.Note,
 	}
 	result := D.DB().Model(&userAnswer).
-		Where("id = ?", c.Params("id")).
+		Where("id = ? AND user_id = ?", c.Params("id"), user.ID).
 		Updates(&userAnswer)
 	// handling errors
 	if result.Error != nil {
