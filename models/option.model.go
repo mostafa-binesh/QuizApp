@@ -7,7 +7,7 @@ type Option struct {
 	Title string `json:"option,omitempty"`
 	// Index is a alphabetic order thing, eg. first option of question 1's index is A, second is B and so on
 	Index string `json:"index,omitempty"`
-	// isCorrect is a bool thing, zero or one
+	// isCorrect is a bool thing, zero or one, i donno why i didn't set it as bool instead of uint
 	IsCorrect uint `json:"status"`
 	// relationships
 	QuestionID *uint     `json:"-"`

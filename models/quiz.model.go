@@ -18,10 +18,9 @@ const (
 )
 
 type Quiz struct {
-	ID     uint  `json:"id,omitempty" gorm:"primary_key"`
-	UserID uint  `json:"-"`
-	User   *User `json:"user,omitempty" gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE,OnUpdate:CASCADE;"`
-	// TODO add lesson : lesson >> ? lesson == course ?
+	ID          uint         `json:"id,omitempty" gorm:"primary_key"`
+	UserID      uint         `json:"-"`
+	User        *User        `json:"user,omitempty" gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE,OnUpdate:CASCADE;"`
 	Status      string       `json:"status,omitempty"`
 	UserAnswers []UserAnswer `json:"userAnswers,omitempty"`
 	CreatedAt   time.Time    `json:"date" gorm:"not null;default:now()"`
