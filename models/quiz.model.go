@@ -177,6 +177,21 @@ func ConvertQuizToQuizList(quizzes []*Quiz) []QuizList {
 	}
 	return quizList
 }
+
+// returns how many correct, incorrect or omitted answers a quiz has,
+// quiz.UserAnswers must be preloaded
+func (quiz Quiz) QuizAnswersStats() (correct, incorrect, omitted uint) {
+	for _, answer := range quiz.UserAnswers {
+		if answer.IsCorrect == nil {
+			omitted++
+		} else if *answer.IsCorrect {
+			correct++
+		} else {
+			incorrect++
+		}
+	}
+	return
+}
 func (quiz Quiz) CalculateQuizResult() (quizResult QuizResult) {
 	quizResult.ID = quiz.ID
 	quizResult.Mode = quiz.Mode
