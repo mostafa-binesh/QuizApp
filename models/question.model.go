@@ -84,19 +84,19 @@ func ConvertQuestionsToFrontQuestions(questions *[]Question) *[]FrontQuestion {
 // question.UserAnswers must be preloaded
 func (question Question) AnswerAccuracyPercentage() int {
 	var correctAnswersCount int
-	userAnswersCount := len(question.UserAnswers)
+	totalAnswersCount := len(question.UserAnswers)
 	// Count the number of correct answers directly in the database query
 	for _, answer := range question.UserAnswers {
-		if answer.IsCorrect != nil && *answer.IsCorrect == true {
+		if answer.IsCorrect != nil && *answer.IsCorrect {
 			correctAnswersCount++
 		}
 	}
-	if userAnswersCount == 0 {
+	if totalAnswersCount == 0 {
 		// Handle the case where there are no user answers to avoid division by zero
 		return 0
 	}
 	// Calculate the accuracy percentage
-	accuracyPercentage := (correctAnswersCount * 100) / userAnswersCount
+	accuracyPercentage := (correctAnswersCount * 100) / totalAnswersCount
 	return accuracyPercentage
 }
 
