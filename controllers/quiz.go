@@ -378,7 +378,7 @@ func OverallReport(c *fiber.Ctx) error {
 
 // report correct, incorrect and omitted answers count of every subject and system
 // TODO optimize this code
-func ReportQuiz(c *fiber.Ctx) error {
+func AllQuizzesReport(c *fiber.Ctx) error {
 	// 1. get all user's quizzes
 	user := M.AuthedUser(c)
 	// options is needed in user preload in correct and incorrect answer coount

@@ -34,7 +34,7 @@ func APIInit(router *fiber.App) {
 	userQuiz.Post("/", C.CreateQuiz)
 	userQuiz.Post("/createFakeQuiz", C.CreateFakeQuiz)
 	userQuiz.Get("/overall", C.OverallReport)
-	userQuiz.Get("/report", C.ReportQuiz)
+	userQuiz.Get("/report", C.AllQuizzesReport)
 
 	userNotes := user.Group("/notes")
 	userNotes.Get("/", C.AllNotes)
