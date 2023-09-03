@@ -441,6 +441,7 @@ func Tabs(c *fiber.Ctx) error {
 // with parameter of "id"
 func QuizReport(c *fiber.Ctx) error {
 	var quiz M.Quiz
+	user := M.AuthedUser(c)
 	if err := D.DB().
 		Preload("UserAnswers.Question.System.Subject").
 		Preload("UserAnswers.Question.Course").
@@ -449,7 +450,7 @@ func QuizReport(c *fiber.Ctx) error {
 			db = db.Select("is_correct", "id", "question_id")
 			return db
 		}).
-		First(&quiz, c.Params("id")).Error; err != nil {
+		First(&quiz, "id = ? AND user_id  = ?", c.Params("id"), user.ID).Error; err != nil {
 		return U.DBError(c, err)
 	}
 	// quiz result and analysis
