@@ -441,8 +441,19 @@ func Tabs(c *fiber.Ctx) error {
 // with parameter of "id"
 func QuizReport(c *fiber.Ctx) error {
 	var quiz M.Quiz
-	if err := D.DB().Find(&quiz).Error; err != nil {
+	if err := D.DB().
+		Preload("UserAnswers.Question.System.Subject").
+		Preload("UserAnswers.Question.Course").
+		Preload("UserAnswers.Question.UserAnswers", func(db *gorm.DB) *gorm.DB { // this has been preloaded to calculate the accuracy of answers to specific question
+			// only select fields which are needed
+			db = db.Select("is_correct", "id", "question_id")
+			return db
+		}).
+		Find(&quiz).Error; err != nil {
 		return U.DBError(c, err)
 	}
-	return c.JSON(fiber.Map{"data": fiber.Map{"analystic": "asdsas", "report": "asdsasd"}})
+	// quiz result and analysis
+	quizAnalysis := quiz.CalculateQuizAnalysis()
+	quizResult := quiz.CalculateQuizResult()
+	return c.JSON(fiber.Map{"data": fiber.Map{"analysis": quizResult, "result": quizAnalysis}})
 }
