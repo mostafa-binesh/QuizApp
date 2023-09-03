@@ -206,6 +206,14 @@ func (quiz Quiz) QuizAnswersStats() (correct, incorrect, omitted uint) {
 	return
 }
 
+// correct / (incorrect + omitted + correct),
+// quiz.UserAnswers must be preloaded
+func (quiz Quiz) Score() (score uint) {
+	correct, incorrect, omitted := quiz.QuizAnswersStats()
+	score = correct / (incorrect + omitted + correct)
+	return
+}
+
 // quiz.UserAnswers.Question.Subject.System must be preloaded
 func (quiz Quiz) CalculateQuizAnalysis() (quizAnalysis QuizAnalysis) {
 	quizAnalysis.ID = quiz.ID
@@ -255,13 +263,15 @@ func (quiz Quiz) CalculateQuizAnalysis() (quizAnalysis QuizAnalysis) {
 
 	return
 }
+
+// quiz.UserAnswers.Question.System.Subject,
+// quiz.UserAnswers.Question.Course,
+// quiz.UserAnswers.Question.UserAnswers must be preloaded
 func (quiz Quiz) CalculateQuizResult() (quizResult QuizResult) {
 	quizResult.ID = quiz.ID
 	quizResult.Mode = quiz.Mode
-	correct, incorrect, omitted := quiz.QuizAnswersStats()
-	quizResult.Score = correct / (incorrect + omitted + correct)
+	quizResult.Score = quiz.Score()
 	var reportAnswers []ReportAnswer
-	// quizResult.ReportAnswers =
 	for _, answer := range quiz.UserAnswers {
 		reportAnswers = append(reportAnswers, ReportAnswer{
 			ID:        answer.ID,
