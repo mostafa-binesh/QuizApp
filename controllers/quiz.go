@@ -310,7 +310,7 @@ func OverallReport(c *fiber.Ctx) error {
 	user := M.AuthedUser(c)
 	// options is needed in user preload in correct and incorrect answer coount
 	if err := D.DB().
-		Preload("Quizzes.UserAnswers.Question.Options").
+		Preload("Quizzes.UserAnswers.Question").
 		Preload("Courses.ParentCourse.Subjects.Systems.Questions").
 		Find(&user).Error; err != nil {
 		return U.DBError(c, err)
