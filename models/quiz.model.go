@@ -51,6 +51,20 @@ type QuizList struct {
 	Title  string `json:"title"`
 	Status string `json:"status"`
 }
+type QuizAnalysis struct {
+	ID                   uint           `json:"id"`
+	CorrectAnswerCount   uint           `json:"correctCount"`
+	IncorrectAnswerCount uint           `json:"incorrectCount"`
+	OmittedAnswerCount   uint           `json:"omittedCount"`
+	Subject              []QuizAnalysis `json:"subjects,omitempty"`
+}
+type QuizResult struct {
+	ID            uint           `json:"id"`
+	Mode          string         `json:"correctCount"`
+	Type          string         `json:"incorrectCount"`
+	Score         uint           `json:"omittedCount"`
+	ReportAnswers []ReportAnswer `json:"subjects"`
+}
 
 // used to convert backend quiz model to front mocked model
 type QuizToFront struct {

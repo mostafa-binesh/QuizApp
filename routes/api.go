@@ -30,6 +30,7 @@ func APIInit(router *fiber.App) {
 	userQuiz.Get("/", C.AllQuizzes)
 	userQuiz.Get("/:id<int>", C.QuizByID)
 	userQuiz.Put("/:id<int>", C.UpdateQuiz)
+	userQuiz.Get("/:id<int>/report", C.QuizReport)
 	userQuiz.Post("/", C.CreateQuiz)
 	userQuiz.Post("/createFakeQuiz", C.CreateFakeQuiz)
 	userQuiz.Get("/overall", C.OverallReport)
@@ -106,6 +107,7 @@ func APIInit(router *fiber.App) {
 	// practical dev routes
 	dev.Get("/autoMigrate", C.AutoMigrate)
 	dev.Get("/answerCorrection", C.AnswerCorrection)
+	dev.Get("/questionCorrect", C.QuestionCorrect)
 	devPanel := dev.Group("/admin")
 	devPanel.Get("/structInfo", C.StructInfo)
 }
