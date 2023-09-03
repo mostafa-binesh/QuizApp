@@ -192,6 +192,56 @@ func (quiz Quiz) QuizAnswersStats() (correct, incorrect, omitted uint) {
 	}
 	return
 }
+
+// quiz.UserAnswers.Question.Subject.System must be preloaded
+func (quiz Quiz) CalculateQuizAnalysis() (quizAnalysis QuizAnalysis) {
+	quizAnalysis.ID = quiz.ID
+	// Count correct, incorrect, and omitted answers count
+	correct, incorrect, omitted := quiz.QuizAnswersStats()
+	quizAnalysis.CorrectAnswerCount = correct
+	quizAnalysis.IncorrectAnswerCount = incorrect
+	quizAnalysis.OmittedAnswerCount = omitted
+
+	// Count correct, incorrect, and omitted answers count for every subject
+	subjectResultMap := make(map[uint]QuizAnalysis)
+	for _, answer := range quiz.UserAnswers {
+		// Ensure that Subject and System are preloaded in UserAnswers
+		// Assuming that Subject and System are relationships in your UserAnswer model
+
+		subjectID := answer.Question.System.SubjectID
+
+		// Initialize subjectResult if it doesn't exist in the map
+		if _, ok := subjectResultMap[subjectID]; !ok {
+			subjectResult := QuizAnalysis{
+				ID:                   subjectID,
+				CorrectAnswerCount:   0,
+				IncorrectAnswerCount: 0,
+				OmittedAnswerCount:   0,
+			}
+			subjectResultMap[subjectID] = subjectResult
+		}
+
+		// Calculate answer stats for the current answer
+		correct, incorrect, omitted := CalculateAnswerStats(answer)
+
+		// Update subjectResult with answer stats
+		subjectResult := subjectResultMap[subjectID]
+		subjectResult.CorrectAnswerCount += correct
+		subjectResult.IncorrectAnswerCount += incorrect
+		subjectResult.OmittedAnswerCount += omitted
+
+		// Update the subjectResult back into the map
+		subjectResultMap[subjectID] = subjectResult
+	}
+
+	// Convert the subjectResultMap into a slice of QuizResult and insert it into quizResult
+	quizAnalysis.Subject = make([]QuizAnalysis, 0, len(subjectResultMap))
+	for _, result := range subjectResultMap {
+		quizAnalysis.Subject = append(quizAnalysis.Subject, result)
+	}
+
+	return
+}
 func (quiz Quiz) CalculateQuizResult() (quizResult QuizResult) {
 	quizResult.ID = quiz.ID
 	quizResult.Mode = quiz.Mode
