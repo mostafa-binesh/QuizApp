@@ -1,7 +1,6 @@
 package models
 
 import (
-	D "docker/database"
 	"fmt"
 	"strings"
 )
@@ -35,8 +34,9 @@ type Question struct {
 	Course   *Course      `json:"course,omitempty" gorm:"foreignKey:CourseID;constraint:OnDelete:CASCADE,OnUpdate:CASCADE;"`
 	Type     QuestionType `json:"type"`
 	// NextGenerationType NextGenerationType `json:"-"`
-	Tabs      []Tab      `json:"tabs"`
-	Dropdowns []Dropdown `json:"dropdowns,omitempty"`
+	Tabs        []Tab        `json:"tabs"`
+	Dropdowns   []Dropdown   `json:"dropdowns,omitempty"`
+	UserAnswers []UserAnswer `json:"-"`
 }
 type FrontQuestion struct {
 	ID          uint    `json:"no" gorm:"primary_key"`
@@ -80,24 +80,16 @@ func ConvertQuestionsToFrontQuestions(questions *[]Question) *[]FrontQuestion {
 	}
 	return &frontQuestions
 }
-func (question Question) AnswerAccuracyPercentage() int64 {
-	var correctAnswersCount int64
+
+// question.UserAnswers must be preloaded
+func (question Question) AnswerAccuracyPercentage() int {
+	var correctAnswersCount int
+	userAnswersCount := len(question.UserAnswers)
 	// Count the number of correct answers directly in the database query
-	if err := D.DB().
-		Model(&UserAnswer{}).
-		Where("question_id = ? AND is_correct = ?", question.ID, true).
-		Count(&correctAnswersCount).
-		Error; err != nil {
-		panic("There was an error in the database query of AnswerAccuracyPercentage function")
-	}
-	var userAnswersCount int64
-	// Count the total number of user answers for the question
-	if err := D.DB().
-		Model(&UserAnswer{}).
-		Where("question_id = ?", question.ID).
-		Count(&userAnswersCount).
-		Error; err != nil {
-		panic("There was an error in the database query of AnswerAccuracyPercentage function")
+	for _, answer := range question.UserAnswers {
+		if answer.IsCorrect != nil && *answer.IsCorrect == true {
+			correctAnswersCount++
+		}
 	}
 	if userAnswersCount == 0 {
 		// Handle the case where there are no user answers to avoid division by zero

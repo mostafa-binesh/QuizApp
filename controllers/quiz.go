@@ -25,6 +25,7 @@ func AllQuizzes(c *fiber.Ctx) error {
 	}).Preload("Quizzes.UserAnswers.Question.Options").
 		Preload("Quizzes.UserAnswers.Question.Dropdowns.Options").
 		Preload("Quizzes.UserAnswers.Question.Tabs").
+		Preload("Quizzes.UserAnswers.Question.UserAnswers"). // this has been preloaded to calculate the accuracy of answers to specific question
 		First(&user).Error; err != nil {
 		return U.DBError(c, err)
 	}
@@ -431,4 +432,13 @@ func Tabs(c *fiber.Ctx) error {
 		return U.DBError(c, err)
 	}
 	return c.JSON(fiber.Map{"data": tabs})
+}
+
+// with parameter of "id"
+func QuizReport(c *fiber.Ctx) error {
+	var quiz M.Quiz
+	if err := D.DB().Find(&quiz).Error; err != nil {
+		return U.DBError(c, err)
+	}
+	return c.JSON(fiber.Map{"data": fiber.Map{"analystic": "asdsas", "report": "asdsasd"}})
 }
