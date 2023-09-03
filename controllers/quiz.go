@@ -25,7 +25,10 @@ func AllQuizzes(c *fiber.Ctx) error {
 	}).Preload("Quizzes.UserAnswers.Question.Options").
 		Preload("Quizzes.UserAnswers.Question.Dropdowns.Options").
 		Preload("Quizzes.UserAnswers.Question.Tabs").
-		Preload("Quizzes.UserAnswers.Question.UserAnswers"). // this has been preloaded to calculate the accuracy of answers to specific question
+		Preload("Quizzes.UserAnswers.Question.UserAnswers", func(db *gorm.DB) *gorm.DB { // could do this as well : Preload("Comments", "ORDER BY ? ASC > ?", "id")
+			db = db.Select("is_correct", "id", "question_id")
+			return db
+		}). // this has been preloaded to calculate the accuracy of answers to specific question
 		First(&user).Error; err != nil {
 		return U.DBError(c, err)
 	}
