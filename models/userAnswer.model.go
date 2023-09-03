@@ -32,25 +32,16 @@ type EditNoteInput struct {
 }
 
 // checks answer is true, false or empty
-// ! answer.question.options must be preloaded
-func CalculateAnswerStats(answer UserAnswer) (correctAnswerCount, incorrectAnswerCount, omittedAnswerCount uint) {
-	// if answer is empty, increase omittedAnswerCount by one and return stats
-	if answer.Answer == nil {
-		omittedAnswerCount++
-		return
+// CalculateAnswerStats calculates answer statistics for a given answer
+func CalculateAnswerStats(answer UserAnswer) (correct, incorrect, omitted uint) {
+	if answer.IsCorrect == nil {
+		omitted = 1
+	} else if *answer.IsCorrect {
+		correct = 1
+	} else {
+		incorrect = 1
 	}
-	// if answer is not empty, find out that answer is correct or not
-	for _, option := range answer.Question.Options {
-		optionIndex := option.Index
-		userAnswerIndex := answer.Answer
-		if *userAnswerIndex == optionIndex {
-			correctAnswerCount++
-			return
-		}
-	}
-	// if answer was not correct, increase the incorrectAnswersCount be one and return
-	incorrectAnswerCount++
-	return
+	return correct, incorrect, omitted
 }
 
 // array version of CalculateAnswerStats
