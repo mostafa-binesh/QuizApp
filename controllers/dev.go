@@ -225,3 +225,21 @@ func AnswerCorrection(c *fiber.Ctx) error {
 	}
 	return c.JSON(fiber.Map{"data": answers})
 }
+
+// fix all question course_id
+func QuestionCorrect(c *fiber.Ctx) error {
+	var questions []M.Question
+	if err := D.DB().
+		Preload("System.Subject").
+		Find(&questions).Error; err != nil {
+		return err
+	}
+	for i := range questions {
+		questions[i].CourseID = &questions[i].System.Subject.CourseID
+	}
+
+	if err := D.DB().Save(&questions).Error; err != nil {
+		return err
+	}
+	return c.JSON(fiber.Map{"data": questions})
+}
