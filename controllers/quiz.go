@@ -449,7 +449,7 @@ func QuizReport(c *fiber.Ctx) error {
 			db = db.Select("is_correct", "id", "question_id")
 			return db
 		}).
-		Find(&quiz).Error; err != nil {
+		First(&quiz, c.Params("id")).Error; err != nil {
 		return U.DBError(c, err)
 	}
 	// quiz result and analysis
