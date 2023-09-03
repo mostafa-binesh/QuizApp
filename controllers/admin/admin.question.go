@@ -61,6 +61,12 @@ func CreateMultipleSelectQuestion(c *fiber.Ctx) error {
 		})
 	}
 	// create new question with given info
+	var system M.System
+	if err := D.DB().
+		Preload("Subject").
+		Find(&system).Error; err != nil {
+		return U.DBError(c, err)
+	}
 	newQuestion := M.Question{
 		Title:       payload.Question,
 		Options:     questionOptions,
@@ -68,6 +74,7 @@ func CreateMultipleSelectQuestion(c *fiber.Ctx) error {
 		Description: payload.Description,
 		Images:      questionImages,
 		Type:        M.MultipleSelect,
+		CourseID:    &system.Subject.CourseID,
 	}
 	// convert frontend's sent string question type to backend uint question type
 	newQuestion.ConvertTypeStringToTypeInt(payload.QuestionType)
@@ -121,6 +128,12 @@ func CreateSingleSelectQuestion(c *fiber.Ctx) error {
 		})
 	}
 	fmt.Printf("here 4")
+	var system M.System
+	if err := D.DB().
+		Preload("Subject").
+		Find(&system).Error; err != nil {
+		return U.DBError(c, err)
+	}
 	// # create new question with given info
 	newQuestion := M.Question{
 		Title:       payload.Question,
@@ -129,6 +142,7 @@ func CreateSingleSelectQuestion(c *fiber.Ctx) error {
 		Description: payload.Description,
 		Images:      questionImages,
 		Type:        M.SingleSelect,
+		CourseID:    &system.Subject.CourseID,
 	}
 	// # convert frontend's sent string question type to backend uint question type
 	// newQuestion.ConvertTypeStringToTypeInt(payload.QuestionType)
