@@ -330,10 +330,8 @@ func OverallReport(c *fiber.Ctx) error {
 	// we need to get all unique questions
 	for _, quiz := range user.Quizzes {
 		for _, answer := range quiz.UserAnswers {
-			if answer.Question != nil {
-				if !U.ExistsInArray[uint](usedQuestions, answer.Question.ID) {
-					usedQuestions = append(usedQuestions, answer.Question.ID)
-				}
+			if !U.ExistsInArray[uint](usedQuestions, answer.QuestionID) {
+				usedQuestions = append(usedQuestions, answer.QuestionID)
 			}
 		}
 	}
@@ -348,7 +346,7 @@ func OverallReport(c *fiber.Ctx) error {
 			// todo: in structure ro khosham nemiad
 			// todo suspend vaghtiye ke taze sakhte shode
 			// todo pending vaghtiye ke khode user suspend karde
-		} else if quiz.Status == "suspend" || quiz.Status == "pending" {
+		} else if quiz.Status == "suspend" || quiz.Status == "pending" || quiz.Status == "started" {
 			suspendedTests++
 		}
 		for _, answer := range quiz.UserAnswers {
@@ -446,7 +444,7 @@ func QuizReport(c *fiber.Ctx) error {
 		Preload("UserAnswers.Question.System.Subject").
 		Preload("UserAnswers.Question.Course").
 		Preload("UserAnswers.Question.UserAnswers", func(db *gorm.DB) *gorm.DB { // this has been preloaded to calculate the accuracy of answers to specific question
-			// only select fields which are needed
+			// only select required fields
 			db = db.Select("is_correct", "id", "question_id")
 			return db
 		}).
