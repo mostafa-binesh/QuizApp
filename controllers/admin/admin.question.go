@@ -21,7 +21,6 @@ func CreateMultipleSelectQuestion(c *fiber.Ctx) error {
 	if err := c.BodyParser(payload); err != nil {
 		return U.ResErr(c, err.Error())
 	}
-	fmt.Printf("payload: %v\n", payload)
 	// validate the payload
 	if errs := U.Validate(payload); errs != nil {
 		return c.Status(400).JSON(fiber.Map{"errors": errs})
@@ -36,23 +35,19 @@ func CreateMultipleSelectQuestion(c *fiber.Ctx) error {
 			IsCorrect: U.ConvertBoolToUint(option.IsCorrect),
 		})
 	}
-	fmt.Printf("after setting the options\n")
 	// get images from request
 	form, err := c.MultipartForm()
 	if err != nil {
 		return U.ResErr(c, "Parsing multipart form data failed")
 	}
-	fmt.Printf("after setting the multi part form\n")
 	// images := form.File["images"]
 	// if images == nil {
 	// 	return U.ResErr(c, err.Error())
 	// }
 	images := form.File["images"]
-	fmt.Printf("images variable %v\n", images)
 	// create appropriate unique name for images and save them int disc
 	var questionImages []M.Image
 	for _, image := range images {
-		fmt.Printf("image name: %v\n", image.Filename)
 		uuid := uuid.New().String()
 		newFileName := uuid + "-" + image.Filename
 		c.SaveFile(image, fmt.Sprintf(U.UploadLocation+"/%s", newFileName))
@@ -92,13 +87,11 @@ func CreateSingleSelectQuestion(c *fiber.Ctx) error {
 		return U.ResErr(c, err.Error())
 	}
 	// validate the payload
-	fmt.Printf("here 0")
 	if errs := U.Validate(payload); errs != nil {
 		return c.Status(400).JSON(fiber.Map{"errors": errs})
 	}
 	// handling options
-	// init options array
-	fmt.Printf("here 1")
+	// init options arra
 	questionOptions := []M.Option{}
 	questionOptions = append(questionOptions, M.Option{Title: payload.Option1, Index: "A"})
 	questionOptions = append(questionOptions, M.Option{Title: payload.Option2, Index: "B"})
@@ -106,20 +99,16 @@ func CreateSingleSelectQuestion(c *fiber.Ctx) error {
 	questionOptions = append(questionOptions, M.Option{Title: payload.Option4, Index: "D"})
 	// if first option is correct, client needs to send 1
 	questionOptions[payload.CorrectOption-1].IsCorrect = 1
-	fmt.Printf("here 2")
 	// # get images from request
 	form, err := c.MultipartForm()
 	if err != nil {
 		return U.ResErr(c, err.Error())
 	}
-	fmt.Printf("here 2.5")
 	// images is optional
 	images := form.File["images"]
-	fmt.Printf("images variable %v\n", images)
 	// create appropriate unique name for images and save them int disc
 	var questionImages []M.Image
 	for _, image := range images {
-		fmt.Printf("image name: %v\n", image.Filename)
 		uuid := uuid.New().String()
 		newFileName := uuid + "-" + image.Filename
 		c.SaveFile(image, fmt.Sprintf(U.UploadLocation+"/%s", newFileName))
@@ -127,7 +116,6 @@ func CreateSingleSelectQuestion(c *fiber.Ctx) error {
 			Name: newFileName,
 		})
 	}
-	fmt.Printf("here 4")
 	var system M.System
 	if err := D.DB().
 		Preload("Subject").
@@ -170,15 +158,21 @@ func CreateNextGenerationQuestion(c *fiber.Ctx) error {
 func QuestionByID(c *fiber.Ctx) error {
 	question := &M.Question{}
 	// find the question with id of param id and preload course, iamges, system.subject
-	if err := D.DB().Preload("Course").Preload("Images").Preload("System.Subject").First(question, c.Params("id")).Error; err != nil {
+	if err := D.DB().
+		Preload("Course").
+		Preload("Images").
+		Preload("System.Subject").
+		First(question, c.Params("id")).Error; err != nil {
 		return U.DBError(c, err)
 	}
 	return c.JSON(fiber.Map{"data": question})
 }
 
+// TODO this handler and other upload handlers have memory leak !
 func UploadImage(c *fiber.Ctx) error {
 	type Upload struct {
 		File string `validate:"required"`
+		// FileName string `validate:"required"`
 	}
 	payload := new(Upload)
 	file, err := c.FormFile("file")
@@ -193,20 +187,21 @@ func UploadImage(c *fiber.Ctx) error {
 		return U.ResErr(c, "file already exists")
 	}
 	// ! file extension check
-	fmt.Printf("file name %s\n", file.Filename)
-	fmt.Printf("extension check %t\n", U.IsImageFile(file.Filename))
-	if !(U.IsImageFile(file.Filename)) {
+	if !U.IsImageFile(file.Filename) {
 		return c.SendString("file should be image! please fix it")
 	}
 	// Save file to disk
 	uuid := uuid.New().String()
 	newFileName := uuid + "-" + file.Filename
-	err = c.SaveFile(file, fmt.Sprintf(U.UploadLocation+"/%s", newFileName))
-	if err != nil {
+	if err = c.SaveFile(file, fmt.Sprintf(U.UploadLocation+"/%s", newFileName)); err != nil {
 		return U.ResErr(c, "cannot save | "+err.Error())
 	}
 	return c.JSON(fiber.Map{"data": fiber.Map{"img": c.BaseURL() + "/public/uploads/" + newFileName}})
 }
+
+// this handler and route has been created for when the creator changed the url of the website
+// everything will be moved there, but image urls that been used in description of questions won't change
+// this route will find and replace old website url with new website
 func ChangeImageURLsInDescription(c *fiber.Ctx) error {
 	type ChangeImageURL struct {
 		PreviousWebsite string `json:"previousWebsite" validate:"required"`

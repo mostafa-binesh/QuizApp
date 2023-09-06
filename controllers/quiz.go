@@ -54,7 +54,6 @@ func QuizByID(c *fiber.Ctx) error {
 		return U.DBError(c, result.Error)
 	}
 	// if user quiz with desired id doesn't exist
-	fmt.Printf("user quizzes count: %d\n", len(user.Quizzes))
 	if len(user.Quizzes) <= 0 {
 		return U.ResErr(c, "Quiz not found")
 	}
@@ -300,7 +299,6 @@ func CreateFakeQuiz(c *fiber.Ctx) error {
 		U.RemoveElementByRef[uint](&multipleSelectQuestionIDs, int(randomIndex))
 		questionsCount = len(multipleSelectQuestionIDs)
 	}
-	fmt.Printf("printing the result\n")
 	return c.Status(200).JSON(fiber.Map{
 		"msg":    "Quiz been created",
 		"quizID": quiz.ID,
@@ -312,7 +310,7 @@ func OverallReport(c *fiber.Ctx) error {
 	if err := D.DB().
 		Preload("Quizzes.UserAnswers.Question").
 		Preload("Courses.ParentCourse.Subjects.Systems.Questions").
-		Find(&user).Error; err != nil {
+		First(&user).Error; err != nil {
 		return U.DBError(c, err)
 	}
 	// all questions that belongs to bought courses
@@ -382,7 +380,7 @@ func AllQuizzesReport(c *fiber.Ctx) error {
 	// options is needed in user preload in correct and incorrect answer coount
 	if err := D.DB().Preload("Quizzes.UserAnswers.Question.Options").
 		Preload("Quizzes.UserAnswers.Question.System.Subject").
-		Find(&user).Error; err != nil {
+		First(&user).Error; err != nil {
 		return U.DBError(c, err)
 	}
 	// 2. group answers by subject and system and calculate every answer stat

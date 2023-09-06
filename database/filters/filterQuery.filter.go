@@ -40,7 +40,6 @@ func FilterByParameters(c *fiber.Ctx, queryParams []string) func(db *gorm.DB) *g
 			if queryValue == "" {
 				continue
 			}
-			fmt.Printf("%v", queryValue)
 			db = db.Where(fmt.Sprintf("%s = ?", value), queryValue)
 		}
 		return db

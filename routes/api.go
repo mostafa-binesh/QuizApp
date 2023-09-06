@@ -6,7 +6,6 @@ import (
 
 	// "github.com/gofiber/contrib/swagger"
 	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/encryptcookie"
 )
 
 func APIInit(router *fiber.App) {
@@ -79,20 +78,8 @@ func APIInit(router *fiber.App) {
 	// ! authentication routes
 	auth := router.Group("/auth")
 	auth.Post("/signup", C.SignUpUser)
-	auth.Post("/signup/devs", C.DevsSignUpUser)
-	auth.Post("/signup/devs2", C.Devs2SignUpUser)
 	auth.Post("/login", C.Login)
 	auth.Get("/logout", C.Logout)
-	// ! messaging
-	msg := router.Group("correspondence")
-	msg.Use(encryptcookie.New(encryptcookie.Config{
-		// ! only base64 characters
-		// ! A-Z | a-z | 0-9 | + | /
-		Key: "S6e5+xc65+4dfs/nb4/f56+EW+56N4d6",
-	}))
-	// ! dashboard routes
-	dashboard := router.Group("/dashboard", C.AuthMiddleware)
-	dashboard.Get("/", C.Dashboard)
 	// ! devs route
 	dev := router.Group("/devs")
 	dev.Get("/translation", C.TranslationTest)

@@ -35,7 +35,7 @@ func CourseSubjects(c *fiber.Ctx) error {
 		// todo: add limit to courses preload
 		Preload("Courses", "id = ?", c.Params("courseID")).
 		Preload("Courses.Subjects.Systems").
-		Find(&user).Error; err != nil {
+		First(&user).Error; err != nil {
 		return U.DBError(c, err)
 	}
 	if len(user.Courses) != 1 {

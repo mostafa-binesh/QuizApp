@@ -39,7 +39,7 @@ func AllNotes(c *fiber.Ctx) error {
 			db = db.Where("Note IS NOT NULL")
 			return db
 		}).Preload("Quizzes.UserAnswers.Question").
-		Find(&user).Error; err != nil {
+		First(&user).Error; err != nil {
 		return U.DBError(c, err)
 	}
 	// extract notes from all userAnswers

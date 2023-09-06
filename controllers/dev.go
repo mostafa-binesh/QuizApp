@@ -147,8 +147,6 @@ func SeeMessages(c *fiber.Ctx) error {
 	// }
 	// session := U.Session(c)
 	if sess != nil {
-		fmt.Printf("session type: %v\n", sess.Get("guest"))
-		fmt.Printf("session: %v\n", sess)
 		return U.ResMsg(c, fmt.Sprintf("type: %v, guest: %v", sess.Get("type"), sess.Get("guest")))
 	}
 	// return U.ResMsg(c, "session KHALIE")

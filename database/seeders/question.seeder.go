@@ -44,7 +44,6 @@ func QuestionAndOptionsSeeder() {
 	systems := []M.System{}
 	D.DB().Preload("Subject.Course").Find(&systems)
 	systemsCount := len(systems)
-	fmt.Printf("systems count: %d\n", systemsCount)
 	for i, questionText := range questions {
 		systemID := uint(rand.Intn(int(systemsCount)))
 		question := M.Question{
