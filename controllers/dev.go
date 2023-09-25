@@ -197,3 +197,142 @@ func WCProducts(c *fiber.Ctx) error {
 	}
 	return c.JSON(fiber.Map{"data": wcProducts})
 }
+func MigrateNewSubjects(c *fiber.Ctx) error {
+	realSubjects := []string{
+		"Critical Care",
+		"Fundamentals",
+		"Leadership and Management",
+		"Pharmacology",
+		"Prometric",
+		"Saunders",
+		"Self Assessments",
+	}
+	realSystems := [][]string{
+		{
+			"Critical Care Concepts",
+		},
+		{
+			"Basic care and Comfort",
+			"Medication Administration",
+			"SafetyInfection Control",
+			"Skills Procedures",
+		},
+		{
+			"Management Concepts",
+			"Assignment Delegation",
+			"Ethical Legal",
+			"Prioritization",
+		},
+		{
+			"Analgesics",
+			"Cardiovascular",
+			"Endorcine",
+			"Gastrointestinal Nutrition",
+			"Hematological Oncological",
+			"Immune",
+			"Infection Decease",
+			"Integumentary",
+			"Musculoskeletal",
+			"Neurologic",
+			"Psychiatric Medications",
+			"Reproductive Maternity Newborn",
+			"Respiratory",
+			"Urinary Renal",
+			"Visual Auditory",
+		},
+		{"Prometric"},
+		{
+			"Chapter 8",
+			"Chapter 9",
+			"Chapter 10",
+			"Chapter 11",
+			"Chapter 12",
+			"Chapter 13",
+			"Chapter 14",
+			"Chapter 15",
+			"Chapter 16",
+			"Chapter 17",
+			"Chapter 18",
+			"Chapter 19",
+			"Chapter 20",
+			"Chapter 21",
+			"Chapter 22",
+			"Chapter 23",
+			"Chapter 24",
+			"Chapter 25",
+			"Chapter 26",
+			"Chapter 27",
+			"Chapter 28",
+			"Chapter 29",
+			"Chapter 30",
+			"Chapter 31",
+			"Chapter 32",
+			"Chapter 33",
+			"Chapter 34",
+			"Chapter 35",
+			"Chapter 36",
+			"Chapter 37",
+			"Chapter 38",
+			"Chapter 39",
+			"Chapter 40",
+			"Chapter 41",
+			"Chapter 42",
+			"Chapter 43",
+			"Chapter 44",
+			"Chapter 45",
+			"Chapter 46",
+			"Chapter 47",
+			"Chapter 48",
+			"Chapter 48",
+			"Chapter 49",
+			"Chapter 50",
+			"Chapter 50",
+			"Chapter 51",
+			"Chapter 52",
+			"Chapter 53",
+			"Chapter 54",
+			"Chapter 55",
+			"Chapter 56",
+			"Chapter 57",
+			"Chapter 58",
+			"Chapter 59",
+			"Chapter 60",
+			"Chapter 61",
+			"Chapter 62",
+			"Chapter 63",
+			"Chapter 64",
+			"Chapter 65",
+			"Chapter 66",
+			"Chapter 67",
+			"Chapter 68",
+			"Chapter 69",
+			"Chapter 70",
+		},
+		{
+			"Self Assessments 1",
+			"Self Assessments 2",
+		},
+	}
+	// add real subject and systems
+	NCLEXCourse := &M.Course{}
+	if result := D.DB().Where("Title = ?", "NCLEX-RN مادر").Find(&NCLEXCourse); result.RowsAffected == 0 {
+		return U.ResErr(c, "No course found with title of NC-LEX RN")
+	}
+	for i, subject := range realSubjects {
+		newSubject := &M.Subject{
+			Title:    subject,
+			CourseID: NCLEXCourse.ID,
+		}
+		D.DB().Create(&newSubject)
+		for _, system := range realSystems[i] {
+			newSystem := &M.System{
+				Title:     system,
+				SubjectID: newSubject.ID,
+			}
+			D.DB().Create(&newSystem)
+		}
+	}
+
+	fmt.Println("Subjects and systems inserted successfully.")
+	return c.JSON(fiber.Map{"msg": "done"})
+}

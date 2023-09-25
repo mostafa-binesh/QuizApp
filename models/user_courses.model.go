@@ -17,8 +17,10 @@ func (CourseUser) TableName() string {
 	return "course_user"
 }
 
-// Custom global scope for UserCourse model to filter out expired records
-func NonExpiredCourses(db *gorm.DB) *gorm.DB {
-	currentTime := time.Now()
-	return db.Where("expiration_date > ?", currentTime)
+// Custom global scope for CourseUser model to filter out expired records
+func UserNonExpiredCourses() func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		currentTime := time.Now()
+		return db.Where("expiration_date > ?", currentTime)
+	}
 }

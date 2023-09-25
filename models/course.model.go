@@ -1,14 +1,20 @@
 package models
 
+import (
+	D "docker/database"
+	U "docker/utils"
+	"time"
+)
 type Course struct {
-	ID            uint       `json:"id" gorm:"primary_key"`
-	WoocommerceID uint       `json:"woocommerce_id" gorm:"unique"`
-	Title         string     `json:"title"`
-	Users         []*User    `json:"-" gorm:"many2many:course_user;"`
-	Subjects      []*Subject `json:"subjects" gorm:"foreignKey:CourseID"`
-	Duration      uint64     `json:"-"` // todo don't show it for now, fix it later
-	ParentID      *uint
-	ParentCourse  *Course `gorm:"foreignKey:ParentID"` // use Company.CompanyID as references
+	ID                 uint       `json:"id" gorm:"primary_key"`
+	WoocommerceID      uint       `json:"woocommerce_id" gorm:"uniqueIndex"`
+	Title              string     `json:"title"`
+	Users              []*User    `json:"-" gorm:"many2many:course_user;"`
+	Subjects           []*Subject `json:"subjects" gorm:"foreignKey:CourseID"`
+	Duration           uint64     `json:"-"` // todo don't show it for now, fix it later
+	ParentID           *uint
+	ParentCourse       *Course `gorm:"foreignKey:ParentID"` // use Company.CompanyID as references
+	ValidityDaysPeriod uint    `json:"-"`
 }
 
 // model used for creating new course
@@ -78,4 +84,32 @@ func ConvertCourseToCourseWithQuestionsCounts(courses []*Course) (coursesWithQue
 		})
 	}
 	return
+}
+func RetrieveUserBoughtCoursesIDs(userID uint) ([]uint, error) {
+	var courseIDs []uint
+	if err := D.DB().Model(&CourseUser{}).Where("user_id = ? AND expiration_date > ?", userID, time.Now()).
+		Pluck("course_id", &courseIDs).Error; err != nil {
+		return nil, err
+	}
+	return courseIDs, nil
+}
+func RetrieveUserBoughtCourses(userID uint) ([]Course, error) {
+	courseIDs, err := RetrieveUserBoughtCoursesIDs(userID)
+	if err != nil {
+		return nil, err
+	}
+	// find all courses where their id is in courseIDs
+	var userBoughtCourses []Course
+	if err := D.DB().Model(&Course{}).
+		Find(&userBoughtCourses, "id IN ?", courseIDs).Error; err != nil {
+		return nil, err
+	}
+	return userBoughtCourses, nil
+}
+func UserHasCourse(userID uint, courseID uint) (bool, error) {
+	courseIDs, err := RetrieveUserBoughtCoursesIDs(userID)
+	if err != nil {
+		return false, err
+	}
+	return U.ExistsInArray[uint](courseIDs, courseID), nil
 }

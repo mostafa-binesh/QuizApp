@@ -7,21 +7,62 @@ import (
 	U "docker/utils"
 	"github.com/gofiber/fiber/v2"
 )
-
+// todo: first need to insert all courses into the database and then again check for the parent's ids
 func AddCoursesFromWooCommerce(c *fiber.Ctx) error {
 	// get all woocommerce products from its service
-	courses, err := S.GetAllProducts()
+	wcCourses, err := S.GetAllProducts()
 	if err != nil {
 		return U.ResErr(c, err.Error())
 	}
-	// create every course in the database
-	for _, course := range courses {
-		D.DB().Create(&M.Course{
-			WoocommerceID: uint(course.ID),
-			Title:         course.Name,
-		})
+	// convert the wooc. retreived products into course model
+	convertedCourses, err := S.ConvertWCCourseToCourseModel(&wcCourses)
+	if err != nil {
+		return U.ResErr(c, err.Error())
 	}
-	return c.JSON(fiber.Map{"data": courses})
+	// create a map to store parent courses id and its courses
+	DBCourseWoocommerceIDMap := make(map[uint]*M.Course)
+	for _, course := range *convertedCourses {
+		// for some reason, some of courses were empty
+		if course.Title == "" {
+			continue
+		}
+		var existingCourse M.Course
+		var parentCourse M.Course
+		// Try to find the course with the given woocommerce_id
+		result := D.DB().Where("woocommerce_id = ?", course.WoocommerceID).First(&existingCourse)
+		// also need to find the parent course with the given course.parentid
+		if course.ParentID != nil {
+			if DBCourseWoocommerceIDMap[*course.ParentID] == nil {
+				// parent course map doesn't exist in the map
+				// try to find it in the database
+				parentResult := D.DB().First(&parentCourse, *course.ParentID)
+				if parentResult.RowsAffected == 1 {
+					DBCourseWoocommerceIDMap[*course.ParentID] = &parentCourse
+				}
+			} else {
+				parentCourse = *DBCourseWoocommerceIDMap[*course.ParentID]
+			}
+		}
+
+		// if course with desired woocommerce_id not found, create it
+		if result.RowsAffected == 0 {
+			if parentCourse.Title != "" {
+				course.ParentID = &parentCourse.ID
+			}
+			D.DB().Create(&course)
+		} else {
+			// if found, just update it
+			existingCourse.Title = course.Title
+			existingCourse.Duration = course.Duration
+			if parentCourse.Title != "" {
+				existingCourse.ParentID = &parentCourse.ID
+			}
+			existingCourse.ValidityDaysPeriod = course.ValidityDaysPeriod
+
+			D.DB().Save(&existingCourse)
+		}
+	}
+	return c.JSON(fiber.Map{"data": convertedCourses})
 }
 func AllCourses(c *fiber.Ctx) error {
 	// get all courses

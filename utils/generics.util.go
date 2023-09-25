@@ -23,7 +23,7 @@ func RemoveElementByRef[T any](arr *[]T, index int) {
 	*arr = (*arr)[:len(*arr)-1]
 }
 
-// ExistsInArray checks if a number exists in an array of comparable type.
+// ExistsInArray checks if an element exists in an array of comparable type.
 func ExistsInArray[T comparable](elems []T, v T) bool {
 	for _, s := range elems {
 		if v == s {

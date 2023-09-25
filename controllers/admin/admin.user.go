@@ -82,19 +82,18 @@ func EditUser(c *fiber.Ctx) error {
 // ! user by id with admin/users/{email}
 func UserByEmail(c *fiber.Ctx) error {
 	user := M.User{}
-	result := D.DB().Where("email = ?", c.Params("email")).Preload("Courses").First(&user)
+	result := D.DB().Where("email = ?", c.Params("email")).First(&user)
 	if result.RowsAffected == 0 { // can check the same condition with user.Name == ""
 		return U.ResErr(c, "User doesn't exist")
 	}
-	// extract user's courses ids
-	var userCoursesIDs []uint
-	for _, course := range user.Courses {
-		userCoursesIDs = append(userCoursesIDs, course.ID)
+	userCourseIDs, err := M.RetrieveUserBoughtCoursesIDs(user.ID)
+	if err != nil {
+		return U.ResErr(c, err.Error())
 	}
 	minUserWithCoursesIDs := M.MinUserWithCoursesIDs{
 		ID:      user.ID,
 		Email:   user.Email,
-		Courses: userCoursesIDs,
+		Courses: userCourseIDs,
 	}
 	return c.JSON(fiber.Map{
 		"data": minUserWithCoursesIDs,
