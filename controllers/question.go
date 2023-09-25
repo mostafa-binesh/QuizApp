@@ -12,9 +12,10 @@ import (
 
 // sorry that this function is long
 // all logic are continuous and need to be done in a single function
+// this handler is for all questions but with certain filters
 func AllQuestionsWithSearch(c *fiber.Ctx) error {
 	// select all userAnswers of the authenticated user
-	user := c.Locals("user").(M.User)
+	user := M.AuthedUser(c)
 	if err := D.DB().Model(&user).
 		Preload("Quizzes.UserAnswers.Question", func(db *gorm.DB) *gorm.DB { // could do this as well : Preload("Comments", "ORDER BY ? ASC > ?", "id")
 			// if filterType is body and search query exists, search in question's title
@@ -41,7 +42,8 @@ func AllQuestionsWithSearch(c *fiber.Ctx) error {
 			db = db.Where("title ILIKE ?", fmt.Sprintf("%%%s%%", c.Query("search")))
 		}
 		return db
-	}).Find(&user).Error; err != nil {
+	}).
+		Find(&user).Error; err != nil {
 		return U.DBError(c, err)
 	}
 	var questions []M.QuestionSearch

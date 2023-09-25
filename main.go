@@ -21,18 +21,13 @@ func main() {
 	)
 	// create woocommerce instance
 	U.InitWoomeCommerce(U.Env("WC_CONSUMER_KEY"), U.Env("WC_CONSUMER_SECRET"), U.Env("WC_SHOP_NAME"))
-	// C.Initilize() // initialize controllers value
 	// ! session
-	cookieSecure := false
-	if U.Env("COOKIE_SECURE") == "true" {
-		cookieSecure = true
-	}
+	cookieSecure := U.EnvBool("COOKIE_SECURE")
 	// Initialize custom config
 	U.Store = session.New(session.Config{
-		Storage:      U.NewMemory(),
-		Expiration:   time.Hour * 168, // 7 days
-		CookieSecure: cookieSecure,     // false for postman, true for react localhost
-		// CookieHTTPOnly: true,
+		Storage:        U.NewMemory(),
+		Expiration:     time.Hour * 168, // 7 days
+		CookieSecure:   cookieSecure,    // false for postman, true for react localhost
 		CookieSameSite: U.Env("COOKIE_SAME_SITE"),
 		KeyGenerator: func() string {
 			secretKey := U.Env("SESSION_SECRET_KEY")
@@ -44,6 +39,7 @@ func main() {
 			return sessionID
 		},
 	})
+	// Initialize application routes
 	R.RouterInit()
 
 }

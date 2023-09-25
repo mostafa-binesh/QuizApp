@@ -18,13 +18,18 @@ import (
 // because frontend guys only request once for all of quizzes and
 // save the entire quizzes into the state, i need to send quiz with all of its info
 func AllQuizzes(c *fiber.Ctx) error {
-	user := c.Locals("user").(M.User)
+	user := M.AuthedUser(c)
 	if err := D.DB().Model(&user).Preload("Quizzes.Course").Preload("UserAnswers", func(db *gorm.DB) *gorm.DB { // could do this as well : Preload("Comments", "ORDER BY ? ASC > ?", "id")
 		db = db.Order("id ASC")
 		return db
 	}).Preload("Quizzes.UserAnswers.Question.Options").
 		Preload("Quizzes.UserAnswers.Question.Dropdowns.Options").
 		Preload("Quizzes.UserAnswers.Question.Tabs").
+		Preload("Quizzes.UserAnswers.Question.UserAnswers", func(db *gorm.DB) *gorm.DB { // this has been preloaded to calculate the accuracy of answers to specific question
+			// only select fields which are needed
+			db = db.Select("is_correct", "id", "question_id")
+			return db
+		}).
 		First(&user).Error; err != nil {
 		return U.DBError(c, err)
 	}
@@ -37,7 +42,7 @@ func AllQuizzes(c *fiber.Ctx) error {
 
 func QuizByID(c *fiber.Ctx) error {
 	// get authenticated user
-	user := c.Locals("user").(M.User)
+	user := M.AuthedUser(c)
 	// find quiz with id of paramID of the user with dependencies
 	if result := D.DB().Model(&user).Preload("Quizzes", c.Params("id")).Preload("Quizzes.Course").Preload("UserAnswers", func(db *gorm.DB) *gorm.DB { // could do this as well : Preload("Comments", "ORDER BY ? ASC > ?", "id")
 		db = db.Order("id ASC")
@@ -49,7 +54,6 @@ func QuizByID(c *fiber.Ctx) error {
 		return U.DBError(c, result.Error)
 	}
 	// if user quiz with desired id doesn't exist
-	fmt.Printf("user quizzes count: %d\n", len(user.Quizzes))
 	if len(user.Quizzes) <= 0 {
 		return U.ResErr(c, "Quiz not found")
 	}
@@ -57,6 +61,7 @@ func QuizByID(c *fiber.Ctx) error {
 }
 func CreateQuiz(c *fiber.Ctx) error {
 	payload := new(M.QuizInput)
+	var err error
 	// parsing the payload
 	if err := c.BodyParser(payload); err != nil {
 		U.ResErr(c, err.Error())
@@ -65,25 +70,43 @@ func CreateQuiz(c *fiber.Ctx) error {
 	if errs := U.Validate(payload); errs != nil {
 		return c.Status(400).JSON(fiber.Map{"errors": errs})
 	}
-	user := c.Locals("user").(M.User)
-	// get course id using first system id
+	user := M.AuthedUser(c)
+	// # get course id using first system id
+	// check if sent systemIDs is not empty (at least one system should be selected by the user)
 	if len(payload.SystemIDs) == 0 {
 		return U.ResErr(c, "You must at least select one system")
 	}
+	// # check every system course and match them with user's bought courses
+	systems := []M.System{}
+	D.DB().Preload("Subject.Course.ParentCourse").Find(&systems, payload.SystemIDs)
+	var userBoughtCoursesIDs []uint
+	if userBoughtCoursesIDs, err = M.RetrieveUserBoughtParentCoursesIDs(user.ID); err != nil {
+		return U.ResErr(c, "Something went wrong when retreiving user's bought courses")
+	}
+	// todo: a UserHasCourse function has been written
+	for _, system := range systems {
+		// fmt.Printf("system.Subject.Course: %v\n", system.Subject.Course.ParentID)
+		if U.ExistsInArray[uint](userBoughtCoursesIDs, system.Subject.Course.ID) {
+			continue
+		}
+		// else
+		return U.ResErr(c, "You haven't bought desired course")
+	}
+	// # get the course duration from payload.systemIDs[0]
 	// find the system from first index of systemIDs
-	// cause we checked the length of payload.systemIDs > 0, we can use first index of it
+	// cause we checked the length of payload.systemIDs > 0, we can safely use first index of it
 	systemID := payload.SystemIDs[0]
 	system := M.System{}
 	D.DB().Preload("Subject.Course").Find(&system, systemID)
 	// create the quiz
-	endTime := time.Now().Add(time.Hour * 1) // todo: hardcoded, should get it from woocommerce.course.duration
+	endTime := time.Now().Add(time.Duration(system.Subject.Course.Duration) * time.Minute)
 	currentTime := time.Now()
 	duration := endTime.Sub(currentTime)
 	remainingSeconds := uint(duration.Seconds())
 	// # create quiz
 	quiz := M.Quiz{
 		UserID:       user.ID,
-		Status:       "pending",
+		Status:       "started", // todo: change started status if it's not good
 		EndTime:      &endTime,
 		Duration:     remainingSeconds,
 		CourseID:     system.Subject.CourseID,
@@ -97,13 +120,14 @@ func CreateQuiz(c *fiber.Ctx) error {
 	}
 	// # find questions based on question mode
 	// create the empty user answer h selected systems
-	// TODO SECURITY ISSUE: checking the id of systems has not been checked
+
 	// all avaiable questions's id with desired system_id
 	var questionIDs []uint
-	var err error
+	// if payload.QuestionMode is all
 	if payload.QuestionMode == M.AllQuestionMode {
+		// get all question that belongs to payload.systemIDs
 		err = D.DB().Model(&M.Question{}).Distinct().Where("system_id IN (?)", payload.SystemIDs).Pluck("id", &questionIDs).Error
-	} else if payload.QuestionMode == M.MarkedQuestionMode {
+	} else if payload.QuestionMode == M.MarkedQuestionMode { // if marked questions only
 		err = D.DB().Model(&user).Preload("UserAnswers", "is_marked = ?", true).Find(&user).Error
 		if err != nil {
 			D.DB().Delete(&quiz)
@@ -115,22 +139,24 @@ func CreateQuiz(c *fiber.Ctx) error {
 				questionIDs = append(questionIDs, answer.QuestionID)
 			}
 		}
-	} else if payload.QuestionMode == M.SingleSelectQuestionMode {
+	} else if payload.QuestionMode == M.SingleSelectQuestionMode { // if single select questions only
 		err = D.DB().Model(&M.Question{}).Where("type = ?", M.SingleSelect).Pluck("id", &questionIDs).Error
-	} else if payload.QuestionMode == M.MultipleSelectQuestionMode {
+	} else if payload.QuestionMode == M.MultipleSelectQuestionMode { // if multiple select questions only
 		err = D.DB().Model(&M.Question{}).Where("type = ?", M.MultipleSelect).Pluck("id", &questionIDs).Error
 	}
+	// if something went wrong, delete the created quiz
 	if err != nil {
 		D.DB().Delete(&quiz)
 		return U.DBError(c, err)
 	}
+	// # check if sufficient questions are in the db
 	questionsCount := len(questionIDs)
 	var randomIndex uint
-	fmt.Printf("payload question: %d , available questions count: %d\n", payload.QuestionsCount, questionsCount)
 	if questionsCount <= payload.QuestionsCount {
 		D.DB().Delete(&quiz)
 		return U.ResErr(c, "There are not enough available questions")
 	}
+	// create UserAnswer(s)
 	for i := 0; i < payload.QuestionsCount; i++ {
 		randomIndex = uint(rand.Intn(int(questionsCount)))
 		rand.Seed(time.Now().UnixNano())
@@ -144,7 +170,8 @@ func CreateQuiz(c *fiber.Ctx) error {
 		U.RemoveElementByRef[uint](&questionIDs, int(randomIndex))
 		questionsCount = len(questionIDs)
 	}
-	return c.Status(200).JSON(fiber.Map{
+	// show response
+	return c.Status(201).JSON(fiber.Map{
 		"msg":    "Quiz been created",
 		"quizID": quiz.ID,
 	})
@@ -160,22 +187,23 @@ func UpdateQuiz(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"errors": errs})
 	}
 	// get authenticated user info
-	user := c.Locals("user").(M.User)
+	user := M.AuthedUser(c)
 	// ! todo maybe can optimize it
 	// get quiz and its dependencies with paramID of the user in order
 	// didn't get the error of ParamsInt, because i checked it in the router
 	quizID, _ := c.ParamsInt("id")
-	if err := D.DB().Model(&user).Preload("Quizzes", quizID).Preload("UserAnswers", func(db *gorm.DB) *gorm.DB { // could do this as well : Preload("Comments", "ORDER BY ? ASC > ?", "id")
-		db = db.Order("id ASC")
-		return db
-	}).Preload("Quizzes.UserAnswers.Question.Options").First(&user).Error; err != nil {
+	if err := D.DB().Model(&user).
+		Preload("Quizzes", quizID).
+		Preload("UserAnswers", func(db *gorm.DB) *gorm.DB { // could do this as well : Preload("Comments", "ORDER BY ? ASC > ?", "id")
+			db = db.Order("id ASC")
+			return db
+		}).Preload("Quizzes.UserAnswers.Question.Options").
+		First(&user).Error; err != nil {
 		return U.DBError(c, err)
 	}
-	fmt.Printf("user's quizzes count: %d\n", len(user.Quizzes))
-	fmt.Printf("user's quizzes: %v\n", user.Quizzes)
 	quiz := M.Quiz{}
+	// i know i fu.ked up here, but there was a bug here and i only could handle it in this way
 	for _, q := range user.Quizzes {
-		// return c.JSON(fiber.Map{"data": q})
 		quiz = q
 		break
 	}
@@ -185,21 +213,19 @@ func UpdateQuiz(c *fiber.Ctx) error {
 	if user.Quizzes[0].Status == "" {
 		return U.ResErr(c, "This quiz doesn't exist")
 	}
-	// quiz = user.Quizzes[0]
 	convertedUserAnswer := payload.ConvertQuizFrontToQuiz(quiz.UserAnswers)
 	// update the user answers into database
-	fmt.Printf("convertedUserAnswer = %v\n", convertedUserAnswer)
-	if err := D.DB().Save(convertedUserAnswer).Error; err != nil {
-		return U.DBError(c, err)
+
+	if err := D.DB().Save(&convertedUserAnswer).Error; err != nil {
+		return err
 	}
+	// handle the status and remaining time
 	quiz.Status = payload.QuizState
 	quiz.CalculateRemainingSeconds(payload.RemainingHours, payload.RemainingMinutes, payload.RemainingSeconds)
 	if err := D.DB().Save(&quiz).Error; err != nil {
 		return U.DBError(c, err)
 	}
-	// todo not tested yet
-	// return c.JSON(fiber.Map{"asd": convertedUserAnswer})
-	return U.ResMessage(c, "Quiz been updated")
+	return U.ResMsg(c, "Quiz been updated")
 }
 func CreateFakeQuiz(c *fiber.Ctx) error {
 	payload := new(M.QuizInput)
@@ -216,7 +242,7 @@ func CreateFakeQuiz(c *fiber.Ctx) error {
 	if errs := U.Validate(payload); errs != nil {
 		return c.Status(400).JSON(fiber.Map{"errors": errs})
 	}
-	user := c.Locals("user").(M.User)
+	user := M.AuthedUser(c)
 
 	if len(payload.SystemIDs) == 0 {
 		return U.ResErr(c, "You must at least select one system")
@@ -245,21 +271,13 @@ func CreateFakeQuiz(c *fiber.Ctx) error {
 		return U.ResErr(c, result.Error.Error())
 	}
 	// create the empty user answer h selected systems
-	// TODO SECURITY ISSUE: checking the id of systems has not been checked
 	// all avaiable questions's id with desired system_id
 	var multipleSelectQuestionIDs []uint
-	// var singleSelectQuestionIDs []uint
-	// if err := D.DB().Model(&M.Question{}).Distinct().Where("system_id IN (?)", payload.SystemIDs).Pluck("id", &questionIDs).Error; err != nil {
-	// 	return U.DBError(c, err)
-	// }
 	// get 3 multiple question type
 	if err := D.DB().Model(&M.Question{}).Where("type IN ?", []M.QuestionType{M.NextGenerationSingleSelect, M.NextGenerationMultipleSelect, M.NextGenerationTableSingleSelect,
 		M.NextGenerationTableMultipleSelect, M.NextGenerationTableDropDown}).Limit(payload.QuestionsCount).Pluck("id", &multipleSelectQuestionIDs).Error; err != nil {
 		return U.DBError(c, err)
 	}
-	// if err := D.DB().Model(&M.Question{}).Where("type IN ?", M.SingleSelect).Limit(3).Pluck("id", &singleSelectQuestionIDs).Error; err != nil {
-	// 	return U.DBError(c, err)
-	// }
 	// multipleSelectQuestionIDs = append(multipleSelectQuestionIDs, singleSelectQuestionIDs...)
 	questionsCount := len(multipleSelectQuestionIDs)
 	var randomIndex uint
@@ -281,22 +299,26 @@ func CreateFakeQuiz(c *fiber.Ctx) error {
 		U.RemoveElementByRef[uint](&multipleSelectQuestionIDs, int(randomIndex))
 		questionsCount = len(multipleSelectQuestionIDs)
 	}
-	fmt.Printf("printing the result\n")
 	return c.Status(200).JSON(fiber.Map{
 		"msg":    "Quiz been created",
 		"quizID": quiz.ID,
 	})
 }
 func OverallReport(c *fiber.Ctx) error {
-	user := c.Locals("user").(M.User)
+	user := M.AuthedUser(c)
 	// options is needed in user preload in correct and incorrect answer coount
-	if err := D.DB().Preload("Quizzes.UserAnswers.Question.Options").Preload("Courses.Subjects.Systems.Questions").Find(&user).Error; err != nil {
+	if err := D.DB().
+		Preload("Quizzes.UserAnswers.Question").
+		Preload("Courses.ParentCourse.Subjects.Systems.Questions").
+		First(&user).Error; err != nil {
 		return U.DBError(c, err)
 	}
+	// all questions that belongs to bought courses
 	var totalQuestionsCount int
 	// todo: if we add course id to question model, here would be better solution
+	// user.Courses are childCourses
 	for _, course := range user.Courses {
-		for _, subject := range course.Subjects {
+		for _, subject := range course.ParentCourse.Subjects {
 			for _, system := range subject.Systems {
 				totalQuestionsCount += len(system.Questions)
 			}
@@ -306,13 +328,8 @@ func OverallReport(c *fiber.Ctx) error {
 	// we need to get all unique questions
 	for _, quiz := range user.Quizzes {
 		for _, answer := range quiz.UserAnswers {
-			if answer.Question != nil {
-				// answer.Question.System != nil &&
-				// answer.Question.System.Subject != nil &&
-				// answer.Question.System.Subject.Course != nil {
-				if !U.ExistsInArray[uint](usedQuestions, answer.Question.ID) {
-					usedQuestions = append(usedQuestions, answer.Question.ID)
-				}
+			if !U.ExistsInArray[uint](usedQuestions, answer.QuestionID) {
+				usedQuestions = append(usedQuestions, answer.QuestionID)
 			}
 		}
 	}
@@ -327,7 +344,7 @@ func OverallReport(c *fiber.Ctx) error {
 			// todo: in structure ro khosham nemiad
 			// todo suspend vaghtiye ke taze sakhte shode
 			// todo pending vaghtiye ke khode user suspend karde
-		} else if quiz.Status == "suspend" || quiz.Status == "pending" {
+		} else if quiz.Status == "suspend" || quiz.Status == "pending" || quiz.Status == "started" {
 			suspendedTests++
 		}
 		for _, answer := range quiz.UserAnswers {
@@ -335,7 +352,7 @@ func OverallReport(c *fiber.Ctx) error {
 		}
 	}
 	correctAnswerCount, incorrectAnswerCount, omittedAnswerCount := M.CalculateAnswersStats(userAnswers)
-	unusedQuestions := totalQuestionsCount - usedQuestionsCount
+	unusedQuestions := uint(totalQuestionsCount - usedQuestionsCount)
 	// in some cases (no course but user has quizzes), the unused questions may be negative
 	if unusedQuestions < 0 {
 		unusedQuestions = 0
@@ -357,13 +374,13 @@ func OverallReport(c *fiber.Ctx) error {
 
 // report correct, incorrect and omitted answers count of every subject and system
 // TODO optimize this code
-func ReportQuiz(c *fiber.Ctx) error {
+func AllQuizzesReport(c *fiber.Ctx) error {
 	// 1. get all user's quizzes
-	user := c.Locals("user").(M.User)
+	user := M.AuthedUser(c)
 	// options is needed in user preload in correct and incorrect answer coount
 	if err := D.DB().Preload("Quizzes.UserAnswers.Question.Options").
 		Preload("Quizzes.UserAnswers.Question.System.Subject").
-		Find(&user).Error; err != nil {
+		First(&user).Error; err != nil {
 		return U.DBError(c, err)
 	}
 	// 2. group answers by subject and system and calculate every answer stat
@@ -415,4 +432,25 @@ func Tabs(c *fiber.Ctx) error {
 		return U.DBError(c, err)
 	}
 	return c.JSON(fiber.Map{"data": tabs})
+}
+
+// with parameter of "id"
+func QuizReport(c *fiber.Ctx) error {
+	var quiz M.Quiz
+	user := M.AuthedUser(c)
+	if err := D.DB().
+		Preload("UserAnswers.Question.System.Subject").
+		Preload("UserAnswers.Question.Course").
+		Preload("UserAnswers.Question.UserAnswers", func(db *gorm.DB) *gorm.DB { // this has been preloaded to calculate the accuracy of answers to specific question
+			// only select required fields
+			db = db.Select("is_correct", "id", "question_id")
+			return db
+		}).
+		First(&quiz, "id = ? AND user_id  = ?", c.Params("id"), user.ID).Error; err != nil {
+		return U.DBError(c, err)
+	}
+	// quiz result and analysis
+	quizAnalysis := quiz.CalculateQuizAnalysis()
+	quizResult := quiz.CalculateQuizResult()
+	return c.JSON(fiber.Map{"data": fiber.Map{"analysis": quizResult, "result": quizAnalysis}})
 }

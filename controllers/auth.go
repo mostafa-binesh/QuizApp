@@ -29,61 +29,21 @@ func SignUpUser(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"errors": errs})
 	}
 	// check email uniqueness
-	if emailUniqueness := D.DB().Find(&M.User{}, "email = ?", payload.Email); emailUniqueness.RowsAffected != 0 {
+	if emailUniqueness := D.DB().
+		Find(&M.User{}, "email = ?", payload.Email); emailUniqueness.RowsAffected != 0 || emailUniqueness.Error != nil {
 		return U.ResErr(c, "Email already exists")
-	}
-	// ! here we need to check that if the order exists and then if exists
-	// ! > add the courses for the user
-	// get user orders
-	order, err := U.WCClient().Order.Get(int64(payload.OrderID), nil)
-	if err != nil {
-		return U.ResErr(c, fmt.Sprint("Woocommerce Error: , ", err.Error()))
-	}
-	// add bought courses to user's courses
-	var purchasedCoursesIDs []int64
-	purchasedCourseIDPayDateMap := make(map[int64]time.Time)
-	for _, item := range order.LineItems {
-		// todo: uncomment order.Status line in production
-		// if order.Status != "completed" {
-		// 	continue
-		// }
-		purchasedCoursesIDs = append(purchasedCoursesIDs, item.ProductID)
-		var payTime time.Time
-		// todo: dev only, delete this part on production
-		if order.DatePaidGmt == "" {
-			payTime = time.Now()
-		} else {
-			payTime = S.ConvertWCTimeToStandard(order.DatePaidGmt)
-		}
-		purchasedCourseIDPayDateMap[item.ProductID] = payTime
 	}
 	// hash the password
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(payload.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
-	// get the courses
-	var childrenCourses []M.Course
-	if result := D.DB().Find(&childrenCourses, "woocommerce_id IN ?", purchasedCoursesIDs); result.Error != nil {
-		return U.DBError(c, result.Error)
+	// get all courses that user have bought using orderID
+	childCourses, purchasedCourseIDPayDateMap, err := S.ImportUserCoursesUsingOrderID(payload.OrderID)
+	if err != nil {
+		return U.ResDebug(c, err, "Failed to retreieve bought courses from woocommerce")
 	}
-	// get the child courses
-	var parentCourseIDs []uint
-	// if result := D.DB().Where("woocommerce_id IN ?", purchasedOrderIDs).Pluck("parent_id", &parentCourseIDs); result.Error != nil {
-	// 	return U.DBError(c, result.Error)
-	// }
-	for _, childrenCourse := range childrenCourses {
-		if childrenCourse.ParentID != nil {
-			parentCourseIDs = append(parentCourseIDs, *childrenCourse.ParentID)
-		}
-	}
-	// we need to set the mother courses into the course_user table
-	// var parentCourses []*M.Course
-	// if result := D.DB().Find(&parentCourses, "id in ?", parentCourseIDs); result.Error != nil {
-	// 	return U.DBError(c, result.Error)
-	// }
-	// todo add expiration date to the courses and then add it to the course_user table
-	// fmt.Printf("found courses: %v\n", parentCourses)
+	// create new user
 	newUser := M.User{
 		Email:    payload.Email,
 		Password: string(hashedPassword),
@@ -94,24 +54,17 @@ func SignUpUser(c *fiber.Ctx) error {
 	if result.Error != nil {
 		return U.ResErr(c, "couldn't create the user")
 	}
-	// create course_user records
-	var userNewBoughtCourses []M.CourseUser
-	// for _, parentCourseID := range parentCourseIDs {
-	for _, childCourse := range childrenCourses {
-		if childCourse.ParentID == nil {
-			continue
-		}
-		userNewBoughtCourses = append(userNewBoughtCourses, M.CourseUser{
-			UserID:         int(newUser.ID),
-			CourseID:       int(*childCourse.ParentID),
-			ExpirationDate: purchasedCourseIDPayDateMap[int64(childCourse.WoocommerceID)].Add(time.Duration(childCourse.ValidityDaysPeriod) * time.Hour * 24),
-		})
-	}
-	if err := D.DB().Save(&userNewBoughtCourses).Error; err != nil {
+	// ! here we need to check that if the order exists and then if exists
+	// ! > add the courses for the user
+	// get the bought courses in course_user format
+	CourseUser := S.AddCourseUserUsingCourses(childCourses, purchasedCourseIDPayDateMap, newUser.ID)
+	// we SAVE records to the database because some user may bought other courses already
+	if err := D.DB().Save(&CourseUser).Error; err != nil {
+		// delete created user
+		D.DB().Delete(&newUser)
 		return U.DBError(c, err)
 	}
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{"msg": "User has been created successfully"})
-
 }
 func DevsSignUpUser(c *fiber.Ctx) error {
 	payload := new(M.SignUpInput)
@@ -119,7 +72,6 @@ func DevsSignUpUser(c *fiber.Ctx) error {
 	if err := c.BodyParser(payload); err != nil {
 		U.ResErr(c, err.Error())
 	}
-	fmt.Printf("payload: %v\n", payload)
 	// validate the payload
 	// ! here we need to check that if the order exists and then if exists
 	// ! > add the courses for the user
@@ -146,7 +98,6 @@ func DevsSignUpUser(c *fiber.Ctx) error {
 	if result := D.DB().Find(&courses, "woocommerce_id IN ?", purchasedOrderIDs); result.Error != nil {
 		return U.DBError(c, result.Error)
 	}
-	fmt.Printf("found courses: %v\n", courses)
 	newUser := M.User{
 		Email:    payload.Email,
 		Password: string(hashedPassword),
@@ -167,7 +118,6 @@ func Devs2SignUpUser(c *fiber.Ctx) error {
 	if err := c.BodyParser(payload); err != nil {
 		U.ResErr(c, err.Error())
 	}
-	fmt.Printf("payload: %v\n", payload)
 	// validate the payload
 	// hash the password
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(payload.Password), bcrypt.DefaultCost)
@@ -239,27 +189,51 @@ func Logout(c *fiber.Ctx) error {
 func Dashboard(c *fiber.Ctx) error {
 	// ! has a AuthMiddleware before here
 	// ! if session and user exists, client can access here
-	user := c.Locals("user").(M.User)
+	user := M.AuthedUser(c)
 	return c.JSON(fiber.Map{"dashboard": "heres the dashboard", "user": user})
 }
 func AuthMiddleware(c *fiber.Ctx) error {
+	// get the session using session utility
 	sess := U.Session(c)
+	// retreive userID from session
 	userID := sess.Get(U.USER_ID)
+	// if userID doesn't exist, show err
 	if userID == nil {
 		return ReturnError(c, "not authenticated", fiber.StatusUnauthorized) // ! notAuthorized is notAuthenticated
-	} else {
-		c.SendString(fmt.Sprintf("user id is: %s", sess.Get(U.USER_ID)))
 	}
+	// get user with userID from database
 	var user M.User
-	result := D.DB().Find(&user, userID)
-	if result.Error != nil {
-		err := sess.Destroy()
-		if err != nil {
-			panic(err)
-		}
-		return ReturnError(c, "cannot authenticate. session removed", 500)
+	result := D.DB().First(&user, userID)
+	if result.Error != nil || result.RowsAffected == 0 {
+		// if user doesn't exist or any error happend, remove the session and show error
+		// sess.Destroy() returns an error, but we don't need it here i guess
+		sess.Destroy()
+		return U.ResErr(c, "cannot authenticate. Please login again", fiber.StatusInternalServerError)
 	}
+	// if everything was ok, save the db user to locals variable "user"
 	c.Locals("user", user)
 	return c.Next()
 
+}
+
+// authentication must be done already
+func RoleCheck(roles []string) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		user, ok := c.Locals("user").(M.User)
+		// check if authentication is done already, just in case
+		if !ok {
+			return U.ResErr(c, "Please login first", fiber.StatusUnauthorized)
+		}
+		// get string of user's role
+		userRoleString := user.RoleString()
+		// check roles
+		for _, role := range roles {
+			if role == userRoleString {
+				// proceed to next handler
+				return c.Next()
+			}
+		}
+		// if roles don't match, show err
+		return U.ResErr(c, "Access Forbidden", fiber.StatusForbidden)
+	}
 }

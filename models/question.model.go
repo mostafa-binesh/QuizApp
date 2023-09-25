@@ -25,17 +25,18 @@ type Question struct {
 	Description string  `json:"description"`
 	Images      []Image `gorm:"polymorphic:Owner;"`
 	// relationships
-	Options  []Option `json:"options,omitempty"`
+	Options  []Option `json:"options,omitempty" gorm:"foreignKey:QuestionID;constraint:OnDelete:CASCADE,OnUpdate:CASCADE;"` // this cascade means if this question is deleted, all options will be deleted too and you won't encounter dependency error
 	SystemID uint     `json:"-"`
-	System   *System  `json:"system,omitempty" gorm:"foreignKey:SystemID;constraint:OnUpdate:CASCADE;OnDelete:CASCADE"`
+	System   *System  `json:"system,omitempty" gorm:"foreignKey:SystemID;constraint:OnDelete:CASCADE,OnUpdate:CASCADE;"`
 	// although we could get the course id from question >subject > system, but that would
 	//  cost resource, i rather add a courseID to the Question table and get it directly
 	CourseID *uint        `json:"-"`
-	Course   *Course      `json:"course,omitempty" gorm:"foreignKey:CourseID;constraint:OnUpdate:CASCADE;OnDelete:CASCADE"`
+	Course   *Course      `json:"course,omitempty" gorm:"foreignKey:CourseID;constraint:OnDelete:CASCADE,OnUpdate:CASCADE;"`
 	Type     QuestionType `json:"type"`
 	// NextGenerationType NextGenerationType `json:"-"`
-	Tabs      []Tab      `json:"tabs"`
-	Dropdowns []Dropdown `json:"dropdowns,omitempty"`
+	Tabs        []Tab        `json:"tabs"`
+	Dropdowns   []Dropdown   `json:"dropdowns,omitempty"`
+	UserAnswers []UserAnswer `json:"-"`
 }
 type FrontQuestion struct {
 	ID          uint    `json:"no" gorm:"primary_key"`
@@ -45,28 +46,30 @@ type FrontQuestion struct {
 	// relationships
 	Options  []FrontOption `json:"options,omitempty"`
 	SystemID uint          `json:"-"`
-	System   *System       `json:"system,omitempty" gorm:"foreignKey:SystemID;constraint:OnUpdate:CASCADE;OnDelete:CASCADE"`
+	System   *System       `json:"system,omitempty" gorm:"foreignKey:SystemID;constraint:OnDelete:CASCADE,OnUpdate:CASCADE;"`
 	// although we could get the course id from question >subject > system, but that would
 	//  cost resource, i rather add a courseID to the Question table and get it directly
-	Course    *Course      `json:"course,omitempty" gorm:"foreignKey:CourseID;constraint:OnUpdate:CASCADE;OnDelete:CASCADE"`
-	Type      QuestionType `json:"type"`
-	Tabs      []Tab        `json:"tabs"`
-	Dropdowns []Dropdown   `json:"dropdowns,omitempty"`
+	Course                   *Course      `json:"course,omitempty" gorm:"foreignKey:CourseID;constraint:OnDelete:CASCADE,OnUpdate:CASCADE;"`
+	Type                     QuestionType `json:"type"`
+	Tabs                     []Tab        `json:"tabs"`
+	Dropdowns                []Dropdown   `json:"dropdowns,omitempty"`
+	AnswerAccuracyPercentage uint         `json:"answerAccuracyPercentage"`
 }
 
 func (question Question) ConvertQuestionToFrontQuestion() FrontQuestion {
 	frontQuestion := FrontQuestion{
-		ID:          question.ID,
-		Title:       question.Title,
-		Description: question.Description,
-		Images:      question.Images,
-		Options:     *ConvertOptionToFrontOption(&question.Options, question.Type),
-		SystemID:    question.SystemID,
-		System:      question.System,
-		Course:      question.Course,
-		Type:        question.Type,
-		Tabs:        question.Tabs,
-		Dropdowns:   question.Dropdowns,
+		ID:                       question.ID,
+		Title:                    question.Title,
+		Description:              question.Description,
+		Images:                   question.Images,
+		Options:                  *ConvertOptionToFrontOption(&question.Options, question.Type),
+		SystemID:                 question.SystemID,
+		System:                   question.System,
+		Course:                   question.Course,
+		Type:                     question.Type,
+		Tabs:                     question.Tabs,
+		Dropdowns:                question.Dropdowns,
+		AnswerAccuracyPercentage: uint(question.AnswerAccuracyPercentage()),
 	}
 	return frontQuestion
 }
@@ -76,6 +79,25 @@ func ConvertQuestionsToFrontQuestions(questions *[]Question) *[]FrontQuestion {
 		frontQuestions[i] = question.ConvertQuestionToFrontQuestion()
 	}
 	return &frontQuestions
+}
+
+// question.UserAnswers must be preloaded
+func (question Question) AnswerAccuracyPercentage() int {
+	var correctAnswersCount int
+	totalAnswersCount := len(question.UserAnswers)
+	// Count the number of correct answers directly in the database query
+	for _, answer := range question.UserAnswers {
+		if answer.IsCorrect != nil && *answer.IsCorrect {
+			correctAnswersCount++
+		}
+	}
+	if totalAnswersCount == 0 {
+		// Handle the case where there are no user answers to avoid division by zero
+		return 0
+	}
+	// Calculate the accuracy percentage
+	accuracyPercentage := (correctAnswersCount * 100) / totalAnswersCount
+	return accuracyPercentage
 }
 
 type QuestionList struct {
@@ -162,4 +184,14 @@ func (question *Question) ConvertNextGenerationTypeToTypeInt(value string) error
 // replace previous webiste url with new website in description field
 func (question *Question) ReplacePreWebsiteWithNewWebsiteImageURLDescription(previousSite string, newSite string) {
 	question.Description = strings.Replace(question.Description, previousSite, newSite, -1)
+}
+
+// question.options must be preloaded
+func (question Question) CorrectOptionsCount() (howManyCorrectAnswers uint) {
+	for _, option := range question.Options {
+		if option.IsCorrect == 1 {
+			howManyCorrectAnswers++
+		}
+	}
+	return
 }

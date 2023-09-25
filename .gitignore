@@ -7,3 +7,4 @@ tmp/main.exe
 
 docker.exe
 tmp/*
+/DBBackups

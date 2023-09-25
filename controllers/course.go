@@ -2,23 +2,24 @@ package controllers
 
 import (
 	D "docker/database"
+	S "docker/services"
+
 	// "math/rand"
 	// "time"
 
 	// F "docker/database/filters"
 	M "docker/models"
 	U "docker/utils"
-	"fmt"
 
-	WC "github.com/chenyangguang/woocommerce"
 	"github.com/gofiber/fiber/v2"
 )
 
+// todo: now, all questions' courseID is empty, fill it and get all courseIDs from it
 // todo: with counts ro az comment dar biar
 func AllCourses(c *fiber.Ctx) error {
-	user := c.Locals("user").(M.User)
+	user := M.AuthedUser(c)
 	// find all bought courses ids
-	userBoughtCourses, err := M.RetrieveUserBoughtCourses(user.ID)
+	userBoughtCourses, err := M.UserBoughtCoursesWithExpirationDateAndQuestionsCount(user.ID)
 	if err != nil {
 		return U.DBError(c, err)
 	}
@@ -28,11 +29,14 @@ func AllCourses(c *fiber.Ctx) error {
 // all subject of course with id of courseID
 func CourseSubjects(c *fiber.Ctx) error {
 	// get authenticated user
-	user := c.Locals("user").(M.User)
+	user := M.AuthedUser(c)
 	// get user's course with id of param with subject with system of the user
-	result := D.DB().Preload("Courses", "id = ?", c.Params("courseID")).Preload("Courses.Subjects.Systems").Find(&user)
-	if result.Error != nil {
-		return U.DBError(c, result.Error)
+	if err := D.DB().
+		// todo: add limit to courses preload
+		Preload("Courses", "id = ?", c.Params("courseID")).
+		Preload("Courses.Subjects.Systems").
+		First(&user).Error; err != nil {
+		return U.DBError(c, err)
 	}
 	if len(user.Courses) != 1 {
 		return U.ResErr(c, "Course not found")
@@ -53,26 +57,38 @@ func CourseSubjects(c *fiber.Ctx) error {
 }
 
 func UpdateUserCourses(c *fiber.Ctx) error {
-	app := WC.App{
-		CustomerKey:    U.Env("WC_CONSUMER_KEY"),
-		CustomerSecret: U.Env("WC_CONSUMER_SECRET"),
+	payload := new(M.AddCourseUsingOrderID)
+	// parsing the payload
+	if err := c.BodyParser(payload); err != nil {
+		U.ResErr(c, err.Error())
 	}
-
-	wc := WC.NewClient(app, U.Env("WC_SHOP_NAME"))
-
-	// Retrieve the order details
-	order, err := wc.Order.Get(int64(c.QueryInt("id")), nil)
+	// validation the payload
+	if errs := U.Validate(payload); errs != nil {
+		return c.Status(400).JSON(fiber.Map{"errors": errs})
+	}
+	// get authenticated user
+	user := M.AuthedUser(c)
+	// get wc courses using payload.OrderID
+	childCourses, purchasedCourseIDPayDateMap, err := S.ImportUserCoursesUsingOrderID(payload.OrderID)
 	if err != nil {
-		// log.Fatal(err)
-		fmt.Printf("error: %v", err)
+		return U.DBError(c, err)
 	}
-
-	// Print the names of the products
-	fmt.Println("Products purchased:")
-	var productNames []string
-	for _, item := range order.LineItems {
-		fmt.Println(item.Name)
-		productNames = append(productNames, item.Name)
+	// get user's bought courses with orderID and seperate them to already-inserted and newly courses
+	courseUsersToUpdate, newCourseUsers, err := S.ExtractCourseToInsertAndToUpdate(childCourses, purchasedCourseIDPayDateMap, user.ID)
+	if err != nil {
+		return U.DBError(c, err)
 	}
-	return c.JSON(fiber.Map{"productNames": productNames})
+	// Batch update existing courseUser records
+	if len(courseUsersToUpdate) > 0 {
+		if err := D.DB().Save(courseUsersToUpdate).Error; err != nil {
+			return U.DBError(c, err)
+		}
+	}
+	// Batch insert new courseUser records
+	if len(newCourseUsers) > 0 {
+		if err := D.DB().Create(&newCourseUsers).Error; err != nil {
+			return U.DBError(c, err)
+		}
+	}
+	return U.ResMsg(c, "Courses have been added", fiber.StatusCreated)
 }

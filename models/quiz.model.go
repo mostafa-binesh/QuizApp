@@ -3,6 +3,7 @@ package models
 import (
 	U "docker/utils"
 	"strings"
+
 	// "fmt"
 	"time"
 )
@@ -17,17 +18,16 @@ const (
 )
 
 type Quiz struct {
-	ID     uint  `json:"id,omitempty" gorm:"primary_key"`
-	UserID uint  `json:"-"`
-	User   *User `json:"user,omitempty" gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE;OnDelete:CASCADE"`
-	// TODO add lesson : lesson >> ? lesson == course ?
+	ID          uint         `json:"id,omitempty" gorm:"primary_key"`
+	UserID      uint         `json:"-"`
+	User        *User        `json:"user,omitempty" gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE,OnUpdate:CASCADE;"`
 	Status      string       `json:"status,omitempty"`
 	UserAnswers []UserAnswer `json:"userAnswers,omitempty"`
 	CreatedAt   time.Time    `json:"date" gorm:"not null;default:now()"`
 	EndTime     *time.Time   `json:"-" gorm:"not null;default:now()"`
 	Duration    uint         `json:"duration" gorm:"not null"`
 	CourseID    uint         `json:"-"`
-	Course      *Course      `json:"course,omitempty" gorm:"foreignKey:CourseID;constraint:OnUpdate:CASCADE;OnDelete:CASCADE"`
+	Course      *Course      `json:"course,omitempty" gorm:"foreignKey:CourseID;constraint:OnDelete:CASCADE,OnUpdate:CASCADE;"`
 	// mode = tutor, timed
 	Mode string `json:"mode" gorm:"type:varchar(255)"`
 	// type like nextGeneration
@@ -50,6 +50,20 @@ type QuizList struct {
 	ID     uint   `json:"id"`
 	Title  string `json:"title"`
 	Status string `json:"status"`
+}
+type QuizAnalysis struct {
+	ID                   uint           `json:"id"`
+	CorrectAnswerCount   uint           `json:"correctCount"`
+	IncorrectAnswerCount uint           `json:"incorrectCount"`
+	OmittedAnswerCount   uint           `json:"omittedCount"`
+	Subject              []QuizAnalysis `json:"subjects,omitempty"`
+}
+type QuizResult struct {
+	ID            uint           `json:"id"`
+	Mode          string         `json:"correctCount"`
+	Type          string         `json:"incorrectCount"`
+	Score         uint           `json:"omittedCount"`
+	ReportAnswers []ReportAnswer `json:"subjects"`
 }
 
 // used to convert backend quiz model to front mocked model
@@ -151,6 +165,11 @@ func (frontQuiz *QuizToFront) ConvertQuizFrontToQuiz(userAnswers []UserAnswer) [
 			userAnswers[i].SpentTime = *frontQuiz.SpentTimes[i]
 		}
 		userAnswers[i].Submitted = frontQuiz.SubmitedQuestions[i]
+		// calculate the "IsCorrect" field and save them again
+		userAnswers[i].IsCorrect = userAnswers[i].IsChosenOptionsCorrect()
+		// set the question to null because we're saving the options later in the handler
+		// and don't want to save the questions and options again
+		userAnswers[i].Question = nil
 	}
 	return userAnswers
 }
@@ -170,4 +189,100 @@ func ConvertQuizToQuizList(quizzes []*Quiz) []QuizList {
 		quizList = append(quizList, quizWithList)
 	}
 	return quizList
+}
+
+// returns how many correct, incorrect or omitted answers a quiz has,
+// quiz.UserAnswers must be preloaded
+func (quiz Quiz) QuizAnswersStats() (correct, incorrect, omitted uint) {
+	for _, answer := range quiz.UserAnswers {
+		if answer.IsCorrect == nil {
+			omitted++
+		} else if *answer.IsCorrect {
+			correct++
+		} else {
+			incorrect++
+		}
+	}
+	return
+}
+
+// correct / (incorrect + omitted + correct),
+// quiz.UserAnswers must be preloaded
+func (quiz Quiz) Score() (score uint) {
+	correct, incorrect, omitted := quiz.QuizAnswersStats()
+	score = correct / (incorrect + omitted + correct)
+	return
+}
+
+// quiz.UserAnswers.Question.Subject.System must be preloaded
+func (quiz Quiz) CalculateQuizAnalysis() (quizAnalysis QuizAnalysis) {
+	quizAnalysis.ID = quiz.ID
+	// Count correct, incorrect, and omitted answers count
+	correct, incorrect, omitted := quiz.QuizAnswersStats()
+	quizAnalysis.CorrectAnswerCount = correct
+	quizAnalysis.IncorrectAnswerCount = incorrect
+	quizAnalysis.OmittedAnswerCount = omitted
+
+	// Count correct, incorrect, and omitted answers count for every subject
+	subjectResultMap := make(map[uint]QuizAnalysis)
+	for _, answer := range quiz.UserAnswers {
+		// Ensure that Subject and System are preloaded in UserAnswers
+		// Assuming that Subject and System are relationships in your UserAnswer model
+
+		subjectID := answer.Question.System.SubjectID
+
+		// Initialize subjectResult if it doesn't exist in the map
+		if _, ok := subjectResultMap[subjectID]; !ok {
+			subjectResult := QuizAnalysis{
+				ID:                   subjectID,
+				CorrectAnswerCount:   0,
+				IncorrectAnswerCount: 0,
+				OmittedAnswerCount:   0,
+			}
+			subjectResultMap[subjectID] = subjectResult
+		}
+
+		// Calculate answer stats for the current answer
+		correct, incorrect, omitted := CalculateAnswerStats(answer)
+
+		// Update subjectResult with answer stats
+		subjectResult := subjectResultMap[subjectID]
+		subjectResult.CorrectAnswerCount += correct
+		subjectResult.IncorrectAnswerCount += incorrect
+		subjectResult.OmittedAnswerCount += omitted
+
+		// Update the subjectResult back into the map
+		subjectResultMap[subjectID] = subjectResult
+	}
+
+	// Convert the subjectResultMap into a slice of QuizResult and insert it into quizResult
+	quizAnalysis.Subject = make([]QuizAnalysis, 0, len(subjectResultMap))
+	for _, result := range subjectResultMap {
+		quizAnalysis.Subject = append(quizAnalysis.Subject, result)
+	}
+
+	return
+}
+
+// quiz.UserAnswers.Question.System.Subject,
+// quiz.UserAnswers.Question.Course,
+// quiz.UserAnswers.Question.UserAnswers must be preloaded
+func (quiz Quiz) CalculateQuizResult() (quizResult QuizResult) {
+	quizResult.ID = quiz.ID
+	quizResult.Mode = quiz.Mode
+	quizResult.Score = quiz.Score()
+	var reportAnswers []ReportAnswer
+	for _, answer := range quiz.UserAnswers {
+		reportAnswers = append(reportAnswers, ReportAnswer{
+			ID:        answer.ID,
+			Status:    answer.Status,
+			Subject:   answer.Question.System.Subject.Title,
+			System:    answer.Question.System.Title,
+			Course:    answer.Question.Course.Title,
+			Accuracy:  answer.Question.ConvertQuestionToFrontQuestion().AnswerAccuracyPercentage,
+			SpentTime: answer.SpentTime,
+		})
+	}
+	quizResult.ReportAnswers = reportAnswers
+	return
 }

@@ -1,22 +1,25 @@
 package models
 
+import "strings"
+
 type UserAnswer struct {
 	ID         uint      `json:"id,omitempty" gorm:"primary_key"`
 	QuestionID uint      `json:"-"`
-	Question   *Question `json:"question,omitempty" gorm:"foreignKey:QuestionID;constraint:OnUpdate:CASCADE;OnDelete:CASCADE"`
+	Question   *Question `json:"question,omitempty" gorm:"foreignKey:QuestionID;constraint:OnDelete:CASCADE,OnUpdate:CASCADE;"`
 	Note       *string   `json:"note,omitempty"`
 	IsMarked   bool      `json:"isMarked,omitempty" gorm:"default:false;"`
 	Submitted  bool      `json:"submitted,omitempty" gorm:"default:false;"`
 	Status     string    `json:"status,omitempty"`
 	SpentTime  uint      `json:"spentTime,omitempty"`
 	UserID     uint      `json:"-"`
-	User       *User     `json:"user,omitempty" gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE;OnDelete:CASCADE"`
+	User       *User     `json:"user,omitempty" gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE,OnUpdate:CASCADE;"`
 	QuizID     uint      `json:"-"`
-	Quiz       *Quiz     `json:"quiz,omitempty" gorm:"foreignKey:QuizID;constraint:OnUpdate:CASCADE;OnDelete:CASCADE"`
+	Quiz       *Quiz     `json:"quiz,omitempty" gorm:"foreignKey:QuizID;constraint:OnDelete:CASCADE,OnUpdate:CASCADE;"`
 	// ! multiple-choice option
 	// Answers    []*Answer `json:"answers,omitempty"`
 	// ! single-choice option
-	Answer *string `json:"answer,omitempty"`
+	Answer    *string `json:"answer,omitempty"`
+	IsCorrect *bool   `json:"isCorrect"`
 }
 type AnswerNote struct {
 	ID       uint      `json:"id"` // is parent UserAnswer's ID
@@ -27,53 +30,78 @@ type AnswerNote struct {
 type EditNoteInput struct {
 	Note *string `json:"note" validator:"required"`
 }
+type ReportAnswer struct {
+	ID        uint   `json:"id"`
+	Status    string `json:"status"`
+	Subject   string `json:"subject"`
+	System    string `json:"system"`
+	Course    string `json:"course"`
+	Accuracy  uint   `json:"accuracy"`
+	SpentTime uint   `json:"spentTime"`
+}
 
 // checks answer is true, false or empty
-func CalculateAnswerStats(answer UserAnswer) (correctAnswerCount, incorrectAnswerCount, omittedAnswerCount uint) {
-	// if answer is empty, increase omittedAnswerCount by one and return stats
-	if answer.Answer == nil {
-		omittedAnswerCount++
-		return
+// CalculateAnswerStats calculates answer statistics for a given answer
+func CalculateAnswerStats(answer UserAnswer) (correct, incorrect, omitted uint) {
+	if answer.IsCorrect == nil {
+		omitted = 1
+	} else if *answer.IsCorrect {
+		correct = 1
+	} else {
+		incorrect = 1
 	}
-	// if answer is not empty, find out that answer is correct or not
-	for _, option := range answer.Question.Options {
-		optionIndex := option.Index
-		userAnswerIndex := answer.Answer
-		if *userAnswerIndex == optionIndex {
-			correctAnswerCount++
-			return
-		}
-	}
-	// if answer was not correct, increase the incorrectAnswersCount be one and return
-	incorrectAnswerCount++
-	return
+	return correct, incorrect, omitted
 }
 
 // array version of CalculateAnswerStats
 // calculate correct, incorrect and omitted answers count of userAnswers
 func CalculateAnswersStats(answers []UserAnswer) (correctAnswerCount, incorrectAnswerCount, omittedAnswerCount uint) {
-	var found bool
 	for _, answer := range answers {
-		found = false
-		if answer.Answer == nil {
-			omittedAnswerCount++
-			continue
-		}
-		for _, option := range answer.Question.Options {
-			// had to make option a separated value to be able to compare with answer.answer
+		correct, incorrect, omitted := CalculateAnswerStats(answer)
+		correctAnswerCount += correct
+		incorrectAnswerCount += incorrect
+		omittedAnswerCount += omitted
+	}
+	return
+}
+
+// checks if answer is correct, incorrect or null
+// ! not checking the "IsCorrect" field
+// ! answer.Question.Options must be preloaded
+func (answer UserAnswer) IsChosenOptionsCorrect() *bool {
+	// func IsAnswerCorrect(answer UserAnswer) *bool {
+	// if answer is empty, return nil
+	var isCorrect bool
+	if answer.Answer == nil {
+		return nil
+	}
+	// # main logic
+	// if answer is not empty, find out that answer is correct or not
+
+	var CorrectAnswersCheckedCount uint
+	CorrectAnswersRequiredCount := answer.Question.CorrectOptionsCount()
+	splittedAnswers := answer.SplittedAnswers()
+	// why priorize option to answer : what if user's answers are "E,E,E" for any reason?, algorithm is vunleable against it
+	for _, option := range answer.Question.Options {
+		for _, chosenAnswerIndex := range splittedAnswers {
 			optionIndex := option.Index
-			userAnswerIndex := answer.Answer
-			if *userAnswerIndex == optionIndex {
-				correctAnswerCount++
-				found = true
+			if chosenAnswerIndex == optionIndex {
+				CorrectAnswersCheckedCount++
 				break
 			}
 		}
-		if !found {
-			incorrectAnswerCount++
-		}
 	}
-	return
+	// return the final result
+	isCorrect = CorrectAnswersRequiredCount == CorrectAnswersCheckedCount
+	return &isCorrect
+}
+func (answer UserAnswer) SplittedAnswers() []string {
+	if answer.Answer != nil {
+		unSplittedAnswer := *answer.Answer
+		splittedAnswers := strings.Split(unSplittedAnswer, ",")
+		return splittedAnswers
+	}
+	return []string{}
 }
 
 // this model has been used in overall report handler

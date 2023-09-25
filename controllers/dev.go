@@ -129,7 +129,7 @@ func MessageRegister(c *fiber.Ctx) error {
 	if err := sess.Save(); err != nil {
 		return U.ResErr(c, err.Error())
 	}
-	return U.ResMessage(c, "ورود انجام شد")
+	return U.ResMsg(c, "ورود انجام شد")
 }
 func SeeMessages(c *fiber.Ctx) error {
 	sess := U.Session(c)
@@ -147,11 +147,9 @@ func SeeMessages(c *fiber.Ctx) error {
 	// }
 	// session := U.Session(c)
 	if sess != nil {
-		fmt.Printf("session type: %v\n", sess.Get("guest"))
-		fmt.Printf("session: %v\n", sess)
-		return U.ResMessage(c, fmt.Sprintf("type: %v, guest: %v", sess.Get("type"), sess.Get("guest")))
+		return U.ResMsg(c, fmt.Sprintf("type: %v, guest: %v", sess.Get("type"), sess.Get("guest")))
 	}
-	// return U.ResMessage(c, "session KHALIE")
+	// return U.ResMsg(c, "session KHALIE")
 	// if sess.Get("type") == "guest" {
 	// 	guest := sess.Get("guest").(Guest)
 	// 	return c.JSON(fiber.Map{
@@ -162,10 +160,10 @@ func SeeMessages(c *fiber.Ctx) error {
 	return U.ResErr(c, "شما باید وارد شوید")
 }
 
-// func FiberContextMemoryAddress(c *fiber.Ctx) error {
-// 	fmt.Printf("utility memory: %p\n, function context memory ad.: %p\n", U.FiberCtx(), c)
-// 	return c.SendString("ss")
-// }
+//	func FiberContextMemoryAddress(c *fiber.Ctx) error {
+//		fmt.Printf("utility memory: %p\n, function context memory ad.: %p\n", U.FiberCtx(), c)
+//		return c.SendString("ss")
+//	}
 func StructInfo(c *fiber.Ctx) error {
 	type Post struct {
 		PostName string
@@ -196,6 +194,52 @@ func WCProducts(c *fiber.Ctx) error {
 		return U.ResErr(c, err.Error())
 	}
 	return c.JSON(fiber.Map{"data": wcProducts})
+}
+func AllQuestions(c *fiber.Ctx) error {
+	var questions []M.Question
+	if err := D.DB().Find(&questions).Error; err != nil {
+		return err
+	}
+	return c.JSON(fiber.Map{"data": questions})
+}
+
+// get all answers, checks if the answer is correct or not
+func AnswerCorrection(c *fiber.Ctx) error {
+	var answers []M.UserAnswer
+	if err := D.DB().
+		Preload("Question.Options").
+		Find(&answers).Error; err != nil {
+		return err
+	}
+	for i := range answers {
+		answers[i].IsCorrect = answers[i].IsChosenOptionsCorrect()
+		// set the question to null because we're saving the options later in the handler
+		// and don't want to save the questions and options again
+		answers[i].Question = nil
+	}
+
+	if err := D.DB().Save(&answers).Error; err != nil {
+		return err
+	}
+	return c.JSON(fiber.Map{"data": answers})
+}
+
+// fix all question course_id
+func QuestionCorrect(c *fiber.Ctx) error {
+	var questions []M.Question
+	if err := D.DB().
+		Preload("System.Subject").
+		Find(&questions).Error; err != nil {
+		return err
+	}
+	for i := range questions {
+		questions[i].CourseID = &questions[i].System.Subject.CourseID
+	}
+
+	if err := D.DB().Save(&questions).Error; err != nil {
+		return err
+	}
+	return c.JSON(fiber.Map{"data": questions})
 }
 func MigrateNewSubjects(c *fiber.Ctx) error {
 	realSubjects := []string{

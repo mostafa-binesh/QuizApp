@@ -2,6 +2,8 @@ package models
 
 import (
 	"time"
+
+	"github.com/gofiber/fiber/v2"
 )
 
 type Role uint
@@ -25,6 +27,8 @@ type User struct {
 	UserAnswers []*UserAnswer `json:"userAnswer" gorm:"foreignKey:UserID"`
 }
 
+// as the Role field is uint, we need to convert it to string sometimes
+// eg. 1 returns "user"
 func (c *User) RoleString() string {
 	switch c.Role {
 	case uint(AdminRole):
@@ -65,7 +69,7 @@ type AdminEditUserInput struct {
 // ! this model has been used in Edit user handler
 type EditInput struct {
 	Name         string `json:"name" validate:"required"`
-	PhoneNumber  string `json:"phoneNumber" validate:"required,regex=^09\d{9}$,dunique=users"`
+	PhoneNumber  string `json:"phoneNumber" validate:"required,dunique=users"`
 	PersonalCode string `json:"personalCode" validate:"required,max=10,numeric,dunique=users"`
 	NationalCode string `json:"nationalCode" validate:"required,len=10,numeric,dunique=users"`
 	Password     string `json:"password"`
@@ -88,4 +92,14 @@ type UserResponse struct {
 	Provider    string    `json:"provider"`
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
+}
+type AddCourseUsingOrderID struct {
+	OrderID uint `json:"orderID" validate:"required"`
+}
+
+// get the authenticated user interface from fiber context locals variabels and convert to user model
+// auth middleware should be done already
+// didn't add it in auth utility becase of cycle import error
+func AuthedUser(c *fiber.Ctx) User {
+	return c.Locals("user").(User)
 }
