@@ -137,6 +137,9 @@ func QuestionByID(c *fiber.Ctx) error {
 		Preload("Course").
 		Preload("Images").
 		Preload("System.Subject").
+		Preload("Options").
+		Preload("Tabs").
+		Preload("Dropdowns").
 		First(question, c.Params("id")).Error; err != nil {
 		return U.DBError(c, err)
 	}
