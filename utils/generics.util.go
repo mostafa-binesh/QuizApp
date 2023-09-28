@@ -39,7 +39,8 @@ func ExistsInArray[T comparable](elems []T, v T) bool {
 func ConvertSliceToPtrSlice[T any](s []T) []*T {
 	ptrSlice := make([]*T, len(s))
 	for i, str := range s {
-		ptrSlice[i] = &str
+		var t T = str // create a new variable to hold the copy of the string
+		ptrSlice[i] = &t
 	}
 	return ptrSlice
 }
