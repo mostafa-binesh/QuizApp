@@ -77,7 +77,7 @@ func CreateSingleSelectQuestion(c *fiber.Ctx) error {
 	// # create new question with given info
 	newQuestion, err := S.SingleSelect(*payload, c)
 	if err != nil {
-		return U.DBError(c, err)
+		return err
 	}
 	// # convert frontend's sent string question type to backend uint question type
 	// newQuestion.ConvertTypeStringToTypeInt(payload.QuestionType)
