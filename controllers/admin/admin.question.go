@@ -32,7 +32,7 @@ func CreateMultipleSelectQuestion(c *fiber.Ctx) error {
 		return err
 	}
 	// insert new question to the database
-	result := D.DB().Create(&newQuestion)
+	result := D.DB().Create(newQuestion)
 	if result.Error != nil {
 		return U.DBError(c, result.Error)
 	}
@@ -57,7 +57,7 @@ func EditMultipleSelectQuestion(c *fiber.Ctx) error {
 	questionID, _ := c.ParamsInt("questionID")
 	editedQuestion.ID = uint(questionID)
 	// insert new question to the database
-	result := D.DB().Save(&editedQuestion)
+	result := D.DB().Save(editedQuestion)
 	if result.Error != nil {
 		return U.DBError(c, result.Error)
 	}
@@ -82,7 +82,7 @@ func CreateSingleSelectQuestion(c *fiber.Ctx) error {
 	// # convert frontend's sent string question type to backend uint question type
 	// newQuestion.ConvertTypeStringToTypeInt(payload.QuestionType)
 	// insert new question to the database
-	result := D.DB().Create(&newQuestion)
+	result := D.DB().Create(newQuestion)
 	if result.Error != nil {
 		return U.DBError(c, result.Error)
 	}
@@ -111,7 +111,7 @@ func EditSingleSelectQuestion(c *fiber.Ctx) error {
 	// # convert frontend's sent string question type to backend uint question type
 	// newQuestion.ConvertTypeStringToTypeInt(payload.QuestionType)
 	// insert new question to the database
-	result := D.DB().Save(&editedQuestion)
+	result := D.DB().Save(editedQuestion)
 	if result.Error != nil {
 		return U.DBError(c, result.Error)
 	}
