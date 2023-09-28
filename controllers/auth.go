@@ -7,6 +7,7 @@ import (
 	U "docker/utils"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"golang.org/x/crypto/bcrypt"
@@ -46,6 +47,7 @@ func SignUpUser(c *fiber.Ctx) error {
 	newUser := M.User{
 		Email:    payload.Email,
 		Password: string(hashedPassword),
+		// Courses:  parentCourses,
 	}
 	//  add created user to the database
 	result := D.DB().Create(&newUser)
