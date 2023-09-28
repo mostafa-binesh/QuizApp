@@ -83,6 +83,10 @@ func (answer UserAnswer) IsChosenOptionsCorrect() *bool {
 	splittedAnswers := answer.SplittedAnswers()
 	// why priorize option to answer : what if user's answers are "E,E,E" for any reason?, algorithm is vunleable against it
 	for _, option := range answer.Question.Options {
+		// if the option was not correct, continue
+		if option.IsCorrect == 0 {
+			continue
+		}
 		for _, chosenAnswerIndex := range splittedAnswers {
 			optionIndex := option.Index
 			if chosenAnswerIndex == optionIndex {
