@@ -227,6 +227,128 @@ func UpdateQuiz(c *fiber.Ctx) error {
 	}
 	return U.ResMsg(c, "Quiz been updated")
 }
+// func CreateFakeNextGenerationQuiz(c *fiber.Ctx) error {
+// 	data := make(map[string]interface{
+// 			"nextGenQuestion": [
+// 			  {
+// 				"metaDescription": "nurse is nursing a old man",
+// 				"question": "the question text goes here",
+// 				"tabs": [
+// 				  {
+// 					"tableTitle": "value of title",
+// 					"rows": [
+// 					  ["row1 col1", "row1 col2", "row1 col3"],
+// 					  ["row2 col1", "row2 col2", "row2 col3"],
+// 					  ["row3 col1", "row3 col2", "row3 col3"]
+// 					]
+// 				  },
+// 				  {
+// 					"tableTitle": "value of title 2",
+// 					"rows": [
+// 					  ["rw1 cl1", "rw1 cl2", "rw1 cl3"],
+// 					  ["rw2 cl1", "rw2 cl2", "rw2 cl3"],
+// 					  ["rw3 cl1", "rw3 cl2", "rw3 cl3"]
+// 					]
+// 				  }
+// 				],
+// 				"type": "singleSelect",
+// 				"options": ["mesl chizi k handle shode"]
+// 			  },
+// 			  {
+// 				"metaDescription": "nurse is nursing a old man",
+// 				"question": "the question text goes here",
+// 				"tabs": [
+// 				  {
+// 					"tableTitle": "value of title",
+// 					"rows": [
+// 					  ["row1 col1", "row1 col2", "row1 col3"],
+// 					  ["row2 col1", "row2 col2", "row2 col3"],
+// 					  ["row3 col1", "row3 col2", "row3 col3"]
+// 					]
+// 				  },
+// 				  {
+// 					"tableTitle": "value of title 2",
+// 					"rows": [
+// 					  ["rw1 cl1", "rw1 cl2", "rw1 cl3"],
+// 					  ["rw2 cl1", "rw2 cl2", "rw2 cl3"],
+// 					  ["rw3 cl1", "rw3 cl2", "rw3 cl3"]
+// 					]
+// 				  }
+// 				],
+// 				"type": "multipleSelect",
+// 				"options": ["mesl chizi k handle shode"]
+// 			  },
+// 			  {
+// 				"metaDescription": "nurse is nursing a old man",
+// 				"question": "the question text goes here",
+// 				"tabs": [
+// 				  {
+// 					"tableTitle": "value of title",
+// 					"rows": [
+// 					  ["row1 col1", "row1 col2", "row1 col3"],
+// 					  ["row2 col1", "row2 col2", "row2 col3"],
+// 					  ["row3 col1", "row3 col2", "row3 col3"]
+// 					]
+// 				  },
+// 				  {
+// 					"tableTitle": "value of title 2",
+// 					"rows": [
+// 					  ["rw1 cl1", "rw1 cl2", "rw1 cl3"],
+// 					  ["rw2 cl1", "rw2 cl2", "rw2 cl3"],
+// 					  ["rw3 cl1", "rw3 cl2", "rw3 cl3"]
+// 					]
+// 				  }
+// 				],
+// 				"type": "tableSingle(Multiple)Select",
+// 				"tableHeaders": ["headerOne", "headerTwo", "headerThree"],
+// 				"options": [
+// 				  { "option": "option text goes here", "status": true },
+// 				  { "option": "option text goes here", "status": false },
+// 				  { "option": "option text goes here", "status": false },
+// 				  { "option": "option text goes here", "status": false }
+// 				]
+// 			  },
+// 			  {
+// 				"metaDescription": "nurse is nursing a old man",
+// 				"question": "the question text goes here",
+// 				"tabs": [
+// 				  {
+// 					"tableTitle": "value of title",
+// 					"rows": [
+// 					  ["row1 col1", "row1 col2", "row1 col3"],
+// 					  ["row2 col1", "row2 col2", "row2 col3"],
+// 					  ["row3 col1", "row3 col2", "row3 col3"]
+// 					]
+// 				  },
+// 				  {
+// 					"tableTitle": "value of title 2",
+// 					"rows": [
+// 					  ["rw1 cl1", "rw1 cl2", "rw1 cl3"],
+// 					  ["rw2 cl1", "rw2 cl2", "rw2 cl3"],
+// 					  ["rw3 cl1", "rw3 cl2", "rw3 cl3"]
+// 					]
+// 				  }
+// 				],
+// 				"type": "dropdown",
+// 				"options": [
+// 				  [
+// 					{ "dropdownTitle": "title1", "status": true },
+// 					{ "dropdownTitle": "title2", "status": false },
+// 					{ "dropdownTitle": "title3", "status": false }
+// 				  ],
+// 				  [
+// 					{ "dropdownTitle": "title4", "status": true },
+// 					{ "dropdownTitle": "title5", "status": false },
+// 					{ "dropdownTitle": "title6", "status": false }
+// 				  ]
+// 				]
+// 			  }
+// 			]
+// 		  })
+		  
+// 	})
+// 	return c.JSON(fiber.Map{"data": data})
+// }
 func CreateFakeQuiz(c *fiber.Ctx) error {
 	payload := new(M.QuizInput)
 	payload.QuestionsCount = 5
