@@ -8,7 +8,9 @@ import (
 	// "os"
 
 	// F "docker/database/filters"
+	F "docker/database/filters"
 	M "docker/models"
+	S "docker/services"
 	U "docker/utils"
 
 	"github.com/gofiber/fiber/v2"
@@ -25,60 +27,41 @@ func CreateMultipleSelectQuestion(c *fiber.Ctx) error {
 	if errs := U.Validate(payload); errs != nil {
 		return c.Status(400).JSON(fiber.Map{"errors": errs})
 	}
-	// handling options
-	questionOptions := []M.Option{}
-	// go through each payload.option and convert it into M.Option
-	for i, option := range payload.Options {
-		questionOptions = append(questionOptions, M.Option{
-			Title:     option.Title,
-			Index:     U.GetNthAlphabeticUpperLetter(i + 1),
-			IsCorrect: U.ConvertBoolToUint(option.IsCorrect),
-		})
-	}
-	// get images from request
-	form, err := c.MultipartForm()
+	newQuestion, err := S.MultipleSelect(*payload, c)
 	if err != nil {
-		return U.ResErr(c, "Parsing multipart form data failed")
+		return err
 	}
-	// images := form.File["images"]
-	// if images == nil {
-	// 	return U.ResErr(c, err.Error())
-	// }
-	images := form.File["images"]
-	// create appropriate unique name for images and save them int disc
-	var questionImages []M.Image
-	for _, image := range images {
-		uuid := uuid.New().String()
-		newFileName := uuid + "-" + image.Filename
-		c.SaveFile(image, fmt.Sprintf(U.UploadLocation+"/%s", newFileName))
-		questionImages = append(questionImages, M.Image{
-			Name: newFileName,
-		})
-	}
-	// create new question with given info
-	var system M.System
-	if err := D.DB().
-		Preload("Subject").
-		Find(&system).Error; err != nil {
-		return U.DBError(c, err)
-	}
-	newQuestion := M.Question{
-		Title:       payload.Question,
-		Options:     questionOptions,
-		SystemID:    payload.SystemID,
-		Description: payload.Description,
-		Images:      questionImages,
-		Type:        M.MultipleSelect,
-		CourseID:    &system.Subject.CourseID,
-	}
-	// convert frontend's sent string question type to backend uint question type
-	newQuestion.ConvertTypeStringToTypeInt(payload.QuestionType)
 	// insert new question to the database
 	result := D.DB().Create(&newQuestion)
 	if result.Error != nil {
 		return U.DBError(c, result.Error)
 	}
 	return c.JSON(fiber.Map{"msg": "Question created successfully", "id": newQuestion.ID})
+}
+func EditMultipleSelectQuestion(c *fiber.Ctx) error {
+	payload := new(M.AdminCreateMultipleSelectQuestionInput)
+	// parse body
+	if err := c.BodyParser(payload); err != nil {
+		return U.ResErr(c, err.Error())
+	}
+	// validate the payload
+	if errs := U.Validate(payload); errs != nil {
+		return c.Status(400).JSON(fiber.Map{"errors": errs})
+	}
+	editedQuestion, err := S.MultipleSelect(*payload, c)
+	if err != nil {
+		return err
+	}
+	// set the id from query param
+	// ignore the paramsInt error, because i've checked it already in the router
+	questionID, _ := c.ParamsInt("questionID")
+	editedQuestion.ID = uint(questionID)
+	// insert new question to the database
+	result := D.DB().Save(&editedQuestion)
+	if result.Error != nil {
+		return U.DBError(c, result.Error)
+	}
+	return c.JSON(fiber.Map{"msg": "Question was updated"})
 }
 func CreateSingleSelectQuestion(c *fiber.Ctx) error {
 	payload := new(M.AdminCreateSingleSelectQuestionInput)
@@ -90,47 +73,11 @@ func CreateSingleSelectQuestion(c *fiber.Ctx) error {
 	if errs := U.Validate(payload); errs != nil {
 		return c.Status(400).JSON(fiber.Map{"errors": errs})
 	}
-	// handling options
-	// init options arra
-	questionOptions := []M.Option{}
-	questionOptions = append(questionOptions, M.Option{Title: payload.Option1, Index: "A"})
-	questionOptions = append(questionOptions, M.Option{Title: payload.Option2, Index: "B"})
-	questionOptions = append(questionOptions, M.Option{Title: payload.Option3, Index: "C"})
-	questionOptions = append(questionOptions, M.Option{Title: payload.Option4, Index: "D"})
-	// if first option is correct, client needs to send 1
-	questionOptions[payload.CorrectOption-1].IsCorrect = 1
-	// # get images from request
-	form, err := c.MultipartForm()
-	if err != nil {
-		return U.ResErr(c, err.Error())
-	}
-	// images is optional
-	images := form.File["images"]
-	// create appropriate unique name for images and save them int disc
-	var questionImages []M.Image
-	for _, image := range images {
-		uuid := uuid.New().String()
-		newFileName := uuid + "-" + image.Filename
-		c.SaveFile(image, fmt.Sprintf(U.UploadLocation+"/%s", newFileName))
-		questionImages = append(questionImages, M.Image{
-			Name: newFileName,
-		})
-	}
-	var system M.System
-	if err := D.DB().
-		Preload("Subject").
-		Find(&system).Error; err != nil {
-		return U.DBError(c, err)
-	}
+
 	// # create new question with given info
-	newQuestion := M.Question{
-		Title:       payload.Question,
-		Options:     questionOptions,
-		SystemID:    payload.SystemID,
-		Description: payload.Description,
-		Images:      questionImages,
-		Type:        M.SingleSelect,
-		CourseID:    &system.Subject.CourseID,
+	newQuestion, err := S.SingleSelect(*payload, c)
+	if err != nil {
+		return U.DBError(c, err)
 	}
 	// # convert frontend's sent string question type to backend uint question type
 	// newQuestion.ConvertTypeStringToTypeInt(payload.QuestionType)
@@ -141,8 +88,36 @@ func CreateSingleSelectQuestion(c *fiber.Ctx) error {
 	}
 	return c.JSON(fiber.Map{"msg": "Question created successfully", "id": newQuestion.ID})
 }
+func EditSingleSelectQuestion(c *fiber.Ctx) error {
+	payload := new(M.AdminCreateSingleSelectQuestionInput)
+	// parse body
+	if err := c.BodyParser(payload); err != nil {
+		return U.ResErr(c, err.Error())
+	}
+	// validate the payload
+	if errs := U.Validate(payload); errs != nil {
+		return c.Status(400).JSON(fiber.Map{"errors": errs})
+	}
 
-// WIP
+	// # create new question with given info
+	editedQuestion, err := S.SingleSelect(*payload, c)
+	if err != nil {
+		// return the error only, because we handlede the rest of it the in the service
+		return err
+	}
+	// ignore the paramsInt error, because i've checked it already in the router
+	questionID, _ := c.ParamsInt("questionID")
+	editedQuestion.ID = uint(questionID)
+	// # convert frontend's sent string question type to backend uint question type
+	// newQuestion.ConvertTypeStringToTypeInt(payload.QuestionType)
+	// insert new question to the database
+	result := D.DB().Save(&editedQuestion)
+	if result.Error != nil {
+		return U.DBError(c, result.Error)
+	}
+	return c.JSON(fiber.Map{"msg": "Question was updated"})
+}
+
 func CreateNextGenerationQuestion(c *fiber.Ctx) error {
 	payload := new(M.AdminCreateNextGenerationQuestionInput)
 	// parse body
@@ -229,4 +204,17 @@ func ChangeImageURLsInDescription(c *fiber.Ctx) error {
 		return U.DBError(c, err)
 	}
 	return U.ResMsg(c, "Success")
+}
+func AllQuestions(c *fiber.Ctx) error {
+	// get all questions
+	var questions []M.Question
+	// two available filter: type and courseID
+	if err := D.DB().
+		Scopes(
+			F.FilterByType(c, F.FilterType{QueryName: "type"},
+				F.FilterType{QueryName: "courseID", ColumnName: "course_id"})).
+		Find(&questions).Error; err != nil {
+		return U.DBError(c, err)
+	}
+	return c.JSON(fiber.Map{"data": questions})
 }
