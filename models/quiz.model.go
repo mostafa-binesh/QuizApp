@@ -25,7 +25,7 @@ type Quiz struct {
 	UserAnswers []UserAnswer `json:"userAnswers,omitempty"`
 	CreatedAt   time.Time    `json:"date" gorm:"not null;default:now()"`
 	EndTime     *time.Time   `json:"-" gorm:"not null;default:now()"`
-	Duration    uint         `json:"duration" gorm:"not null"`
+	Duration    uint         `json:"duration" gorm:"not null"` // duration in seconds
 	CourseID    uint         `json:"-"`
 	Course      *Course      `json:"course,omitempty" gorm:"foreignKey:CourseID;constraint:OnDelete:CASCADE,OnUpdate:CASCADE;"`
 	// mode = tutor, timed
