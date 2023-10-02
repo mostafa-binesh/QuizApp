@@ -27,12 +27,14 @@ type CourseWithExpirationDate struct {
 	Duration       uint64     `json:"duration"`
 }
 type CourseWithExpirationDateAndQuestionsCount struct {
-	ID             uint                         `json:"id"`
-	Title          string                       `json:"title"`
-	Subjects       []*SubjectWithQuestionsCount `json:"subjects"`
-	ExpirationDate time.Time                    `json:"expirationDate"`
-	Duration       uint64                       `json:"duration"`
-	QuestionsCount int                          `json:"questionsCount"`
+	ID                           uint                         `json:"id"`
+	Title                        string                       `json:"title"`
+	Subjects                     []*SubjectWithQuestionsCount `json:"subjects"`
+	ExpirationDate               time.Time                    `json:"expirationDate"`
+	Duration                     uint64                       `json:"duration"`
+	QuestionsCount               int                          `json:"questionsCount"`
+	TraditionalQuestionsCount    int                          `json:"traditionalQuestionsCount"`
+	NextGenerationQuestionsCount int                          `json:"nextGenerationQuestionsCount"`
 }
 
 // model used for creating new course
@@ -45,11 +47,13 @@ type CourseWithTitleOnly struct {
 	Title string `json:"title"`
 }
 type CourseWithQuestionsCount struct {
-	ID             uint                         `json:"id"`
-	Title          string                       `json:"title"`
-	Subjects       []*SubjectWithQuestionsCount `json:"subjects"`
-	Duration       uint64                       `json:"-"` // todo don't show it for now, fix it later
-	QuestionsCount int                          `json:"questionsCount"`
+	ID                           uint                         `json:"id"`
+	Title                        string                       `json:"title"`
+	Subjects                     []*SubjectWithQuestionsCount `json:"subjects"`
+	Duration                     uint64                       `json:"-"` // todo don't show it for now, fix it later
+	QuestionsCount               int                          `json:"questionsCount"`
+	TraditionalQuestionsCount    int                          `json:"traditionalQuestionsCount"`
+	NextGenerationQuestionsCount int                          `json:"nextGenerationQuestionsCount"`
 }
 
 // its used for user.Courses so i needed to make the argument refrence
@@ -71,37 +75,54 @@ func ConvertCourseToCourseWithTitleOnly(courses []*Course) []CourseWithTitleOnly
 func ConvertCourseToCourseWithQuestionsCounts(course Course) (coursesWithQuestionsCount CourseWithQuestionsCount) {
 	// because we're getting the *courses in making the array, we need to check the null pointer
 	// var courseQuestionsCount int
-	var subjectsQuestionsCount int
 	var systemsQuestionsCount int
+	var systemTraditionalsCount int
+	var systemNextGenerationsCount int
+	var subjectsQuestionsCount int
+	var subjectTraditionalsCount int
+	var subjectNextGenerationsCount int
 	var systemWithQuestionsCount []*SystemWithQuestionsCount
 	var subjectsWithQuestionsCount []*SubjectWithQuestionsCount
 	for _, subject := range course.Subjects {
 		systemWithQuestionsCount = nil
 		systemsQuestionsCount = 0
+		systemTraditionalsCount = 0
+		systemNextGenerationsCount = 0
 		for _, system := range subject.Systems {
 			systemsQuestionsCount += len(system.Questions)
+			traditionalCount, nextGenerationCount := system.QuestionsCount()
+			systemTraditionalsCount += traditionalCount
+			systemNextGenerationsCount += nextGenerationCount
 			systemWithQuestionsCount = append(systemWithQuestionsCount, &SystemWithQuestionsCount{
-				ID:             system.ID,
-				Title:          system.Title,
-				SubjectID:      system.SubjectID,
-				QuestionsCount: len(system.Questions),
+				ID:                           system.ID,
+				Title:                        system.Title,
+				SubjectID:                    system.SubjectID,
+				QuestionsCount:               len(system.Questions),
+				TraditionalQuestionsCount:    int(traditionalCount),
+				NextGenerationQuestionsCount: int(nextGenerationCount),
 			})
 		}
 		subjectsQuestionsCount += systemsQuestionsCount
+		subjectTraditionalsCount += systemTraditionalsCount
+		subjectNextGenerationsCount += systemNextGenerationsCount
 		subjectsWithQuestionsCount = append(subjectsWithQuestionsCount, &SubjectWithQuestionsCount{
-			ID:             subject.ID,
-			Title:          subject.Title,
-			Systems:        systemWithQuestionsCount,
-			CourseID:       subject.CourseID,
-			QuestionsCount: systemsQuestionsCount,
+			ID:                           subject.ID,
+			Title:                        subject.Title,
+			Systems:                      systemWithQuestionsCount,
+			CourseID:                     subject.CourseID,
+			QuestionsCount:               systemsQuestionsCount,
+			TraditionalQuestionsCount:    systemTraditionalsCount,
+			NextGenerationQuestionsCount: systemNextGenerationsCount,
 		})
 	}
 	return CourseWithQuestionsCount{
-		ID:             course.ID,
-		Title:          course.Title,
-		Subjects:       subjectsWithQuestionsCount,
-		Duration:       course.Duration,
-		QuestionsCount: systemsQuestionsCount,
+		ID:                           course.ID,
+		Title:                        course.Title,
+		Subjects:                     subjectsWithQuestionsCount,
+		Duration:                     course.Duration,
+		QuestionsCount:               systemsQuestionsCount,
+		TraditionalQuestionsCount:    subjectTraditionalsCount,
+		NextGenerationQuestionsCount: subjectNextGenerationsCount,
 	}
 }
 
@@ -165,15 +186,22 @@ func UserBoughtCoursesWithExpirationDateAndQuestionsCount(userID uint) (*[]Cours
 	}
 	var userCourses []CourseWithExpirationDateAndQuestionsCount
 	// loop through each CourseUser model
+	totalTraditionalQuestions := 0
+	totalNextGenerationQuestions := 0
 	for i := 0; i < len(userBoughtCourses); i++ {
 		courseWithQuestionsCount := ConvertCourseToCourseWithQuestionsCounts(*userBoughtCourses[i].Course.ParentCourse)
+		totalTraditionalQuestions += courseWithQuestionsCount.TraditionalQuestionsCount 
+		totalNextGenerationQuestions += courseWithQuestionsCount.NextGenerationQuestionsCount 
+
 		userCourses = append(userCourses, CourseWithExpirationDateAndQuestionsCount{
-			ID:             userBoughtCourses[i].ID,
-			Title:          userBoughtCourses[i].Course.Title,
-			ExpirationDate: userBoughtCourses[i].ExpirationDate, // most important part
-			Subjects:       courseWithQuestionsCount.Subjects,   // subject is not from Subject model
-			Duration:       userBoughtCourses[i].Course.ParentCourse.Duration,
-			QuestionsCount: courseWithQuestionsCount.QuestionsCount,
+			ID:                           userBoughtCourses[i].ID,
+			Title:                        userBoughtCourses[i].Course.Title,
+			ExpirationDate:               userBoughtCourses[i].ExpirationDate, // most important part
+			Subjects:                     courseWithQuestionsCount.Subjects,   // subject is not from Subject model
+			Duration:                     userBoughtCourses[i].Course.ParentCourse.Duration,
+			QuestionsCount:               courseWithQuestionsCount.QuestionsCount,
+			TraditionalQuestionsCount:    totalTraditionalQuestions,
+			NextGenerationQuestionsCount: totalNextGenerationQuestions,
 		})
 	}
 	return &userCourses, nil
