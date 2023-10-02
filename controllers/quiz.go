@@ -20,7 +20,10 @@ import (
 // save the entire quizzes into the state, i need to send quiz with all of its info
 func AllQuizzes(c *fiber.Ctx) error {
 	user := M.AuthedUser(c)
-	if err := D.DB().Model(&user).Preload("Quizzes.Course").Preload("UserAnswers", func(db *gorm.DB) *gorm.DB { // could do this as well : Preload("Comments", "ORDER BY ? ASC > ?", "id")
+	if err := D.DB().Model(&user).Preload("Quizzes", func(db *gorm.DB) *gorm.DB { // could do this as well : Preload("Comments", "ORDER BY ? ASC > ?", "id")
+		db = db.Order("id Desc")
+		return db
+	}).Preload("Quizzes.Course").Preload("UserAnswers", func(db *gorm.DB) *gorm.DB { // could do this as well : Preload("Comments", "ORDER BY ? ASC > ?", "id")
 		db = db.Order("id ASC")
 		return db
 	}).Preload("Quizzes.UserAnswers.Question.Options").
@@ -228,6 +231,7 @@ func UpdateQuiz(c *fiber.Ctx) error {
 	}
 	return U.ResMsg(c, "Quiz been updated")
 }
+
 // func CreateFakeNextGenerationQuiz(c *fiber.Ctx) error {
 // 	data := make(map[string]interface{
 // 			"nextGenQuestion": [
@@ -346,7 +350,7 @@ func UpdateQuiz(c *fiber.Ctx) error {
 // 			  }
 // 			]
 // 		  })
-		  
+
 // 	})
 // 	return c.JSON(fiber.Map{"data": data})
 // }
@@ -701,4 +705,4 @@ func CreateFakeNextGenerationQuiz(c *fiber.Ctx) error {
 		return U.ResErr(c, "Invalid Data")
 	}
 	return c.JSON(fiber.Map{"data": payload})
-}	
+}
