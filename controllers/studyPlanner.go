@@ -31,6 +31,8 @@ func CreateStudyPlanner(c *fiber.Ctx) error {
 	if errs := U.Validate(payload); errs != nil {
 		return c.Status(400).JSON(fiber.Map{"errors": errs})
 	}
+	// check if all values are between min and max study hour
+	payload.ValidateWorkingHours()
 	// get authenticated user
 	user := M.AuthedUser(c)
 	// Calculate the number of days between start and end dates
