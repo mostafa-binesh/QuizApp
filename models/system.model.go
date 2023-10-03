@@ -15,12 +15,13 @@ type SystemWithQuestionsCount struct {
 	TraditionalQuestionsCount    int    `json:"traditionalQuestionsCount"`
 	NextGenerationQuestionsCount int    `json:"nextGenerationQuestionsCount"`
 }
-func (s *System) QuestionsCount() (traditionalQount, nextGenerationCount int) {
+
+func (s System) QuestionsCount() (traditionalQount, nextGenerationCount int) {
 	for _, q := range s.Questions {
-		if q.IsNextGeneration() {
-			nextGenerationCount++
-		} else {
+		if q.IsTraditional() {
 			traditionalQount++
+		} else {
+			nextGenerationCount++
 		}
 	}
 	return
