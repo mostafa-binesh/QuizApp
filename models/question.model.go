@@ -1,6 +1,7 @@
 package models
 
 import (
+	U "docker/utils"
 	"fmt"
 	"strings"
 )
@@ -140,6 +141,23 @@ type AdminCreateNextGenerationQuestionInput struct {
 	MultipleOptions []AdminCreateNextGenerationQuestionOptionsInput   `json:"multipleOptions"`
 }
 
+func (payload AdminCreateNextGenerationQuestionInput) ToQuestion() (q Question) {
+	q.Title = payload.Title
+	q.Description = payload.Description
+	// tabs
+	if err := U.Convert[AdminCreateNextGenerationQuestionTabsInput, Tab](payload.Tabs, &q.Tabs); err != nil {
+		panic("conversion error in toQuestion of AdminCreateNextGenerationQuestionInput")
+	}
+	// type
+	q.ConvertTypeStringToTypeInt(payload.Type)
+	// dropdown options
+	// ! needs attention
+	if err := U.Convert[AdminCreateNextGenerationQuestionOptionsInput, Dropdown](payload.DropDownOptions[1], &q.Dropdowns); err != nil {
+		panic("conversion error in toQuestion of AdminCreateNextGenerationQuestionInput")
+	}
+	return
+}
+
 // each tab has a name and tables
 type AdminCreateNextGenerationQuestionTabsInput struct {
 	TableTitle string     `json:"tableTitle" validate:"required"`
@@ -194,4 +212,7 @@ func (question Question) CorrectOptionsCount() (howManyCorrectAnswers uint) {
 		}
 	}
 	return
+}
+func (q Question) IsTraditional() bool {
+	return q.Type == MultipleSelect || q.Type == SingleSelect
 }

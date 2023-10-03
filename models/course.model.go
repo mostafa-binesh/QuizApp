@@ -14,8 +14,9 @@ type Course struct {
 	Subjects           []*Subject `json:"subjects" gorm:"foreignKey:CourseID"`
 	Duration           uint64     `json:"duration"`
 	ParentID           *uint
-	ParentCourse       *Course `json:"-" gorm:"foreignKey:ParentID"` // use Company.CompanyID as references
-	ValidityDaysPeriod uint    `json:"-"`
+	ParentCourse       *Course    `json:"-" gorm:"foreignKey:ParentID"` // use Company.CompanyID as references
+	ValidityDaysPeriod uint       `json:"-"`
+	Questions          []Question `json:"questions,omitempty"`
 }
 
 // used in user.courses route
@@ -35,6 +36,9 @@ type CourseWithExpirationDateAndQuestionsCount struct {
 	QuestionsCount               int                          `json:"questionsCount"`
 	TraditionalQuestionsCount    int                          `json:"traditionalQuestionsCount"`
 	NextGenerationQuestionsCount int                          `json:"nextGenerationQuestionsCount"`
+	MarkedQuestionsCount         uint                         `json:"markedQuestionsCount"`
+	CorrectQuestionsCount        uint                         `json:"correctQuestionsCount"`
+	IncorrectQuestionsCount      uint                         `json:"incorrectQuestionsCount"`
 }
 
 // model used for creating new course
@@ -180,6 +184,7 @@ func UserBoughtCoursesWithExpirationDateAndQuestionsCount(userID uint) (*[]Cours
 		Model(&CourseUser{}).
 		Where("user_id = ? AND expiration_date > ?", userID, time.Now()).
 		Preload("Course.ParentCourse.Subjects.Systems.Questions").
+		Preload("Course.Questions.UserAnswers").
 		Find(&userBoughtCourses).
 		Error; err != nil {
 		return nil, err
@@ -190,9 +195,22 @@ func UserBoughtCoursesWithExpirationDateAndQuestionsCount(userID uint) (*[]Cours
 	totalNextGenerationQuestions := 0
 	for i := 0; i < len(userBoughtCourses); i++ {
 		courseWithQuestionsCount := ConvertCourseToCourseWithQuestionsCounts(*userBoughtCourses[i].Course.ParentCourse)
-		totalTraditionalQuestions += courseWithQuestionsCount.TraditionalQuestionsCount 
-		totalNextGenerationQuestions += courseWithQuestionsCount.NextGenerationQuestionsCount 
-
+		totalTraditionalQuestions += courseWithQuestionsCount.TraditionalQuestionsCount
+		totalNextGenerationQuestions += courseWithQuestionsCount.NextGenerationQuestionsCount
+		// answers status
+		var correctCount uint
+		var incorrectCount uint
+		var markedCount uint
+		for _, question := range userBoughtCourses[i].Course.Questions {
+			for _, answer := range question.UserAnswers {
+				correct, incorrect, _ := CalculateAnswerStats(answer)
+				correctCount += correct
+				incorrectCount += incorrect
+				if answer.IsMarked {
+					markedCount += markedCount
+				}
+			}
+		}
 		userCourses = append(userCourses, CourseWithExpirationDateAndQuestionsCount{
 			ID:                           userBoughtCourses[i].ID,
 			Title:                        userBoughtCourses[i].Course.Title,
@@ -202,6 +220,9 @@ func UserBoughtCoursesWithExpirationDateAndQuestionsCount(userID uint) (*[]Cours
 			QuestionsCount:               courseWithQuestionsCount.QuestionsCount,
 			TraditionalQuestionsCount:    totalTraditionalQuestions,
 			NextGenerationQuestionsCount: totalNextGenerationQuestions,
+			MarkedQuestionsCount:         markedCount,
+			CorrectQuestionsCount:        correctCount,
+			IncorrectQuestionsCount:      incorrectCount,
 		})
 	}
 	return &userCourses, nil
