@@ -212,15 +212,15 @@ func UserBoughtCoursesWithExpirationDateAndQuestionsCount(userID uint) (*[]Cours
 	var subjectsQuestionsCount int
 	var subjectTraditionalsCount int
 	var subjectNextGenerationsCount int
-	var systemWithQuestionsCount []SystemWithQuestionsCount
-	var subjectsWithQuestionsCount []SubjectWithQuestionsCount
-
 	
-
+	
+	
 	var TraditionalSubjects NestedSubjectsWithQuestionsCount
 	var NextGenerationSubjects NestedSubjectsWithQuestionsCount
 	for i := 0; i < len(userBoughtCourses); i++ {
-		for _, subject := range userBoughtCourses[i].Course.Subjects {
+		for _, subject := range userBoughtCourses[i].Course.ParentCourse.Subjects {
+			var systemWithQuestionsCount []SystemWithQuestionsCount
+			var subjectsWithQuestionsCount []SubjectWithQuestionsCount
 			systemWithQuestionsCount = nil
 			systemsQuestionsCount = 0
 			systemTraditionalsCount = 0
@@ -254,7 +254,7 @@ func UserBoughtCoursesWithExpirationDateAndQuestionsCount(userID uint) (*[]Cours
 			if subject.Type == GENERAL_TYPE_TRADITIONAL {
 				TraditionalSubjects.Subjects = append(TraditionalSubjects.Subjects, subjectsWithQuestionsCount...)
 			} else {
-				NextGenerationSubjects.Subjects = append(TraditionalSubjects.Subjects, subjectsWithQuestionsCount...)
+				NextGenerationSubjects.Subjects = append(NextGenerationSubjects.Subjects, subjectsWithQuestionsCount...)
 			}
 		}
 		courseWithQuestionsCount := ConvertCourseToCourseWithQuestionsCounts(*userBoughtCourses[i].Course.ParentCourse)
