@@ -266,7 +266,7 @@ func UserBoughtCoursesWithExpirationDateAndQuestionsCount(userID uint) (*[]Cours
 				correctCount += correct
 				incorrectCount += incorrect
 				if answer.IsMarked {
-					markedCount += markedCount
+					markedCount += 1
 				}
 			}
 		}
