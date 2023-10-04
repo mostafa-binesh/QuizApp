@@ -177,6 +177,8 @@ func UserHasCourse(userID uint, courseID uint) (bool, error) {
 	}
 	return U.ExistsInArray[uint](courseIDs, courseID), nil
 }
+// this function can be optimized very easily 
+// just need to remove the subjects.systems.question preload and use the parentCourse.Questions preload
 func UserBoughtCoursesWithExpirationDateAndQuestionsCount(userID uint) (*[]CourseWithExpirationDateAndQuestionsCount, error) {
 	var userBoughtCourses []CourseUser
 	// get the CourseUser and preload its course
@@ -184,7 +186,7 @@ func UserBoughtCoursesWithExpirationDateAndQuestionsCount(userID uint) (*[]Cours
 		Model(&CourseUser{}).
 		Where("user_id = ? AND expiration_date > ?", userID, time.Now()).
 		Preload("Course.ParentCourse.Subjects.Systems.Questions").
-		Preload("Course.Questions.UserAnswers").
+		Preload("Course.ParentCourse.Questions.UserAnswers").
 		Find(&userBoughtCourses).
 		Error; err != nil {
 		return nil, err
@@ -193,15 +195,15 @@ func UserBoughtCoursesWithExpirationDateAndQuestionsCount(userID uint) (*[]Cours
 	// loop through each CourseUser model
 	totalTraditionalQuestions := 0
 	totalNextGenerationQuestions := 0
+	// answers status
+	var correctCount uint
+	var incorrectCount uint
+	var markedCount uint
 	for i := 0; i < len(userBoughtCourses); i++ {
 		courseWithQuestionsCount := ConvertCourseToCourseWithQuestionsCounts(*userBoughtCourses[i].Course.ParentCourse)
 		totalTraditionalQuestions += courseWithQuestionsCount.TraditionalQuestionsCount
 		totalNextGenerationQuestions += courseWithQuestionsCount.NextGenerationQuestionsCount
-		// answers status
-		var correctCount uint
-		var incorrectCount uint
-		var markedCount uint
-		for _, question := range userBoughtCourses[i].Course.Questions {
+		for _, question := range userBoughtCourses[i].Course.ParentCourse.Questions {
 			for _, answer := range question.UserAnswers {
 				correct, incorrect, _ := CalculateAnswerStats(answer)
 				correctCount += correct
