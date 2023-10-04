@@ -1,5 +1,7 @@
 package utils
 
+import "encoding/json"
+
 // removeElement removes the element at the given index from the input array.
 // The input array must be a slice and the index must be within the bounds of the slice.
 func RemoveElement[T any](arr []T, index int) []T {
@@ -43,4 +45,15 @@ func ConvertSliceToPtrSlice[T any](s []T) []*T {
 		ptrSlice[i] = &t
 	}
 	return ptrSlice
+}
+func Convert[S, T any](source []S, target *[]T) error {
+	jsonBytes, err := json.Marshal(source)
+	if err != nil {
+		return err
+	}
+	err = json.Unmarshal(jsonBytes, target)
+	if err != nil {
+		return err
+	}
+	return nil
 }
