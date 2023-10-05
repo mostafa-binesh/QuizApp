@@ -216,3 +216,7 @@ func (question Question) CorrectOptionsCount() (howManyCorrectAnswers uint) {
 func (q Question) IsTraditional() bool {
 	return q.Type == MultipleSelect || q.Type == SingleSelect
 }
+// return if the question is single select, despite the traditional or next generation
+func (q Question) IsSingleSelect() bool {
+	return q.Type == SingleSelect || q.Type == NextGenerationSingleSelect || q.Type == NextGenerationTableSingleSelect
+}

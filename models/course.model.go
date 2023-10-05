@@ -41,9 +41,15 @@ type CourseWithExpirationDateAndQuestionsCount struct {
 	QuestionsCount               int                              `json:"questionsCount"`
 	TraditionalQuestionsCount    int                              `json:"traditionalQuestionsCount"`
 	NextGenerationQuestionsCount int                              `json:"nextGenerationQuestionsCount"`
-	MarkedQuestionsCount         uint                             `json:"markedQuestionsCount"`
-	CorrectQuestionsCount        uint                             `json:"correctQuestionsCount"`
-	IncorrectQuestionsCount      uint                             `json:"incorrectQuestionsCount"`
+	// traditional
+	// var. name and json name are different !
+	TraditionalSingleSelectQuestionsCount   int  `json:"traditionalCorrectCount"`
+	TraditionalMultipleSelectQuestionsCount int  `json:"traditionalIncorrectCount"`
+	TraditionalMarkedQuestionsCount         uint `json:"traditionalMarkedCount"`
+	// next generation
+	NextGenerationSingleSelectQuestionsCount   int  `json:"nextGenerationCorrectCount"`
+	NextGenerationMultipleSelectQuestionsCount int  `json:"nextGenerationIncorrectCount"`
+	NextGenerationMarkedQuestionsCount         uint `json:"nextGenerationMarkedCount"`
 }
 
 // model used for creating new course
@@ -56,13 +62,13 @@ type CourseWithTitleOnly struct {
 	Title string `json:"title"`
 }
 type CourseWithQuestionsCount struct {
-	ID                           uint                         `json:"id"`
-	Title                        string                       `json:"title"`
+	ID                           uint                        `json:"id"`
+	Title                        string                      `json:"title"`
 	Subjects                     []SubjectWithQuestionsCount `json:"subjects"`
-	Duration                     uint64                       `json:"-"` // todo don't show it for now, fix it later
-	QuestionsCount               int                          `json:"questionsCount"`
-	TraditionalQuestionsCount    int                          `json:"traditionalQuestionsCount"`
-	NextGenerationQuestionsCount int                          `json:"nextGenerationQuestionsCount"`
+	Duration                     uint64                      `json:"-"` // todo don't show it for now, fix it later
+	QuestionsCount               int                         `json:"questionsCount"`
+	TraditionalQuestionsCount    int                         `json:"traditionalQuestionsCount"`
+	NextGenerationQuestionsCount int                         `json:"nextGenerationQuestionsCount"`
 }
 
 // its used for user.Courses so i needed to make the argument refrence
@@ -192,8 +198,10 @@ func UserBoughtCoursesWithExpirationDateAndQuestionsCount(userID uint) (*[]Cours
 		Model(&CourseUser{}).
 		Where("user_id = ? AND expiration_date > ?", userID, time.Now()).
 		Preload("Course.ParentCourse.Subjects.Systems.Questions").
-		Preload("Course.ParentCourse.Questions.UserAnswers").
-		Find(&userBoughtCourses).
+		Preload("Course.ParentCourse.Questions.UserAnswers", func(db *gorm.DB) *gorm.DB {
+			db = db.Where("user_id = ?", userID)
+			return db
+		}).Find(&userBoughtCourses).
 		Error; err != nil {
 		return nil, err
 	}
@@ -202,9 +210,9 @@ func UserBoughtCoursesWithExpirationDateAndQuestionsCount(userID uint) (*[]Cours
 	totalTraditionalQuestions := 0
 	totalNextGenerationQuestions := 0
 	// answers status
-	var correctCount uint
-	var incorrectCount uint
-	var markedCount uint
+	// var correctCount uint
+	// var incorrectCount uint
+	// var markedCount uint
 
 	var systemsQuestionsCount int
 	var systemTraditionalsCount int
@@ -212,9 +220,7 @@ func UserBoughtCoursesWithExpirationDateAndQuestionsCount(userID uint) (*[]Cours
 	var subjectsQuestionsCount int
 	var subjectTraditionalsCount int
 	var subjectNextGenerationsCount int
-	
-	
-	
+
 	var TraditionalSubjects NestedSubjectsWithQuestionsCount
 	var NextGenerationSubjects NestedSubjectsWithQuestionsCount
 	for i := 0; i < len(userBoughtCourses); i++ {
@@ -260,13 +266,36 @@ func UserBoughtCoursesWithExpirationDateAndQuestionsCount(userID uint) (*[]Cours
 		courseWithQuestionsCount := ConvertCourseToCourseWithQuestionsCounts(*userBoughtCourses[i].Course.ParentCourse)
 		totalTraditionalQuestions += courseWithQuestionsCount.TraditionalQuestionsCount
 		totalNextGenerationQuestions += courseWithQuestionsCount.NextGenerationQuestionsCount
+		// stats
+		var traditionalSingleSelectQuestionsCount int
+		var traditionalMultipleSelectQuestionsCount int
+		var traditionalMarkedQuestionsCount uint
+		// next generation
+		var nextGenerationSingleSelectQuestionsCount int
+		var nextGenerationMultipleSelectQuestionsCount int
+		var nextGenerationMarkedQuestionsCount uint
 		for _, question := range userBoughtCourses[i].Course.ParentCourse.Questions {
-			for _, answer := range question.UserAnswers {
-				correct, incorrect, _ := CalculateAnswerStats(answer)
-				correctCount += correct
-				incorrectCount += incorrect
-				if answer.IsMarked {
-					markedCount += 1
+			if question.IsTraditional() {
+				if question.IsSingleSelect() {
+					traditionalSingleSelectQuestionsCount++
+				} else {
+					traditionalMultipleSelectQuestionsCount++
+				}
+				for _, answer := range question.UserAnswers {
+					if answer.IsMarked {
+						traditionalMarkedQuestionsCount++
+					}
+				}
+			} else {
+				if !question.IsSingleSelect() {
+					nextGenerationSingleSelectQuestionsCount++
+				} else {
+					nextGenerationMultipleSelectQuestionsCount++
+				}
+				for _, answer := range question.UserAnswers {
+					if answer.IsMarked {
+						nextGenerationMarkedQuestionsCount++
+					}
 				}
 			}
 		}
@@ -279,11 +308,19 @@ func UserBoughtCoursesWithExpirationDateAndQuestionsCount(userID uint) (*[]Cours
 			QuestionsCount:               courseWithQuestionsCount.QuestionsCount,
 			TraditionalQuestionsCount:    totalTraditionalQuestions,
 			NextGenerationQuestionsCount: totalNextGenerationQuestions,
-			MarkedQuestionsCount:         markedCount,
-			CorrectQuestionsCount:        correctCount,
-			IncorrectQuestionsCount:      incorrectCount,
-			NextGenerationSubjects:       NextGenerationSubjects,
-			TraditionalSubjects:          TraditionalSubjects,
+			// traditional
+			TraditionalSingleSelectQuestionsCount:   traditionalSingleSelectQuestionsCount,
+			TraditionalMultipleSelectQuestionsCount: traditionalMultipleSelectQuestionsCount,
+			TraditionalMarkedQuestionsCount:         traditionalMarkedQuestionsCount,
+			// next gen
+			NextGenerationSingleSelectQuestionsCount:   nextGenerationSingleSelectQuestionsCount,
+			NextGenerationMultipleSelectQuestionsCount: nextGenerationMultipleSelectQuestionsCount,
+			NextGenerationMarkedQuestionsCount:         nextGenerationMarkedQuestionsCount,
+			// MarkedQuestionsCount:         markedCount,
+			// CorrectQuestionsCount:        correctCount,
+			// IncorrectQuestionsCount:      incorrectCount,
+			NextGenerationSubjects: NextGenerationSubjects,
+			TraditionalSubjects:    TraditionalSubjects,
 		})
 	}
 	return &userCourses, nil
