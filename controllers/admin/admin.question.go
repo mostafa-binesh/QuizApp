@@ -48,14 +48,19 @@ func EditMultipleSelectQuestion(c *fiber.Ctx) error {
 	if errs := U.Validate(payload); errs != nil {
 		return c.Status(400).JSON(fiber.Map{"errors": errs})
 	}
+	// use the service to convert payload to question model
 	editedQuestion, err := S.MultipleSelect(*payload, c)
 	if err != nil {
 		return err
 	}
-	// set the id from query param
+	// because it's about the update, set the id from query param
 	// ignore the paramsInt error, because i've checked it already in the router
 	questionID, _ := c.ParamsInt("questionID")
 	editedQuestion.ID = uint(questionID)
+	// delete existing options associated with the question
+	if err := D.DB().Where("question_id = ?", questionID).Delete(M.Option{}).Error; err != nil {
+		return err
+	}
 	// insert new question to the database
 	result := D.DB().Save(editedQuestion)
 	if result.Error != nil {
