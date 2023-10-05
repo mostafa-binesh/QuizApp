@@ -4,6 +4,8 @@ import (
 	D "docker/database"
 	U "docker/utils"
 	"time"
+
+	"gorm.io/gorm"
 )
 
 type Course struct {
