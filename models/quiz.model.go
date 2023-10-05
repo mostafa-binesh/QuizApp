@@ -279,7 +279,7 @@ func (quiz Quiz) CalculateQuizResult() (quizResult QuizResult) {
 			Subject:   answer.Question.System.Subject.Title,
 			System:    answer.Question.System.Title,
 			Course:    answer.Question.Course.Title,
-			Accuracy:  answer.Question.ConvertQuestionToFrontQuestion().AnswerAccuracyPercentage,
+			Accuracy:  answer.Question.ToFrontQuestion().AnswerAccuracyPercentage,
 			SpentTime: answer.SpentTime,
 		})
 	}

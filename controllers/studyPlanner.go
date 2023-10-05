@@ -82,9 +82,9 @@ func FinishDate(c *fiber.Ctx) error {
 		return U.DBError(c, result.Error)
 	}
 	if result.RowsAffected == 0 {
-		return U.ResErr(c, fmt.Sprintf("Plan with given dates not found"), 404)
+		return U.ResErr(c, "Plan with given dates not found", 404)
 	}
-	return U.ResMsg(c, fmt.Sprintf("Plan given dates has been updated"))
+	return U.ResMsg(c, "Plan given dates has been updated")
 }
 func DeleteStudyPlan(c *fiber.Ctx) error {
 	payload := new(M.VerifyStudyPlanDateInput)

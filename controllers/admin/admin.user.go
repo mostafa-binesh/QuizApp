@@ -5,6 +5,7 @@ import (
 	F "docker/database/filters"
 	M "docker/models"
 	U "docker/utils"
+	S "docker/services"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -168,7 +169,7 @@ func AddUser(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"errors": errs})
 	}
 	// hash the password
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(payload.Password), bcrypt.DefaultCost)
+	hashedPassword, err := S.GenerateHashedPassword(payload.Password)
 	if err != nil {
 		return U.ResErr(c, err.Error())
 	}

@@ -2,6 +2,9 @@ package models
 
 import "time"
 
+const maxStudyHour = 20
+const minStudyHour = 0
+
 type StudyPlan struct {
 	ID         uint      `json:"id" gorm:"primaryKey"`
 	Date       time.Time `json:"date"`
@@ -33,10 +36,9 @@ type StudyPlanUpdateInput struct {
 func (sp *StudyPlan) Finish() {
 	sp.IsFinished = true
 }
+
 // check if all values are between min and max study hour
 func (sp *CreateNewStudyPlanInput) ValidateWorkingHours() {
-	const maxStudyHour = 20
-	const minStudyHour = 0
 	// check if all values are between min and max study hour
 	for i := range sp.WorkingHours {
 		if sp.WorkingHours[i] > maxStudyHour {

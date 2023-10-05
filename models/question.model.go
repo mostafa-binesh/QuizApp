@@ -20,21 +20,18 @@ const (
 )
 
 type Question struct {
-	ID          uint    `json:"no" gorm:"primary_key"`
-	Title       string  `json:"question"`
-	Status      string  `json:"-"`
-	Description string  `json:"description"`
-	Images      []Image `gorm:"polymorphic:Owner;"`
-	// relationships
-	Options  []Option `json:"options,omitempty" gorm:"foreignKey:QuestionID;constraint:OnDelete:CASCADE,OnUpdate:CASCADE;"` // this cascade means if this question is deleted, all options will be deleted too and you won't encounter dependency error
-	SystemID uint     `json:"-"`
-	System   *System  `json:"system,omitempty" gorm:"foreignKey:SystemID;constraint:OnDelete:CASCADE,OnUpdate:CASCADE;"`
-	// although we could get the course id from question >subject > system, but that would
-	//  cost resource, i rather add a courseID to the Question table and get it directly
-	CourseID *uint        `json:"-"`
-	Course   *Course      `json:"course,omitempty" gorm:"foreignKey:CourseID;constraint:OnDelete:CASCADE,OnUpdate:CASCADE;"`
-	Type     QuestionType `json:"type"`
-	// NextGenerationType NextGenerationType `json:"-"`
+	ID          uint         `json:"no" gorm:"primary_key"`
+	Title       string       `json:"question"`
+	Status      string       `json:"-"`
+	Description string       `json:"description"`
+	Type        QuestionType `json:"type"`
+	// # relationships
+	CourseID    *uint        `json:"-"` // although we could get the course id from question >subject > system, but that would,  cost resource, i rather add a courseID to the Question table and get it directly
+	Course      *Course      `json:"course,omitempty" gorm:"foreignKey:CourseID;constraint:OnDelete:CASCADE,OnUpdate:CASCADE;"`
+	SystemID    uint         `json:"-"`
+	System      *System      `json:"system,omitempty" gorm:"foreignKey:SystemID;constraint:OnDelete:CASCADE,OnUpdate:CASCADE;"`
+	Images      []Image      `gorm:"polymorphic:Owner;"`
+	Options     []Option     `json:"options,omitempty" gorm:"foreignKey:QuestionID;constraint:OnDelete:CASCADE,OnUpdate:CASCADE;"` // this cascade means if this question is deleted, all options will be deleted too and you won't encounter dependency error
 	Tabs        []Tab        `json:"tabs"`
 	Dropdowns   []Dropdown   `json:"dropdowns,omitempty"`
 	UserAnswers []UserAnswer `json:"-"`
@@ -57,7 +54,7 @@ type FrontQuestion struct {
 	AnswerAccuracyPercentage uint         `json:"answerAccuracyPercentage"`
 }
 
-func (question Question) ConvertQuestionToFrontQuestion() FrontQuestion {
+func (question Question) ToFrontQuestion() FrontQuestion {
 	frontQuestion := FrontQuestion{
 		ID:                       question.ID,
 		Title:                    question.Title,
@@ -77,7 +74,7 @@ func (question Question) ConvertQuestionToFrontQuestion() FrontQuestion {
 func ConvertQuestionsToFrontQuestions(questions *[]Question) *[]FrontQuestion {
 	frontQuestions := make([]FrontQuestion, len(*questions))
 	for i, question := range *questions {
-		frontQuestions[i] = question.ConvertQuestionToFrontQuestion()
+		frontQuestions[i] = question.ToFrontQuestion()
 	}
 	return &frontQuestions
 }
@@ -205,10 +202,10 @@ func (question *Question) ReplacePreWebsiteWithNewWebsiteImageURLDescription(pre
 }
 
 // question.options must be preloaded
-func (question Question) CorrectOptionsCount() (howManyCorrectAnswers uint) {
+func (question Question) CorrectOptionsCount() (correctAnswersCount uint) {
 	for _, option := range question.Options {
 		if option.IsCorrect == 1 {
-			howManyCorrectAnswers++
+			correctAnswersCount++
 		}
 	}
 	return
@@ -216,6 +213,7 @@ func (question Question) CorrectOptionsCount() (howManyCorrectAnswers uint) {
 func (q Question) IsTraditional() bool {
 	return q.Type == MultipleSelect || q.Type == SingleSelect
 }
+
 // return if the question is single select, despite the traditional or next generation
 func (q Question) IsSingleSelect() bool {
 	return q.Type == SingleSelect || q.Type == NextGenerationSingleSelect || q.Type == NextGenerationTableSingleSelect

@@ -28,14 +28,13 @@ func SignUpUser(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"errors": errs})
 	}
 	// check email uniqueness
-	if emailUniqueness := D.DB().
-		Find(&M.User{}, "email = ?", payload.Email); emailUniqueness.RowsAffected != 0 || emailUniqueness.Error != nil {
-		return U.ResErr(c, "Email already exists")
+	if err := S.CheckEmailUniqueness(payload.Email); err != nil {
+		return U.ResErr(c, err.Error())
 	}
 	// hash the password
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(payload.Password), bcrypt.DefaultCost)
+	hashedPassword, err := S.GenerateHashedPassword(payload.Password)
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
+		return U.ResErr(c, err.Error())
 	}
 	// get all courses that user have bought using orderID
 	childCourses, purchasedCourseIDPayDateMap, err := S.ImportUserCoursesUsingOrderID(payload.OrderID)
@@ -160,9 +159,8 @@ func Login(c *fiber.Ctx) error {
 		return U.DBError(c, result.Error)
 	}
 	// ! compare the password of payload and returned user from database
-	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(payload.Password))
-	if err != nil {
-		return U.ResErr(c, loginError)
+	if err := S.CheckHashedPassword(user.Password, payload.Password); err != nil {
+		return U.ResErr(c, err.Error())
 	}
 	// login successful, setting up session
 	sess := U.Session(c)
@@ -215,6 +213,7 @@ func AuthMiddleware(c *fiber.Ctx) error {
 
 }
 
+// roleCheck middleware
 // authentication must be done already
 func RoleCheck(roles []string) fiber.Handler {
 	return func(c *fiber.Ctx) error {

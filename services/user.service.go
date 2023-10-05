@@ -6,6 +6,8 @@ import (
 	U "docker/utils"
 	"fmt"
 	"time"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 // returns bought courses using orderID
@@ -115,4 +117,27 @@ func ExtractCourseToInsertAndToUpdate(childCourses []M.Course, purchasedCourseID
 		newCourseUsers = append(newCourseUsers, *cu)
 	}
 	return courseUsersToUpdate, newCourseUsers, nil
+}
+func CheckEmailUniqueness(email string) error {
+	result := D.DB().Find(&M.User{}, "email = ?", email)
+	if result.Error != nil {
+		return result.Error
+	} else if result.RowsAffected != 0 {
+		return fmt.Errorf("email already exists")
+	}
+	return nil
+}
+func GenerateHashedPassword(password string) (string, error) {
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return "", err
+	}
+	return string(hashedPassword), nil
+}
+func CheckHashedPassword(userPassword, payloadPassword string) error {
+	err := bcrypt.CompareHashAndPassword([]byte(userPassword), []byte(payloadPassword))
+	if err != nil {
+		return err
+	}
+	return nil
 }
