@@ -23,6 +23,11 @@ func AllCourses(c *fiber.Ctx) error {
 	if err != nil {
 		return U.DBError(c, err)
 	}
+	adasdas
+	asdas
+	dsa
+	ds
+	d
 	return c.JSON(fiber.Map{"data": userBoughtCourses})
 }
 
@@ -58,6 +63,7 @@ func CourseSubjects(c *fiber.Ctx) error {
 
 func UpdateUserCourses(c *fiber.Ctx) error {
 	payload := new(M.AddCourseUsingOrderID)
+	asdasdasd
 	// parsing the payload
 	if err := c.BodyParser(payload); err != nil {
 		U.ResErr(c, err.Error())
