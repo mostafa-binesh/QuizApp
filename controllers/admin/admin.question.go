@@ -113,8 +113,10 @@ func EditSingleSelectQuestion(c *fiber.Ctx) error {
 	// ignore the paramsInt error, because i've checked it already in the router
 	questionID, _ := c.ParamsInt("questionID")
 	editedQuestion.ID = uint(questionID)
-	// # convert frontend's sent string question type to backend uint question type
-	// newQuestion.ConvertTypeStringToTypeInt(payload.QuestionType)
+	// delete existing options associated with the question
+	if err := D.DB().Where("question_id = ?", questionID).Delete(M.Option{}).Error; err != nil {
+		return err
+	}
 	// insert new question to the database
 	result := D.DB().Save(editedQuestion)
 	if result.Error != nil {
